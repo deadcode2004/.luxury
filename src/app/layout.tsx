@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { Cairo } from "next/font/google";
+import { Alexandria } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 
-const cairo = Cairo({
-  variable: "--font-cairo",
+const alexandria = Alexandria({
+  variable: "--font-alexandria",
   subsets: ["arabic", "latin"],
   weight: ["300", "400", "500", "600", "700", "800"],
 });
@@ -20,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar" dir="rtl" className={`${cairo.variable} antialiased h-full`}>
+    <html lang="ar" dir="rtl" className={`${alexandria.variable} antialiased h-full`}>
       <body className="min-h-full flex flex-col bg-background text-foreground" suppressHydrationWarning>
         <LanguageProvider>
           {children}

@@ -21,7 +21,7 @@ export default function Categories() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {categories.map((category) => (
-            <Link href={`/category/${category.id}`} key={category.id} className="group relative overflow-hidden rounded-lg aspect-[4/5] block shadow-soft hover:shadow-glow transition-all duration-300">
+            <Link href={`/category/${category.id}`} key={category.id} className="group relative overflow-hidden rounded-lg aspect-[4/5] block shadow-soft hover:shadow-lg transition-all duration-300">
               <Image
                 src={category.image}
                 alt={category.name[language]}

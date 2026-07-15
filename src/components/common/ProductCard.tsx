@@ -15,7 +15,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { language } = useLanguage();
 
   return (
-    <div className="group bg-surface rounded-xl overflow-hidden shadow-soft hover:shadow-glow transition-all duration-300 relative border border-gray-100">
+    <div className="group bg-surface rounded-2xl overflow-hidden shadow-soft hover:shadow-lg transition-all duration-300 relative">
       {/* شارة (جديد/الأكثر مبيعاً) */}
       {product.isNew && (
         <span className="absolute top-4 right-4 bg-primary text-secondary text-xs font-bold px-3 py-1 rounded-full z-10">
