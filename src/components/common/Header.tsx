@@ -120,39 +120,86 @@ export default function Header() {
         </div>
       </div>
 
-      {/* قائمة الموبايل (Mobile Menu) */}
+      {/* خلفية داكنة (Backdrop) */}
+      <div 
+        className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300 md:hidden ${
+          isMobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"
+        }`}
+        onClick={() => setIsMobileMenuOpen(false)}
+      />
+
+      {/* قائمة الموبايل الجانبية (Drawer Menu) */}
       <div
-        className={`fixed inset-0 bg-background z-50 transform transition-transform duration-300 md:hidden ${
-          isMobileMenuOpen ? "translate-x-0" : dir === "rtl" ? "translate-x-full" : "-translate-x-full"
+        className={`fixed top-0 bottom-0 bg-white z-50 w-[85vw] max-w-sm flex flex-col shadow-2xl transform transition-transform duration-300 ease-in-out md:hidden ${
+          dir === "rtl" ? "right-0" : "left-0"
+        } ${
+          isMobileMenuOpen 
+            ? "translate-x-0" 
+            : dir === "rtl" 
+              ? "translate-x-full" 
+              : "-translate-x-full"
         }`}
       >
-        <div className="p-4 flex justify-between items-center border-b border-gray-100">
-          <Link href="/" className="text-2xl font-bold uppercase text-foreground">
+        <div className="p-5 flex justify-between items-center border-b border-gray-100">
+          <Link href="/" className="text-xl font-bold uppercase text-secondary">
             PARADISE<span className="text-primary">.</span>
           </Link>
-          <button onClick={() => setIsMobileMenuOpen(false)} className="text-foreground">
-            <X size={24} />
+          <button onClick={() => setIsMobileMenuOpen(false)} className="text-gray-500 hover:text-primary transition-colors bg-gray-50 p-2 rounded-full">
+            <X size={20} />
           </button>
         </div>
-        <nav className="p-4 flex flex-col space-y-4">
-          {navLinks.map((link, index) => (
-            <Link
-              key={index}
-              href={link.href}
-              className="text-lg font-medium border-b border-gray-50 pb-2 text-foreground hover:text-primary"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              {link.name[language]}
+        
+        <div className="flex-1 overflow-y-auto py-6 px-5 flex flex-col gap-6">
+          <nav className="flex flex-col space-y-2">
+            {navLinks.map((link, index) => (
+              <Link
+                key={index}
+                href={link.href}
+                className="text-base font-medium p-3 rounded-xl text-secondary hover:bg-gray-50 hover:text-primary transition-all flex items-center"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                {link.name[language]}
+              </Link>
+            ))}
+          </nav>
+          
+          <div className="h-px w-full bg-gray-100"></div>
+          
+          <div className="flex flex-col space-y-2">
+            <Link href="/account" className="flex items-center gap-4 p-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-primary transition-all text-sm font-medium" onClick={() => setIsMobileMenuOpen(false)}>
+              <div className="w-10 h-10 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-secondary">
+                <User size={18} />
+              </div>
+              {language === "ar" ? "حسابي الشخصي" : "My Account"}
             </Link>
-          ))}
+            
+            <Link href="/favorites" className="flex items-center gap-4 p-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-primary transition-all text-sm font-medium" onClick={() => setIsMobileMenuOpen(false)}>
+              <div className="w-10 h-10 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-secondary relative">
+                <Heart size={18} />
+                <span className="absolute top-0 right-0 -mt-1 -mr-1 text-[9px] font-bold w-[14px] h-[14px] rounded-full flex items-center justify-center bg-primary text-white">2</span>
+              </div>
+              {language === "ar" ? "المفضلة" : "Wishlist"}
+            </Link>
+
+            <Link href="/cart" className="flex items-center gap-4 p-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-primary transition-all text-sm font-medium" onClick={() => setIsMobileMenuOpen(false)}>
+              <div className="w-10 h-10 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-secondary relative">
+                <ShoppingBag size={18} />
+                <span className="absolute top-0 right-0 -mt-1 -mr-1 text-[9px] font-bold w-[14px] h-[14px] rounded-full flex items-center justify-center bg-primary text-white">2</span>
+              </div>
+              {language === "ar" ? "سلة المشتريات" : "Shopping Cart"}
+            </Link>
+          </div>
+        </div>
+
+        <div className="p-5 border-t border-gray-100 bg-gray-50/50 mt-auto">
           <button 
             onClick={() => { toggleLanguage(); setIsMobileMenuOpen(false); }} 
-            className="flex items-center text-lg font-medium pt-4 text-foreground hover:text-primary"
+            className="flex items-center justify-center w-full gap-2 p-3 bg-white border border-gray-200 rounded-xl text-sm font-bold text-secondary hover:border-primary hover:text-primary transition-all shadow-sm"
           >
-            <Globe size={20} className="me-2" />
+            <Globe size={18} />
             {language === "ar" ? "Switch to English" : "التبديل للعربية"}
           </button>
-        </nav>
+        </div>
       </div>
     </header>
   );
