@@ -34,7 +34,7 @@ export const products: Product[] = [
   {
     id: "p1",
     name: { ar: "عطر ليالي الشرق", en: "Oriental Nights Perfume" },
-    brand: "Luxe Essence",
+    brand: "Paradise Essence",
     price: 1250,
     image: "https://picsum.photos/seed/p1/800/800",
     gallery: [
@@ -148,7 +148,7 @@ export const products: Product[] = [
   {
     id: "p5",
     name: { ar: "عطر الأزهار الملكية", en: "Royal Blooms Perfume" },
-    brand: "Luxe Essence",
+    brand: "Paradise Essence",
     price: 980,
     image: "https://picsum.photos/seed/p5/800/800",
     gallery: [

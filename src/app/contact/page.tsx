@@ -23,7 +23,7 @@ export default function ContactPage() {
     {
       icon: <Mail className="text-primary w-6 h-6" />,
       title: { ar: "البريد الإلكتروني", en: "Email Address" },
-      desc: { ar: "support@luxe.com", en: "support@luxe.com" }
+      desc: { ar: "support@paradise.com", en: "support@paradise.com" }
     },
     {
       icon: <Clock className="text-primary w-6 h-6" />,

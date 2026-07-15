@@ -78,7 +78,7 @@ export default function AdminSettings() {
               </div>
               <div className="flex flex-col gap-2 md:col-span-2">
                 <label className="text-sm font-bold text-gray-600">{language === "ar" ? "البريد الإلكتروني" : "Email Address"}</label>
-                <input type="email" defaultValue="admin@luxe-store.com" className="w-full bg-gray-50 border border-gray-200 rounded-lg h-12 px-4 focus:outline-none focus:border-primary transition-colors text-start dir-ltr" />
+                <input type="email" defaultValue="admin@paradise-store.com" className="w-full bg-gray-50 border border-gray-200 rounded-lg h-12 px-4 focus:outline-none focus:border-primary transition-colors text-start dir-ltr" />
               </div>
               <div className="flex flex-col gap-2 md:col-span-2">
                 <label className="text-sm font-bold text-gray-600">{language === "ar" ? "رقم الهاتف" : "Phone Number"}</label>

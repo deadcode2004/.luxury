@@ -15,7 +15,7 @@ export default function Footer() {
           {/* القسم الأول: عن العلامة */}
           <div>
             <Link href="/" className="text-3xl md:text-4xl font-bold tracking-widest uppercase mb-8 inline-block">
-              LUXE<span className="text-primary">.</span>
+              PARADISE<span className="text-primary">.</span>
             </Link>
             <p className="text-gray-400 text-sm md:text-base leading-loose mb-8">
               {language === "ar"
@@ -91,7 +91,7 @@ export default function Footer() {
         {/* الحقوق */}
         <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center text-gray-500 text-sm gap-4">
           <p className="mb-0 text-center md:text-start">
-            &copy; {new Date().getFullYear()} LUXE. {language === "ar" ? "جميع الحقوق محفوظة." : "All rights reserved."}
+            &copy; {new Date().getFullYear()} PARADISE. {language === "ar" ? "جميع الحقوق محفوظة." : "All rights reserved."}
           </p>
           <div className="flex items-center justify-center gap-4 text-gray-400">
             {/* طرق الدفع */}

@@ -21,7 +21,7 @@ export default function InstagramGallery() {
       <div className="text-center mb-16 md:mb-20">
         <div className="flex items-center justify-center space-x-3 space-x-reverse rtl:space-x-reverse ltr:space-x mb-6 text-primary">
           <FaInstagram size={28} />
-          <span className="font-semibold tracking-[0.2em] uppercase text-lg">@LuxeOfficial</span>
+          <span className="font-semibold tracking-[0.2em] uppercase text-lg">@ParadiseOfficial</span>
         </div>
         <h2 className="text-4xl md:text-5xl font-bold font-sans text-secondary">
           {language === "ar" ? "تابعنا على انستغرام" : "Follow Us On Instagram"}

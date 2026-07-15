@@ -52,7 +52,7 @@ export default function Header() {
 
         {/* الشعار */}
         <Link href="/" className={`text-3xl md:text-4xl font-bold tracking-widest uppercase transition-colors ${textColorClass}`}>
-          LUXE<span className={logoDotColorClass}>.</span>
+          PARADISE<span className={logoDotColorClass}>.</span>
         </Link>
 
         {/* قائمة التنقل - شاشات كبيرة */}
@@ -128,7 +128,7 @@ export default function Header() {
       >
         <div className="p-4 flex justify-between items-center border-b border-gray-100">
           <Link href="/" className="text-2xl font-bold uppercase text-foreground">
-            LUXE<span className="text-primary">.</span>
+            PARADISE<span className="text-primary">.</span>
           </Link>
           <button onClick={() => setIsMobileMenuOpen(false)} className="text-foreground">
             <X size={24} />
