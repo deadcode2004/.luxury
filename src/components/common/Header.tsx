@@ -27,6 +27,19 @@ export default function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // قفل تمرير الشاشة (Scroll Lock) عند فتح القائمة الجانبية
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isMobileMenuOpen]);
+
   const navLinks = [
     { name: { ar: "الرئيسية", en: "Home" }, href: "/" },
     { name: { ar: "تسوق", en: "Shop" }, href: "/shop" },
@@ -36,11 +49,12 @@ export default function Header() {
   ];
 
   return (
-    <header
-      className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        isTransparent ? "bg-transparent py-5" : "bg-white/95 backdrop-blur-md shadow-soft py-3 border-b border-gray-100"
-      }`}
-    >
+    <>
+      <header
+        className={`fixed top-0 w-full z-40 transition-all duration-300 ${
+          isTransparent ? "bg-transparent py-5" : "bg-white/95 backdrop-blur-md shadow-soft py-3 border-b border-gray-100"
+        }`}
+      >
       <div className="container mx-auto px-4 md:px-8 flex justify-between items-center">
         {/* زر القائمة للموبايل */}
         <button
@@ -150,16 +164,18 @@ export default function Header() {
         </div>
         
         <div className="flex-1 overflow-y-auto py-6 px-5 flex flex-col gap-6">
-          <nav className="flex flex-col space-y-2">
+          <nav className="flex flex-col">
             {navLinks.map((link, index) => (
-              <Link
-                key={index}
-                href={link.href}
-                className="text-base font-medium p-3 rounded-xl text-secondary hover:bg-gray-50 hover:text-primary transition-all flex items-center"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                {link.name[language]}
-              </Link>
+              <React.Fragment key={index}>
+                <Link
+                  href={link.href}
+                  className="text-base font-medium py-3.5 px-2 rounded-lg text-secondary hover:bg-gray-50 hover:text-primary transition-all flex items-center"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {link.name[language]}
+                </Link>
+                {index < navLinks.length - 1 && <div className="h-px w-full bg-gray-50 my-1"></div>}
+              </React.Fragment>
             ))}
           </nav>
           
@@ -201,6 +217,6 @@ export default function Header() {
           </button>
         </div>
       </div>
-    </header>
+    </>
   );
 }
