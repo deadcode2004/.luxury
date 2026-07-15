@@ -52,29 +52,29 @@ export default function ProductCard({ product }: ProductCardProps) {
       </Link>
 
       {/* تفاصيل المنتج */}
-      <div className="p-4 md:p-5 flex flex-col items-start text-start">
-        <p className="text-gray-500 text-[10px] tracking-[0.15em] uppercase mb-1.5">{product.brand}</p>
+      <div className="p-3 md:p-4 flex flex-col items-start text-start">
+        <p className="text-gray-500 text-[9px] tracking-[0.15em] uppercase mb-1">{product.brand}</p>
         <Link href={`/product/${product.id}`} className="w-full">
-          <h3 className="text-secondary font-medium text-base md:text-lg mb-2 truncate hover:text-primary transition-colors">
+          <h3 className="text-secondary font-medium text-sm md:text-base mb-1.5 truncate hover:text-primary transition-colors">
             {product.name[language]}
           </h3>
         </Link>
         
-        <div className="flex items-center mb-3">
+        <div className="flex items-center mb-2">
           <div className="flex text-primary gap-0.5">
             {[...Array(5)].map((_, i) => (
-              <Star key={i} size={12} fill={i < Math.floor(product.rating) ? "currentColor" : "none"} className={i < Math.floor(product.rating) ? "text-primary" : "text-gray-300"} />
+              <Star key={i} size={10} fill={i < Math.floor(product.rating) ? "currentColor" : "none"} className={i < Math.floor(product.rating) ? "text-primary" : "text-gray-300"} />
             ))}
           </div>
-          <span className="text-gray-400 text-[10px] ms-1.5">({product.reviews})</span>
+          <span className="text-gray-400 text-[9px] ms-1">({product.reviews})</span>
         </div>
 
         <div className="flex items-center gap-2 mt-auto pt-1">
-          <span className="text-secondary font-bold text-base md:text-lg">
+          <span className="text-secondary font-bold text-sm">
             {product.price} {language === "ar" ? "ر.س" : "SAR"}
           </span>
           {product.oldPrice && (
-            <span className="text-gray-400 line-through text-xs">
+            <span className="text-gray-400 line-through text-[10px]">
               {product.oldPrice} {language === "ar" ? "ر.س" : "SAR"}
             </span>
           )}

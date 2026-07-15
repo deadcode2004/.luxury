@@ -21,17 +21,17 @@ export default function Offers() {
               className="object-cover transition-transform duration-1000 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/80 to-transparent"></div>
-            <div className="relative z-10 p-8 lg:p-10 text-white max-w-lg flex flex-col items-start justify-center h-full">
-              <span className="bg-primary text-secondary text-[10px] font-bold tracking-widest uppercase px-3 py-1.5 rounded-full mb-4 inline-block shadow-sm">
+            <div className="relative z-10 p-6 md:p-8 text-white max-w-lg flex flex-col items-start justify-center h-full">
+              <span className="bg-primary text-secondary text-[9px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full mb-3 inline-block shadow-sm">
                 {language === "ar" ? "عرض خاص" : "Special Offer"}
               </span>
-              <h3 className="text-3xl font-bold mb-3 font-sans leading-tight">
+              <h3 className="text-2xl md:text-3xl font-bold mb-2 font-sans leading-tight">
                 {language === "ar" ? "مجموعة العناية الفاخرة" : "Luxury Care Set"}
               </h3>
-              <p className="text-gray-200 mb-6 text-base leading-relaxed">
+              <p className="text-gray-200 mb-5 text-sm leading-relaxed">
                 {language === "ar" ? "خصم يصل إلى 30% على مجموعة العناية بالبشرة الجديدة." : "Up to 30% off on the new skincare collection."}
               </p>
-              <Link href="/shop" className="inline-block border-b-2 border-primary pb-1 text-sm font-medium hover:text-primary transition-colors tracking-wide">
+              <Link href="/shop" className="inline-block border-b-2 border-primary pb-0.5 text-xs font-medium hover:text-primary transition-colors tracking-wide">
                 {language === "ar" ? "تسوق الآن" : "Shop Now"}
               </Link>
             </div>
@@ -46,17 +46,17 @@ export default function Offers() {
               className="object-cover transition-transform duration-1000 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/80 to-transparent"></div>
-            <div className="relative z-10 p-8 lg:p-10 text-white max-w-lg flex flex-col items-start justify-center h-full">
-              <span className="bg-white text-secondary text-[10px] font-bold tracking-widest uppercase px-3 py-1.5 rounded-full mb-4 inline-block shadow-sm">
+            <div className="relative z-10 p-6 md:p-8 text-white max-w-lg flex flex-col items-start justify-center h-full">
+              <span className="bg-white text-secondary text-[9px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full mb-3 inline-block shadow-sm">
                 {language === "ar" ? "وصل حديثاً" : "New Arrival"}
               </span>
-              <h3 className="text-3xl font-bold mb-3 font-sans leading-tight">
+              <h3 className="text-2xl md:text-3xl font-bold mb-2 font-sans leading-tight">
                 {language === "ar" ? "عطور الصيف المنعشة" : "Fresh Summer Scents"}
               </h3>
-              <p className="text-gray-200 mb-6 text-base leading-relaxed">
+              <p className="text-gray-200 mb-5 text-sm leading-relaxed">
                 {language === "ar" ? "تشكيلة جديدة من العطور الصيفية التي تدوم طويلاً." : "A new selection of long-lasting summer perfumes."}
               </p>
-              <Link href="/shop" className="inline-block border-b-2 border-primary pb-1 text-sm font-medium hover:text-primary transition-colors tracking-wide">
+              <Link href="/shop" className="inline-block border-b-2 border-primary pb-0.5 text-xs font-medium hover:text-primary transition-colors tracking-wide">
                 {language === "ar" ? "تسوق الآن" : "Shop Now"}
               </Link>
             </div>
