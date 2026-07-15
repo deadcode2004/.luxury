@@ -3,13 +3,14 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Search, ShoppingBag, Heart, User, Menu, X, Globe, LayoutDashboard } from "lucide-react";
+import { Search, ShoppingBag, Heart, User, Menu, X, Globe, LayoutDashboard, ChevronDown } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Header() {
   const { language, toggleLanguage, dir } = useLanguage();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const pathname = usePathname();
 
   const isHome = pathname === "/";
@@ -183,12 +184,37 @@ export default function Header() {
           <div className="h-px w-full bg-gray-100"></div>
           
           <div className="flex flex-col space-y-2">
-            <Link href="/account" className="flex items-center gap-4 p-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-primary transition-all text-sm font-medium" onClick={() => setIsMobileMenuOpen(false)}>
-              <div className="w-10 h-10 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-secondary">
-                <User size={18} />
+            <div className="flex flex-col">
+              <button 
+                onClick={() => setIsAccountMenuOpen(!isAccountMenuOpen)}
+                className="flex items-center justify-between p-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-primary transition-all text-sm font-medium w-full text-start"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-secondary">
+                    <User size={18} />
+                  </div>
+                  <span>{language === "ar" ? "حسابي الشخصي" : "My Account"}</span>
+                </div>
+                <ChevronDown size={18} className={`transition-transform duration-300 ${isAccountMenuOpen ? "rotate-180" : "rotate-0"} text-gray-400`} />
+              </button>
+              
+              <div 
+                className={`overflow-hidden transition-all duration-300 ease-in-out ${isAccountMenuOpen ? "max-h-48 opacity-100 mt-1" : "max-h-0 opacity-0"}`}
+              >
+                <div className="flex flex-col space-y-1 py-2 px-12 border-l-2 border-transparent rtl:border-r-2 rtl:border-l-0 rtl:border-r-gray-100 ltr:border-l-gray-100 mx-4">
+                  <Link href="/account" className="text-sm text-gray-500 hover:text-primary py-2 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+                    {language === "ar" ? "الملف الشخصي" : "Profile"}
+                  </Link>
+                  <Link href="/account/orders" className="text-sm text-gray-500 hover:text-primary py-2 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+                    {language === "ar" ? "طلباتي" : "My Orders"}
+                  </Link>
+                  <Link href="/admin" className="text-sm font-bold text-gray-500 hover:text-primary py-2 transition-colors flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
+                    <LayoutDashboard size={14} />
+                    {language === "ar" ? "لوحة الإدارة" : "Admin Dashboard"}
+                  </Link>
+                </div>
               </div>
-              {language === "ar" ? "حسابي الشخصي" : "My Account"}
-            </Link>
+            </div>
             
             <Link href="/favorites" className="flex items-center gap-4 p-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-primary transition-all text-sm font-medium" onClick={() => setIsMobileMenuOpen(false)}>
               <div className="w-10 h-10 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-secondary relative">
