@@ -133,6 +133,7 @@ export default function Header() {
           </div>
         </div>
       </div>
+      </header>
 
       {/* خلفية داكنة (Backdrop) */}
       <div 
