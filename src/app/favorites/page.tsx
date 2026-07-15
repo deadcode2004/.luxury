@@ -60,7 +60,7 @@ export default function FavoritesPage() {
                     </h3>
                   </Link>
                   <p className="text-gray-500 text-sm mb-4 line-clamp-2 leading-relaxed">
-                    {product.description[language]}
+                    {product.description?.[language] || ""}
                   </p>
                   
                   <div className="mt-auto">
