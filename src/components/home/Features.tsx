@@ -31,23 +31,23 @@ export default function Features() {
   ];
 
   return (
-    <section className="py-24 bg-surface border-t border-b border-gray-100">
+    <section className="py-12 bg-surface border-t border-b border-gray-100">
       <div className="container mx-auto px-4 md:px-8">
-        <div className="text-center mb-16 md:mb-20">
-          <h2 className="text-4xl md:text-5xl font-bold font-sans text-secondary mb-6">
+        <div className="text-center mb-12 md:mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold font-sans text-secondary mb-4">
             {language === "ar" ? "لماذا تختارنا؟" : "Why Choose Us?"}
           </h2>
-          <div className="w-20 h-1 bg-primary mx-auto"></div>
+          <div className="w-16 h-1 bg-primary mx-auto"></div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {features.map((feature, index) => (
-            <div key={index} className="text-center group p-8 rounded-2xl hover:bg-background hover:shadow-soft transition-all duration-300 border border-transparent hover:border-gray-100">
-              <div className="flex justify-center transform group-hover:-translate-y-2 transition-transform duration-300">
+            <div key={index} className="text-center group p-6 rounded-2xl hover:bg-background hover:shadow-soft transition-all duration-300 border border-transparent hover:border-gray-100">
+              <div className="flex justify-center transform group-hover:-translate-y-1.5 transition-transform duration-300">
                 {feature.icon}
               </div>
-              <h3 className="text-2xl font-bold mb-4 text-secondary">{feature.title[language]}</h3>
-              <p className="text-gray-500 text-base leading-relaxed">{feature.description[language]}</p>
+              <h3 className="text-xl font-bold mb-3 text-secondary">{feature.title[language]}</h3>
+              <p className="text-gray-500 text-sm leading-relaxed">{feature.description[language]}</p>
             </div>
           ))}
         </div>

@@ -38,7 +38,7 @@ export default function Header() {
   return (
     <header
       className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        isTransparent ? "bg-transparent py-8" : "bg-white/95 backdrop-blur-md shadow-soft py-4 border-b border-gray-100"
+        isTransparent ? "bg-transparent py-5" : "bg-white/95 backdrop-blur-md shadow-soft py-3 border-b border-gray-100"
       }`}
     >
       <div className="container mx-auto px-4 md:px-8 flex justify-between items-center">
@@ -47,21 +47,21 @@ export default function Header() {
           className={`md:hidden transition-colors p-2 -ml-2 ${textColorClass} ${hoverColorClass}`}
           onClick={() => setIsMobileMenuOpen(true)}
         >
-          <Menu size={28} />
+          <Menu size={24} />
         </button>
 
         {/* الشعار */}
-        <Link href="/" className={`text-3xl md:text-4xl font-bold tracking-widest uppercase transition-colors ${textColorClass}`}>
+        <Link href="/" className={`text-xl md:text-2xl font-bold tracking-widest uppercase transition-colors ${textColorClass}`}>
           PARADISE<span className={logoDotColorClass}>.</span>
         </Link>
 
         {/* قائمة التنقل - شاشات كبيرة */}
-        <nav className="hidden md:flex items-center gap-10 absolute left-1/2 transform -translate-x-1/2">
+        <nav className="hidden md:flex items-center gap-8 absolute left-1/2 transform -translate-x-1/2">
           {navLinks.map((link, index) => (
             <Link
               key={index}
               href={link.href}
-              className={`text-base font-medium transition-colors relative group py-2 flex items-center ${textColorClass} ${hoverColorClass}`}
+              className={`text-sm font-medium transition-colors relative group py-2 flex items-center ${textColorClass} ${hoverColorClass}`}
             >
               {link.name[language]}
               <span className={`absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full ${isTransparent ? "bg-white" : "bg-primary"}`}></span>
@@ -70,26 +70,26 @@ export default function Header() {
         </nav>
 
         {/* الأيقونات (بحث، سلة، مفضلة، حساب، لغة) */}
-        <div className={`flex items-center gap-5 ${textColorClass}`}>
-          <button onClick={toggleLanguage} className={`hidden md:flex items-center text-sm font-medium transition-colors ${hoverColorClass}`} title="تغيير اللغة">
-            <Globe size={20} className="me-2" />
-            <span className="mt-1">{language === "ar" ? "EN" : "AR"}</span>
+        <div className={`flex items-center gap-4 ${textColorClass}`}>
+          <button onClick={toggleLanguage} className={`hidden md:flex items-center text-xs font-medium transition-colors ${hoverColorClass}`} title="تغيير اللغة">
+            <Globe size={16} className="me-1.5" />
+            <span className="mt-0.5">{language === "ar" ? "EN" : "AR"}</span>
           </button>
           
           <button className={`transition-colors p-2 flex items-center justify-center ${hoverColorClass}`}>
-            <Search size={22} />
+            <Search size={18} />
           </button>
           <Link href="/favorites" className={`transition-colors relative hidden md:flex items-center justify-center p-2 ${hoverColorClass}`}>
-            <Heart size={22} />
-            <span className={`absolute top-0 right-0 text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center ${isTransparent ? "bg-white text-secondary" : "bg-primary text-white"}`}>2</span>
+            <Heart size={18} />
+            <span className={`absolute top-0.5 right-0.5 text-[9px] font-bold w-[14px] h-[14px] rounded-full flex items-center justify-center ${isTransparent ? "bg-white text-secondary" : "bg-primary text-white"}`}>2</span>
           </Link>
           <Link href="/cart" className={`transition-colors relative flex items-center justify-center p-2 ${hoverColorClass}`}>
-            <ShoppingBag size={22} />
-            <span className={`absolute top-0 right-0 text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center ${isTransparent ? "bg-white text-secondary" : "bg-primary text-white"}`}>2</span>
+            <ShoppingBag size={18} />
+            <span className={`absolute top-0.5 right-0.5 text-[9px] font-bold w-[14px] h-[14px] rounded-full flex items-center justify-center ${isTransparent ? "bg-white text-secondary" : "bg-primary text-white"}`}>2</span>
           </Link>
           <div className="relative group hidden md:block h-full flex items-center">
             <button className={`transition-colors flex items-center justify-center p-2 ${hoverColorClass}`}>
-              <User size={22} />
+              <User size={18} />
             </button>
             
             {/* غلاف شفاف لضمان عدم اختفاء القائمة (Invisible Hover Bridge) */}

@@ -10,7 +10,7 @@ export default function Categories() {
   const { language } = useLanguage();
 
   return (
-    <section className="py-24 bg-background">
+    <section className="py-12 bg-background">
       <div className="container mx-auto px-4 md:px-8">
         <div className="text-center mb-16 md:mb-20">
           <h2 className="text-4xl md:text-5xl font-bold font-sans text-secondary mb-6">

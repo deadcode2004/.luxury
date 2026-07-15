@@ -9,41 +9,41 @@ export default function Reviews() {
   const { language } = useLanguage();
 
   return (
-    <section className="py-24 bg-background relative overflow-hidden">
+    <section className="py-12 bg-background relative overflow-hidden">
       {/* لمسة تصميمية في الخلفية */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
       <div className="absolute bottom-0 left-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4"></div>
 
       <div className="container mx-auto px-4 md:px-8 relative z-10">
-        <div className="text-center mb-16 md:mb-20">
-          <h2 className="text-4xl md:text-5xl font-bold font-sans text-secondary mb-6">
+        <div className="text-center mb-12 md:mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold font-sans text-secondary mb-4">
             {language === "ar" ? "ماذا يقول عملاؤنا" : "What Our Clients Say"}
           </h2>
-          <div className="w-20 h-1 bg-primary mx-auto"></div>
+          <div className="w-16 h-1 bg-primary mx-auto"></div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 lg:gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {reviews.map((review) => (
-            <div key={review.id} className="bg-surface p-10 lg:p-12 rounded-2xl shadow-soft hover:shadow-glow border border-transparent hover:border-primary/10 relative group hover:-translate-y-2 transition-all duration-300">
-              <Quote size={40} className="text-primary/10 absolute top-8 right-8 transform -scale-x-100 rtl:scale-x-100 group-hover:text-primary/20 transition-colors" />
+            <div key={review.id} className="bg-surface p-8 rounded-2xl shadow-soft hover:shadow-lg border border-transparent hover:border-primary/10 relative group hover:-translate-y-1 transition-all duration-300">
+              <Quote size={32} className="text-primary/10 absolute top-6 right-6 transform -scale-x-100 rtl:scale-x-100 group-hover:text-primary/20 transition-colors" />
               
-              <div className="flex text-primary mb-8 relative z-10">
+              <div className="flex text-primary mb-6 relative z-10">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} size={20} fill={i < review.rating ? "currentColor" : "none"} className={i < review.rating ? "text-primary" : "text-gray-300"} />
+                  <Star key={i} size={16} fill={i < review.rating ? "currentColor" : "none"} className={i < review.rating ? "text-primary" : "text-gray-300"} />
                 ))}
               </div>
               
-              <p className="text-gray-600 mb-10 leading-loose italic relative z-10 min-h-[100px] text-lg">
+              <p className="text-gray-600 mb-8 leading-relaxed italic relative z-10 min-h-[80px] text-sm md:text-base">
                 "{review.comment[language]}"
               </p>
               
               <div className="flex items-center">
-                <div className="w-14 h-14 bg-secondary text-white rounded-full flex items-center justify-center font-bold text-xl me-4 shadow-md">
+                <div className="w-10 h-10 bg-secondary text-white rounded-full flex items-center justify-center font-bold text-base me-3 shadow-md">
                   {review.author[language].charAt(0)}
                 </div>
                 <div>
-                  <h4 className="font-bold text-secondary text-lg">{review.author[language]}</h4>
-                  <span className="text-xs text-gray-400 uppercase tracking-widest mt-1 block">
+                  <h4 className="font-bold text-secondary text-sm md:text-base">{review.author[language]}</h4>
+                  <span className="text-[10px] text-gray-400 uppercase tracking-widest mt-0.5 block">
                     {language === "ar" ? "عميل موثق" : "Verified Buyer"}
                   </span>
                 </div>

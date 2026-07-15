@@ -93,7 +93,7 @@ export default function Hero() {
 
   return (
     <section 
-      className="relative h-[100vh] min-h-[600px] flex items-center bg-black overflow-hidden group"
+      className="relative h-[80vh] min-h-[500px] flex items-center bg-black overflow-hidden group"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -119,19 +119,19 @@ export default function Hero() {
           
           <div className="absolute inset-0 z-20 flex flex-col items-center justify-center container mx-auto px-4 md:px-8 text-center text-white">
             <div className={`transition-all duration-1000 transform ${index === currentSlide ? "translate-y-0 opacity-100 delay-100" : "translate-y-8 opacity-0"}`}>
-              <span className="text-primary font-medium tracking-[0.2em] uppercase mb-6 block text-sm md:text-base">
+              <span className="text-primary font-medium tracking-[0.2em] uppercase mb-4 block text-xs md:text-sm">
                 {slide.subtitle[language]}
               </span>
             </div>
             
             <div className={`transition-all duration-1000 transform ${index === currentSlide ? "translate-y-0 opacity-100 delay-300" : "translate-y-8 opacity-0"}`}>
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-8 font-sans drop-shadow-lg max-w-4xl leading-tight">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 font-sans drop-shadow-lg max-w-3xl leading-tight">
                 {slide.title[language]}
               </h1>
             </div>
             
             <div className={`transition-all duration-1000 transform ${index === currentSlide ? "translate-y-0 opacity-100 delay-500" : "translate-y-8 opacity-0"}`}>
-              <p className="text-lg md:text-xl text-gray-200 mb-12 max-w-3xl mx-auto drop-shadow-md leading-relaxed">
+              <p className="text-base md:text-lg text-gray-200 mb-10 max-w-2xl mx-auto drop-shadow-md leading-relaxed">
                 {slide.description[language]}
               </p>
             </div>
@@ -139,13 +139,13 @@ export default function Hero() {
             <div className={`transition-all duration-1000 transform ${index === currentSlide ? "translate-y-0 opacity-100 delay-700" : "translate-y-8 opacity-0"}`}>
               <Link
                 href={slide.link}
-                className="bg-primary text-secondary px-10 py-5 rounded-md font-bold hover:bg-white hover:text-secondary transition-all flex items-center justify-center group tracking-wide text-lg"
+                className="bg-primary text-secondary px-6 py-3 rounded-md font-bold hover:bg-white hover:text-secondary transition-all flex items-center justify-center group tracking-wide text-base"
               >
                 {slide.cta[language]}
                 {dir === "rtl" ? (
-                  <ArrowLeft size={20} className="ms-3 group-hover:-translate-x-2 transition-transform" />
+                  <ArrowLeft size={18} className="ms-2 group-hover:-translate-x-1.5 transition-transform" />
                 ) : (
-                  <ArrowRight size={20} className="ms-3 group-hover:translate-x-2 transition-transform" />
+                  <ArrowRight size={18} className="ms-2 group-hover:translate-x-1.5 transition-transform" />
                 )}
               </Link>
             </div>
@@ -156,26 +156,26 @@ export default function Hero() {
       {/* Navigation Arrows */}
       <button 
         onClick={prevSlide}
-        className="absolute top-1/2 -translate-y-1/2 z-30 w-12 h-12 flex items-center justify-center bg-white/10 hover:bg-white/30 backdrop-blur-sm text-white rounded-full transition-all opacity-0 group-hover:opacity-100 rtl:right-4 rtl:left-auto ltr:left-4 ltr:right-auto"
+        className="absolute top-1/2 -translate-y-1/2 z-30 w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/30 backdrop-blur-sm text-white rounded-full transition-all opacity-0 group-hover:opacity-100 rtl:right-4 rtl:left-auto ltr:left-4 ltr:right-auto"
       >
-        {dir === "rtl" ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
+        {dir === "rtl" ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
       </button>
       
       <button 
         onClick={nextSlide}
-        className="absolute top-1/2 -translate-y-1/2 z-30 w-12 h-12 flex items-center justify-center bg-white/10 hover:bg-white/30 backdrop-blur-sm text-white rounded-full transition-all opacity-0 group-hover:opacity-100 rtl:left-4 rtl:right-auto ltr:right-4 ltr:left-auto"
+        className="absolute top-1/2 -translate-y-1/2 z-30 w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/30 backdrop-blur-sm text-white rounded-full transition-all opacity-0 group-hover:opacity-100 rtl:left-4 rtl:right-auto ltr:right-4 ltr:left-auto"
       >
-        {dir === "rtl" ? <ChevronLeft size={24} /> : <ChevronRight size={24} />}
+        {dir === "rtl" ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
       </button>
 
       {/* Pagination Dots */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30 flex items-center gap-3">
+      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-30 flex items-center gap-2">
         {SLIDES.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentSlide(index)}
             className={`transition-all duration-300 rounded-full ${
-              index === currentSlide ? "w-8 h-2 bg-primary" : "w-2 h-2 bg-white/50 hover:bg-white/80"
+              index === currentSlide ? "w-6 h-1.5 bg-primary" : "w-1.5 h-1.5 bg-white/50 hover:bg-white/80"
             }`}
             aria-label={`Go to slide ${index + 1}`}
           />
