@@ -1,0 +1,225 @@
+export interface Product {
+  id: string;
+  name: { ar: string; en: string };
+  brand: string;
+  price: number;
+  oldPrice?: number;
+  image: string;
+  gallery?: string[];
+  rating: number;
+  reviews: number;
+  isNew?: boolean;
+  isFeatured?: boolean;
+  isBestSeller?: boolean;
+  category: string;
+  description?: { ar: string; en: string };
+  ingredients?: { ar: string[]; en: string[] };
+  usage?: { ar: string; en: string };
+}
+
+export interface Category {
+  id: string;
+  name: { ar: string; en: string };
+  image: string;
+}
+
+export const categories: Category[] = [
+  { id: "c1", name: { ar: "عطور", en: "Perfumes" }, image: "https://picsum.photos/seed/c1/800/800" },
+  { id: "c2", name: { ar: "عناية بالبشرة", en: "Skincare" }, image: "https://picsum.photos/seed/c2/800/800" },
+  { id: "c3", name: { ar: "مكياج", en: "Makeup" }, image: "https://picsum.photos/seed/c3/800/800" },
+  { id: "c4", name: { ar: "عناية بالشعر", en: "Haircare" }, image: "https://picsum.photos/seed/c4/800/800" },
+];
+
+export const products: Product[] = [
+  {
+    id: "p1",
+    name: { ar: "عطر ليالي الشرق", en: "Oriental Nights Perfume" },
+    brand: "Luxe Essence",
+    price: 1250,
+    image: "https://picsum.photos/seed/p1/800/800",
+    gallery: [
+      "https://picsum.photos/seed/p1/800/800",
+      "https://picsum.photos/seed/p1_2/800/800",
+      "https://picsum.photos/seed/p1_3/800/800",
+      "https://picsum.photos/seed/p1_4/800/800"
+    ],
+    rating: 4.9,
+    reviews: 128,
+    isNew: true,
+    isFeatured: true,
+    category: "c1",
+    description: {
+      ar: "عطر شرقي فاخر يجمع بين الأصالة والعصرية. مزيج ساحر من العود والزعفران مع نفحات رقيقة من الورد الدمشقي، مصمم خصيصاً لأصحاب الذوق الرفيع ليترك بصمة لا تُنسى في كل مكان.",
+      en: "A luxurious oriental perfume that combines authenticity and modernity. An enchanting blend of oud and saffron with delicate notes of Damask rose, designed specially for those with refined taste to leave an unforgettable impression everywhere."
+    },
+    ingredients: {
+      ar: ["عود كمبودي معتق", "زعفران إسباني نقي", "ورد دمشقي", "مسك أبيض", "خشب الصندل"],
+      en: ["Aged Cambodian Oud", "Pure Spanish Saffron", "Damask Rose", "White Musk", "Sandalwood"]
+    },
+    usage: {
+      ar: "رش العطر على نقاط النبض (الرسغين، الرقبة، وخلف الأذنين) من مسافة 15-20 سم. تجنب فرك العطر لضمان بقاء تركيبة الروائح متوازنة.",
+      en: "Spray the perfume on pulse points (wrists, neck, and behind the ears) from a distance of 15-20 cm. Avoid rubbing to ensure the scent notes remain balanced."
+    }
+  },
+  {
+    id: "p2",
+    name: { ar: "سيروم الذهب عيار 24", en: "24K Gold Serum" },
+    brand: "Aura Royale",
+    price: 850,
+    oldPrice: 1000,
+    image: "https://picsum.photos/seed/p2/800/800",
+    gallery: [
+      "https://picsum.photos/seed/p2/800/800",
+      "https://picsum.photos/seed/p2_2/800/800",
+      "https://picsum.photos/seed/p2_3/800/800"
+    ],
+    rating: 4.8,
+    reviews: 95,
+    isBestSeller: true,
+    category: "c2",
+    description: {
+      ar: "سيروم مغذي غني برقائق الذهب عيار 24 قيراط وحمض الهيالورونيك. يعمل على تجديد خلايا البشرة، تقليل الخطوط الدقيقة، وإعطاء إشراقة شبابية فورية.",
+      en: "A nourishing serum enriched with 24K gold flakes and Hyaluronic Acid. It works to renew skin cells, reduce fine lines, and provide an instant youthful glow."
+    },
+    ingredients: {
+      ar: ["رقائق ذهب عيار 24 قيراط", "حمض الهيالورونيك", "فيتامين سي", "مستخلص الصبار", "كولاجين بحري"],
+      en: ["24K Gold Flakes", "Hyaluronic Acid", "Vitamin C", "Aloe Vera Extract", "Marine Collagen"]
+    },
+    usage: {
+      ar: "ضعي 3-4 قطرات على بشرة نظيفة وجافة صباحاً ومساءً. دلكي بلطف بحركات دائرية لأعلى حتى يمتص تماماً قبل وضع المرطب.",
+      en: "Apply 3-4 drops onto clean, dry skin morning and evening. Gently massage in upward circular motions until fully absorbed before applying moisturizer."
+    }
+  },
+  {
+    id: "p3",
+    name: { ar: "كريم الترطيب المخملي", en: "Velvet Moisture Cream" },
+    brand: "Aura Royale",
+    price: 450,
+    image: "https://picsum.photos/seed/p3/800/800",
+    gallery: [
+      "https://picsum.photos/seed/p3/800/800",
+      "https://picsum.photos/seed/p3_2/800/800"
+    ],
+    rating: 4.7,
+    reviews: 210,
+    isFeatured: true,
+    category: "c2",
+    description: {
+      ar: "كريم ترطيب مكثف بقوام مخملي يذوب في البشرة فوراً. يغذي البشرة بعمق ويعيد حاجز الرطوبة الطبيعي لحماية تدوم 48 ساعة.",
+      en: "An intensive moisturizing cream with a velvet texture that melts into the skin instantly. It deeply nourishes and restores the natural moisture barrier for 48-hour protection."
+    },
+    ingredients: {
+      ar: ["زبدة الشيا العضوية", "زيت الجوجوبا", "سيراميد", "فيتامين هـ"],
+      en: ["Organic Shea Butter", "Jojoba Oil", "Ceramides", "Vitamin E"]
+    },
+    usage: {
+      ar: "استخدميه كخطوة أخيرة في روتين العناية بالبشرة. خذي كمية بحجم حبة اللؤلؤ ووزعيها بالتساوي على الوجه والرقبة.",
+      en: "Use as the last step in your skincare routine. Take a pearl-sized amount and distribute evenly over the face and neck."
+    }
+  },
+  {
+    id: "p4",
+    name: { ar: "باليت ظلال العيون الصحراوي", en: "Desert Oasis Palette" },
+    brand: "Glow & Co",
+    price: 320,
+    image: "https://picsum.photos/seed/p4/800/800",
+    gallery: [
+      "https://picsum.photos/seed/p4/800/800",
+      "https://picsum.photos/seed/p4_2/800/800",
+      "https://picsum.photos/seed/p4_3/800/800"
+    ],
+    rating: 4.9,
+    reviews: 340,
+    isBestSeller: true,
+    category: "c3",
+    description: {
+      ar: "مجموعة مذهلة من 12 لون مستوحاة من ألوان الصحراء وقت الغروب. تركيبة غنية بالصبغات وسهلة الدمج تتيح لك ابتكار إطلالات طبيعية أو درامية جذابة.",
+      en: "A stunning collection of 12 shades inspired by desert sunset colors. Highly pigmented and easily blendable formula that allows you to create natural or dramatic looks."
+    },
+    ingredients: {
+      ar: ["ميكا نقية", "زيت بذور العنب", "بدون بارابين", "بدون عطور صناعية"],
+      en: ["Pure Mica", "Grape Seed Oil", "Paraben-free", "No Synthetic Fragrances"]
+    },
+    usage: {
+      ar: "استخدمي فرشاة دمج ناعمة للألوان الانتقالية، وفرشاة مسطحة للألوان اللامعة على الجفن المتحرك. يمكن استخدام الألوان اللامعة بإصبعك للحصول على تأثير أقوى.",
+      en: "Use a fluffy blending brush for transition shades, and a flat brush for shimmer shades on the lid. Shimmers can be applied with your finger for a more intense effect."
+    }
+  },
+  {
+    id: "p5",
+    name: { ar: "عطر الأزهار الملكية", en: "Royal Blooms Perfume" },
+    brand: "Luxe Essence",
+    price: 980,
+    image: "https://picsum.photos/seed/p5/800/800",
+    gallery: [
+      "https://picsum.photos/seed/p5/800/800",
+      "https://picsum.photos/seed/p5_2/800/800"
+    ],
+    rating: 4.6,
+    reviews: 82,
+    isNew: true,
+    category: "c1",
+    description: {
+      ar: "عطر زهري منعش يجسد الأنوثة الكلاسيكية. باقة من الياسمين الأبيض، زنبق الوادي، وقاعدة دافئة من المسك وخشب الأرز.",
+      en: "A fresh floral perfume that embodies classic femininity. A bouquet of white jasmine, lily of the valley, with a warm base of musk and cedarwood."
+    },
+    ingredients: {
+      ar: ["ياسمين أبيض", "زنبق الوادي", "خشب الأرز", "مسك نقي"],
+      en: ["White Jasmine", "Lily of the Valley", "Cedarwood", "Pure Musk"]
+    },
+    usage: {
+      ar: "يرش على أماكن النبض للحصول على أفضل ثبات.",
+      en: "Spray on pulse points for best longevity."
+    }
+  },
+  {
+    id: "p6",
+    name: { ar: "زيت الشعر بالأرغان المقطر", en: "Distilled Argan Hair Oil" },
+    brand: "Nature's Gold",
+    price: 290,
+    oldPrice: 350,
+    image: "https://picsum.photos/seed/p6/800/800",
+    gallery: [
+      "https://picsum.photos/seed/p6/800/800",
+      "https://picsum.photos/seed/p6_2/800/800"
+    ],
+    rating: 4.8,
+    reviews: 415,
+    isFeatured: true,
+    isBestSeller: true,
+    category: "c4",
+    description: {
+      ar: "إكسير ذهبي لشعرك. زيت أرغان مغربي عضوي معصور على البارد بنسبة 100%. يعالج التقصف، يضفي لمعاناً حريرياً، ويحمي الشعر من حرارة التصفيف.",
+      en: "A golden elixir for your hair. 100% cold-pressed organic Moroccan argan oil. Treats split ends, imparts silky shine, and protects hair from heat styling."
+    },
+    ingredients: {
+      ar: ["زيت أرغان عضوي 100%", "فيتامين هـ طبيعي", "أوميجا 6 و 9"],
+      en: ["100% Organic Argan Oil", "Natural Vitamin E", "Omega 6 and 9"]
+    },
+    usage: {
+      ar: "ضعي بضع قطرات في راحة يدك، دلكيها بلطف ثم وزعيها على أطراف الشعر المبلل أو الجاف. لا يُغسل.",
+      en: "Place a few drops in the palm of your hand, massage gently, then distribute through damp or dry hair ends. Do not rinse."
+    }
+  }
+];
+
+export const reviews = [
+  {
+    id: "r1",
+    author: { ar: "سارة محمد", en: "Sarah M." },
+    rating: 5,
+    comment: { ar: "منتجات رائعة جداً وتغليف فاخر يليق بالمستوى. سرعة في التوصيل وتجربة ممتازة عموماً.", en: "Amazing products and luxury packaging. Fast delivery and overall excellent experience." }
+  },
+  {
+    id: "r2",
+    author: { ar: "نورة العبدالله", en: "Noura A." },
+    rating: 5,
+    comment: { ar: "السيروم غير بشرتي بالكامل! أنصح به بشدة لكل من تبحث عن النضارة الحقيقية.", en: "The serum completely transformed my skin! Highly recommend it to anyone looking for real glow." }
+  },
+  {
+    id: "r3",
+    author: { ar: "ريم الخالد", en: "Reem K." },
+    rating: 4,
+    comment: { ar: "العطور ثباتها عالي وريحتها مميزة جداً، لا تشبه أي عطر آخر في السوق.", en: "Perfumes have high longevity and very unique scents, unlike anything else in the market." }
+  }
+];

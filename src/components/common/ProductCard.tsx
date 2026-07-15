@@ -1,0 +1,85 @@
+"use client";
+
+import React from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { Heart, ShoppingBag, Star } from "lucide-react";
+import { Product } from "@/data/mock";
+import { useLanguage } from "@/contexts/LanguageContext";
+
+interface ProductCardProps {
+  product: Product;
+}
+
+export default function ProductCard({ product }: ProductCardProps) {
+  const { language } = useLanguage();
+
+  return (
+    <div className="group bg-surface rounded-xl overflow-hidden shadow-soft hover:shadow-glow transition-all duration-300 relative border border-gray-100">
+      {/* شارة (جديد/الأكثر مبيعاً) */}
+      {product.isNew && (
+        <span className="absolute top-4 right-4 bg-primary text-secondary text-xs font-bold px-3 py-1 rounded-full z-10">
+          {language === "ar" ? "جديد" : "New"}
+        </span>
+      )}
+      {!product.isNew && product.isBestSeller && (
+        <span className="absolute top-4 right-4 bg-secondary text-white text-xs font-bold px-3 py-1 rounded-full z-10">
+          {language === "ar" ? "الأكثر مبيعاً" : "Best Seller"}
+        </span>
+      )}
+
+      {/* زر المفضلة */}
+      <button className="absolute top-4 left-4 z-10 w-8 h-8 bg-white/80 backdrop-blur rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-white transition-colors">
+        <Heart size={16} />
+      </button>
+
+      {/* صورة المنتج */}
+      <Link href={`/product/${product.id}`} className="block relative aspect-square overflow-hidden bg-gray-50">
+        <Image
+          src={product.image}
+          alt={product.name[language]}
+          fill
+          className="object-cover transition-transform duration-700 group-hover:scale-105 mix-blend-multiply"
+        />
+        
+        {/* تأثير الظهور عند مرور المؤشر (Hover Overlay) */}
+        <div className="absolute inset-x-0 bottom-0 p-4 opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+          <button className="w-full bg-secondary text-white py-3 rounded-lg flex items-center justify-center space-x-2 space-x-reverse rtl:space-x-reverse ltr:space-x hover:bg-primary hover:text-secondary transition-colors font-medium">
+            <ShoppingBag size={18} />
+            <span>{language === "ar" ? "أضف للسلة" : "Add to Cart"}</span>
+          </button>
+        </div>
+      </Link>
+
+      {/* تفاصيل المنتج */}
+      <div className="p-6 md:p-8 flex flex-col items-start text-start">
+        <p className="text-gray-500 text-xs tracking-[0.15em] uppercase mb-2">{product.brand}</p>
+        <Link href={`/product/${product.id}`} className="w-full">
+          <h3 className="text-secondary font-semibold text-lg md:text-xl mb-3 truncate hover:text-primary transition-colors">
+            {product.name[language]}
+          </h3>
+        </Link>
+        
+        <div className="flex items-center mb-4">
+          <div className="flex text-primary gap-1">
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} size={14} fill={i < Math.floor(product.rating) ? "currentColor" : "none"} className={i < Math.floor(product.rating) ? "text-primary" : "text-gray-300"} />
+            ))}
+          </div>
+          <span className="text-gray-400 text-xs ms-2">({product.reviews})</span>
+        </div>
+
+        <div className="flex items-center gap-3 mt-auto pt-2">
+          <span className="text-secondary font-bold text-lg md:text-xl">
+            {product.price} {language === "ar" ? "ر.س" : "SAR"}
+          </span>
+          {product.oldPrice && (
+            <span className="text-gray-400 line-through text-sm">
+              {product.oldPrice} {language === "ar" ? "ر.س" : "SAR"}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
