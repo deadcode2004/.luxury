@@ -125,7 +125,7 @@ export default function Hero() {
             </div>
             
             <div className={`transition-all duration-1000 transform ${index === currentSlide ? "translate-y-0 opacity-100 delay-300" : "translate-y-8 opacity-0"}`}>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 font-sans drop-shadow-lg max-w-3xl leading-tight">
+              <h1 className="text-4xl md:text-[40px] lg:text-[50px] font-bold mb-6 font-sans drop-shadow-lg max-w-3xl leading-tight">
                 {slide.title[language]}
               </h1>
             </div>
