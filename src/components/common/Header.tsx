@@ -56,7 +56,7 @@ export default function Header() {
         </Link>
 
         {/* قائمة التنقل - شاشات كبيرة */}
-        <nav className="hidden md:flex items-center gap-10">
+        <nav className="hidden md:flex items-center gap-10 absolute left-1/2 transform -translate-x-1/2">
           {navLinks.map((link, index) => (
             <Link
               key={index}
@@ -73,7 +73,7 @@ export default function Header() {
         <div className={`flex items-center gap-5 ${textColorClass}`}>
           <button onClick={toggleLanguage} className={`hidden md:flex items-center text-sm font-medium transition-colors ${hoverColorClass}`} title="تغيير اللغة">
             <Globe size={20} className="me-2" />
-            <span className="mt-1">{language === "ar" ? "EN" : "عربي"}</span>
+            <span className="mt-1">{language === "ar" ? "EN" : "AR"}</span>
           </button>
           
           <button className={`transition-colors p-2 flex items-center justify-center ${hoverColorClass}`}>

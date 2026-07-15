@@ -111,7 +111,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               className="flex items-center text-sm font-medium text-gray-500 hover:text-primary transition-colors"
             >
               <Globe size={20} className="me-2" />
-              <span>{language === "ar" ? "EN" : "عربي"}</span>
+              <span>{language === "ar" ? "EN" : "AR"}</span>
             </button>
             
             <button className="relative text-gray-500 hover:text-primary transition-colors">
