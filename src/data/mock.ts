@@ -1,7 +1,7 @@
 export interface Product {
   id: string;
   name: { ar: string; en: string };
-  brand: string;
+  brand: { ar: string; en: string };
   price: number;
   oldPrice?: number;
   image: string;
@@ -34,7 +34,7 @@ export const products: Product[] = [
   {
     id: "p1",
     name: { ar: "بخاخ ذهبي فضي", en: "Gold Silver Spray" },
-    brand: "Paradise Essence",
+    brand: { ar: "بارادايس إيسنس", en: "Paradise Essence" },
     price: 1250,
     image: "/images/products/paradisecare-shop-gold-silver-spray-01-300x300.jpg",
     gallery: [
@@ -65,7 +65,7 @@ export const products: Product[] = [
   {
     id: "p2",
     name: { ar: "كريمة الزعفران الذهبية", en: "Golden Saffron Cream" },
-    brand: "Aura Royale",
+    brand: { ar: "أورا رويال", en: "Aura Royale" },
     price: 850,
     oldPrice: 1000,
     image: "/images/products/paradisecare-shop-gold-saffron-cream-01-300x300.jpg",
@@ -93,7 +93,7 @@ export const products: Product[] = [
   {
     id: "p3",
     name: { ar: "حمض الهالورونيك مع الذهب و الفضة", en: "Hyaluronic Acid with Gold & Silver" },
-    brand: "Aura Royale",
+    brand: { ar: "أورا رويال", en: "Aura Royale" },
     price: 450,
     image: "/images/products/paradisecare-shop-hyaluronic-with-gold-and-silver-01-300x300.jpg",
     gallery: [
@@ -120,7 +120,7 @@ export const products: Product[] = [
   {
     id: "p4",
     name: { ar: "المغناطيس الحيوي", en: "Biomagnet" },
-    brand: "Glow & Co",
+    brand: { ar: "جلو آند كو", en: "Glow & Co" },
     price: 320,
     image: "/images/products/paradisecare-shop-biomagneti-01-300x300.jpeg",
     gallery: [
@@ -147,7 +147,7 @@ export const products: Product[] = [
   {
     id: "p5",
     name: { ar: "عطر الأزهار الملكية", en: "Royal Blooms Perfume" },
-    brand: "Paradise Essence",
+    brand: { ar: "بارادايس إيسنس", en: "Paradise Essence" },
     price: 980,
     image: "https://picsum.photos/seed/p5/800/800",
     gallery: [
@@ -174,7 +174,7 @@ export const products: Product[] = [
   {
     id: "p6",
     name: { ar: "زيت الشعر بالأرغان المقطر", en: "Distilled Argan Hair Oil" },
-    brand: "Nature's Gold",
+    brand: { ar: "نيتشرز جولد", en: "Nature's Gold" },
     price: 290,
     oldPrice: 350,
     image: "https://picsum.photos/seed/p6/800/800",

@@ -53,7 +53,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
       {/* تفاصيل المنتج */}
       <div className="p-3 md:p-4 flex flex-col items-start text-start">
-        <p className="text-secondary/70 text-[9px] tracking-[0.15em] uppercase mb-1">{product.brand}</p>
+        <p className="text-secondary/70 text-[9px] tracking-[0.15em] uppercase mb-1">{product.brand[language]}</p>
         <Link href={`/product/${product.id}`} className="w-full">
           <h3 className="text-secondary font-medium text-sm md:text-base mb-1.5 truncate hover:text-primary transition-colors">
             {product.name[language]}

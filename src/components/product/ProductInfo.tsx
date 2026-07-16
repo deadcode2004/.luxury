@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import { Star, Minus, Plus, Heart, ShoppingBag, Share2 } from "lucide-react";
@@ -22,7 +22,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
       {/* Brand & Share */}
       <div className="flex justify-between items-center mb-4">
         <span className="text-sm font-bold tracking-widest uppercase text-primary">
-          {product.brand}
+          {product.brand[language]}
         </span>
         <button className="text-gray-400 hover:text-primary transition-colors">
           <Share2 size={20} />
