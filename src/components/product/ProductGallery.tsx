@@ -9,8 +9,20 @@ interface ProductGalleryProps {
 
 export default function ProductGallery({ images }: ProductGalleryProps) {
   const [activeImage, setActiveImage] = useState(images[0]);
+  const [zoomStyle, setZoomStyle] = useState({});
+  const [isZoomed, setIsZoomed] = useState(false);
 
   if (!images || images.length === 0) return null;
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - left) / width) * 100;
+    const y = ((e.clientY - top) / height) * 100;
+    
+    setZoomStyle({
+      transformOrigin: `${x}% ${y}%`
+    });
+  };
 
   return (
     <div className="flex flex-col-reverse md:flex-row gap-4 md:gap-6 sticky top-32">
@@ -35,12 +47,22 @@ export default function ProductGallery({ images }: ProductGalleryProps) {
       </div>
 
       {/* Main Image */}
-      <div className="relative w-full aspect-square md:aspect-[4/5] rounded-2xl overflow-hidden bg-gray-50 group">
+      <div 
+        className="relative w-full aspect-square md:aspect-[4/5] rounded-2xl overflow-hidden bg-gray-50 group cursor-zoom-in"
+        onMouseMove={handleMouseMove}
+        onMouseEnter={() => setIsZoomed(true)}
+        onMouseLeave={() => {
+          setIsZoomed(false);
+          // Optional: reset origin when leaving
+          setTimeout(() => setZoomStyle({}), 300);
+        }}
+      >
         <Image
           src={activeImage}
           alt="Product Main Image"
           fill
-          className="object-cover transition-transform duration-700 group-hover:scale-105"
+          className={`object-cover transition-transform duration-300 ease-out ${isZoomed ? "scale-[1.8]" : "scale-100"}`}
+          style={isZoomed ? zoomStyle : {}}
           priority
         />
       </div>

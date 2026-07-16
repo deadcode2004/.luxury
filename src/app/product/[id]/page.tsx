@@ -28,8 +28,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     );
   }
 
-  // Use gallery if exists, otherwise fallback to main image
-  const images = product.gallery || [product.image];
+  // Use main image and gallery if exists
+  const images = [product.image, ...(product.gallery || [])];
 
   return (
     <>
