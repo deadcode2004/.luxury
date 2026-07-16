@@ -10,7 +10,10 @@ const alexandria = Alexandria({
 });
 
 export const metadata: Metadata = {
-  title: "المتجر الفاخر | Premium Store",
+  title: {
+    template: "%s | PARADISE",
+    default: "الرئيسية | PARADISE",
+  },
   description: "أرقى المنتجات لأصحاب الذوق الرفيع",
 };
 
