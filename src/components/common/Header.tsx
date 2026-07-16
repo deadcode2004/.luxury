@@ -13,8 +13,8 @@ export default function Header() {
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const pathname = usePathname();
 
-  const isHome = pathname === "/";
-  const isTransparent = isHome && !isScrolled;
+  const isTransparentRoute = pathname === "/" || pathname === "/about";
+  const isTransparent = isTransparentRoute && !isScrolled;
   const textColorClass = isTransparent ? "text-background" : "text-secondary";
   const hoverColorClass = isTransparent ? "hover:text-gray-300" : "hover:text-primary";
   const logoDotColorClass = isTransparent ? "text-background" : "text-primary";
