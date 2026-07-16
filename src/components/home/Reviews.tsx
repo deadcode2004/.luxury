@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import { Star, Quote } from "lucide-react";
@@ -24,7 +24,7 @@ export default function Reviews() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {reviews.map((review) => (
-            <div key={review.id} className="bg-background p-6 rounded-2xl shadow-soft hover:shadow-lg border border-transparent hover:border-primary/10 relative group hover:-translate-y-1 transition-all duration-300">
+            <div key={review.id} className="bg-surface p-6 rounded-2xl shadow-soft hover:shadow-lg border border-transparent hover:border-primary/10 relative group hover:-translate-y-1 transition-all duration-300">
               <Quote size={28} className="text-primary/10 absolute top-5 right-5 transform -scale-x-100 rtl:scale-x-100 group-hover:text-primary/20 transition-colors" />
               
               <div className="flex text-primary mb-5 relative z-10">
@@ -33,7 +33,7 @@ export default function Reviews() {
                 ))}
               </div>
               
-              <p className="text-secondary/80 mb-6 leading-relaxed italic relative z-10 min-h-[70px] text-xs md:text-sm">
+              <p className="text-background/80 mb-6 leading-relaxed italic relative z-10 min-h-[70px] text-xs md:text-sm">
                 "{review.comment[language]}"
               </p>
               
@@ -42,8 +42,8 @@ export default function Reviews() {
                   {review.author[language].charAt(0)}
                 </div>
                 <div>
-                  <h4 className="font-bold text-secondary text-xs md:text-sm">{review.author[language]}</h4>
-                  <span className="text-[9px] text-secondary/50 uppercase tracking-widest mt-0.5 block">
+                  <h4 className="font-bold text-background text-xs md:text-sm">{review.author[language]}</h4>
+                  <span className="text-[9px] text-background/50 uppercase tracking-widest mt-0.5 block">
                     {language === "ar" ? "عميل موثق" : "Verified Buyer"}
                   </span>
                 </div>
