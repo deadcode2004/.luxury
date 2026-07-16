@@ -100,8 +100,8 @@ export default function ProductInfo({ product }: ProductInfoProps) {
             onClick={() => setIsFavorite(!isFavorite)}
             className={`w-14 h-14 rounded-lg flex items-center justify-center border transition-all ${
               isFavorite
-                ? "bg-primary/10 border-primary text-primary"
-                : "bg-surface border-gray-100 text-gray-400 hover:border-primary hover:text-primary"
+                ? "bg-[#8FA89A]/10 border-[#8FA89A] text-[#8FA89A]"
+                : "bg-surface border-gray-100 text-gray-400 hover:border-[#8FA89A] hover:text-[#8FA89A]"
             }`}
           >
             <Heart size={24} fill={isFavorite ? "currentColor" : "none"} />
