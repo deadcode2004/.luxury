@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 import Image from "next/image";
@@ -80,7 +80,7 @@ export default function AboutPage() {
         </div>
 
         {/* Values Grid */}
-        <div className="bg-background py-24 border-t border-surface">
+        <div className="bg-background py-24 border-y border-surface">
           <div className="container mx-auto px-4 md:px-8">
             <div className="text-center mb-16">
               <span className="text-primary font-bold tracking-widest uppercase mb-2 block text-sm">
