@@ -27,9 +27,9 @@ export default function Reviews() {
             <div key={review.id} className="bg-surface p-6 rounded-2xl shadow-soft hover:shadow-lg border border-transparent hover:border-primary/10 relative group hover:-translate-y-1 transition-all duration-300">
               <Quote size={28} className="text-primary/10 absolute top-5 right-5 transform -scale-x-100 rtl:scale-x-100 group-hover:text-primary/20 transition-colors" />
               
-              <div className="flex text-primary mb-5 relative z-10">
+              <div className="flex text-accent mb-5 relative z-10">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} size={14} fill={i < review.rating ? "currentColor" : "none"} className={i < review.rating ? "text-primary" : "text-gray-300"} />
+                  <Star key={i} size={14} fill={i < review.rating ? "currentColor" : "none"} className={i < review.rating ? "text-accent" : "text-gray-300"} />
                 ))}
               </div>
               

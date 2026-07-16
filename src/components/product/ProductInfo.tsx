@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { Star, Minus, Plus, Heart, ShoppingBag, Share2 } from "lucide-react";
@@ -36,13 +36,13 @@ export default function ProductInfo({ product }: ProductInfoProps) {
 
       {/* Rating & Reviews */}
       <div className="flex items-center gap-4 mb-6">
-        <div className="flex text-primary">
+        <div className="flex text-accent">
           {[...Array(5)].map((_, i) => (
             <Star
               key={i}
               size={18}
               fill={i < Math.floor(product.rating) ? "currentColor" : "none"}
-              className={i < Math.floor(product.rating) ? "text-primary" : "text-gray-300"}
+              className={i < Math.floor(product.rating) ? "text-accent" : "text-gray-300"}
             />
           ))}
         </div>

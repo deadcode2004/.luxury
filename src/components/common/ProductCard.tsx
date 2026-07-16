@@ -61,9 +61,9 @@ export default function ProductCard({ product }: ProductCardProps) {
         </Link>
         
         <div className="flex items-center mb-2">
-          <div className="flex text-primary gap-0.5">
+          <div className="flex text-accent gap-0.5">
             {[...Array(5)].map((_, i) => (
-              <Star key={i} size={10} fill={i < Math.floor(product.rating) ? "currentColor" : "none"} className={i < Math.floor(product.rating) ? "text-primary" : "text-gray-300"} />
+              <Star key={i} size={10} fill={i < Math.floor(product.rating) ? "currentColor" : "none"} className={i < Math.floor(product.rating) ? "text-accent" : "text-gray-300"} />
             ))}
           </div>
           <span className="text-background/90 text-[9px] ms-1">({product.reviews})</span>
