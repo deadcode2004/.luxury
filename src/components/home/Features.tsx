@@ -40,9 +40,9 @@ export default function Features() {
           <div className="w-16 h-1 bg-primary mx-auto drop-shadow-sm"></div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 bg-background rounded-2xl shadow-xl border border-surface divide-y md:divide-y-0 md:divide-x rtl:divide-x-reverse divide-surface">
+        <div className="flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x rtl:lg:divide-x-reverse divide-surface">
           {features.map((feature, index) => (
-            <div key={index} className="text-center group p-8 text-secondary transition-all duration-300 hover:bg-surface/30">
+            <div key={index} className="flex-1 text-center group p-8 text-secondary transition-all duration-300 hover:bg-surface/30">
               <div className="flex justify-center transform group-hover:-translate-y-1.5 transition-transform duration-300">
                 {feature.icon}
               </div>
