@@ -39,7 +39,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           src={product.image}
           alt={product.name[language]}
           fill
-          className="object-cover transition-transform duration-700 group-hover:scale-105 mix-blend-multiply"
+          className="object-cover transition-transform duration-700 group-hover:scale-105"
         />
         
         {/* تأثير الظهور عند مرور المؤشر (Hover Overlay) */}
