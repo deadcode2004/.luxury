@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import { Product } from "@/data/mock";
@@ -36,7 +36,7 @@ export default function ProductGrid({ title, subtitle, products }: ProductGridPr
         </div>
 
         <div className="mt-20 text-center">
-          <button className="border border-secondary text-secondary px-10 py-4 rounded-md font-bold hover:bg-secondary hover:text-white transition-all tracking-wide">
+          <button className="border border-secondary text-secondary px-10 py-4 rounded-md font-bold hover:bg-secondary hover:text-background transition-all tracking-wide">
             {language === "ar" ? "عرض جميع المنتجات" : "View All Products"}
           </button>
         </div>

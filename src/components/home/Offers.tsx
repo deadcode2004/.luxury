@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import Image from "next/image";
@@ -21,7 +21,7 @@ export default function Offers() {
               className="object-cover transition-transform duration-1000 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/80 to-transparent"></div>
-            <div className="relative z-10 p-6 md:p-8 text-white max-w-lg flex flex-col items-start justify-center h-full">
+            <div className="relative z-10 p-6 md:p-8 text-background max-w-lg flex flex-col items-start justify-center h-full">
               <span className="bg-primary text-secondary text-[9px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full mb-3 inline-block shadow-sm">
                 {language === "ar" ? "عرض خاص" : "Special Offer"}
               </span>
@@ -46,8 +46,8 @@ export default function Offers() {
               className="object-cover transition-transform duration-1000 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/80 to-transparent"></div>
-            <div className="relative z-10 p-6 md:p-8 text-white max-w-lg flex flex-col items-start justify-center h-full">
-              <span className="bg-white text-secondary text-[9px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full mb-3 inline-block shadow-sm">
+            <div className="relative z-10 p-6 md:p-8 text-background max-w-lg flex flex-col items-start justify-center h-full">
+              <span className="bg-background text-secondary text-[9px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full mb-3 inline-block shadow-sm">
                 {language === "ar" ? "وصل حديثاً" : "New Arrival"}
               </span>
               <h3 className="text-2xl md:text-3xl font-bold mb-2 font-sans leading-tight">

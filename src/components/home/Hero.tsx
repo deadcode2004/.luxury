@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
@@ -117,7 +117,7 @@ export default function Hero() {
           />
           <div className="absolute inset-0 bg-black/40"></div>
           
-          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center container mx-auto px-4 md:px-8 text-center text-white">
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center container mx-auto px-4 md:px-8 text-center text-background">
             <div className={`transition-all duration-1000 transform ${index === currentSlide ? "translate-y-0 opacity-100 delay-100" : "translate-y-8 opacity-0"}`}>
               <span className="text-primary font-medium tracking-[0.2em] uppercase mb-4 block text-xs md:text-sm">
                 {slide.subtitle[language]}
@@ -139,7 +139,7 @@ export default function Hero() {
             <div className={`transition-all duration-1000 transform ${index === currentSlide ? "translate-y-0 opacity-100 delay-700" : "translate-y-8 opacity-0"}`}>
               <Link
                 href={slide.link}
-                className="bg-primary text-secondary px-6 py-3 rounded-md font-bold hover:bg-white hover:text-secondary transition-all flex items-center justify-center group tracking-wide text-base"
+                className="bg-primary text-secondary px-6 py-3 rounded-md font-bold hover:bg-background hover:text-secondary transition-all flex items-center justify-center group tracking-wide text-base"
               >
                 {slide.cta[language]}
                 {dir === "rtl" ? (
@@ -156,14 +156,14 @@ export default function Hero() {
       {/* Navigation Arrows */}
       <button 
         onClick={prevSlide}
-        className="absolute top-1/2 -translate-y-1/2 z-30 w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/30 backdrop-blur-sm text-white rounded-full transition-all opacity-0 group-hover:opacity-100 rtl:right-4 rtl:left-auto ltr:left-4 ltr:right-auto"
+        className="absolute top-1/2 -translate-y-1/2 z-30 w-10 h-10 flex items-center justify-center bg-background/10 hover:bg-background/30 backdrop-blur-sm text-background rounded-full transition-all opacity-0 group-hover:opacity-100 rtl:right-4 rtl:left-auto ltr:left-4 ltr:right-auto"
       >
         {dir === "rtl" ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
       </button>
       
       <button 
         onClick={nextSlide}
-        className="absolute top-1/2 -translate-y-1/2 z-30 w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/30 backdrop-blur-sm text-white rounded-full transition-all opacity-0 group-hover:opacity-100 rtl:left-4 rtl:right-auto ltr:right-4 ltr:left-auto"
+        className="absolute top-1/2 -translate-y-1/2 z-30 w-10 h-10 flex items-center justify-center bg-background/10 hover:bg-background/30 backdrop-blur-sm text-background rounded-full transition-all opacity-0 group-hover:opacity-100 rtl:left-4 rtl:right-auto ltr:right-4 ltr:left-auto"
       >
         {dir === "rtl" ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
       </button>
@@ -175,7 +175,7 @@ export default function Hero() {
             key={index}
             onClick={() => setCurrentSlide(index)}
             className={`transition-all duration-300 rounded-full ${
-              index === currentSlide ? "w-6 h-1.5 bg-primary" : "w-1.5 h-1.5 bg-white/50 hover:bg-white/80"
+              index === currentSlide ? "w-6 h-1.5 bg-primary" : "w-1.5 h-1.5 bg-background/50 hover:bg-background/80"
             }`}
             aria-label={`Go to slide ${index + 1}`}
           />

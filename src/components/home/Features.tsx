@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import { ShieldCheck, Truck, PackageOpen, HeadphonesIcon } from "lucide-react";
@@ -31,7 +31,7 @@ export default function Features() {
   ];
 
   return (
-    <section className="py-12 bg-surface border-t border-b border-gray-100">
+    <section className="py-12 bg-surface border-t border-b border-surface">
       <div className="container mx-auto px-4 md:px-8">
         <div className="text-center mb-10 md:mb-14">
           <h2 className="text-2xl md:text-3xl font-bold font-sans text-secondary mb-3">
@@ -42,12 +42,12 @@ export default function Features() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {features.map((feature, index) => (
-            <div key={index} className="text-center group p-5 rounded-2xl hover:bg-background hover:shadow-soft transition-all duration-300 border border-transparent hover:border-gray-100">
+            <div key={index} className="text-center group p-5 rounded-2xl hover:bg-background hover:shadow-soft transition-all duration-300 border border-transparent hover:border-surface">
               <div className="flex justify-center transform group-hover:-translate-y-1.5 transition-transform duration-300">
                 {feature.icon}
               </div>
               <h3 className="text-base md:text-lg font-bold mb-2 text-secondary">{feature.title[language]}</h3>
-              <p className="text-gray-500 text-xs md:text-sm leading-relaxed">{feature.description[language]}</p>
+              <p className="text-secondary/70 text-xs md:text-sm leading-relaxed">{feature.description[language]}</p>
             </div>
           ))}
         </div>

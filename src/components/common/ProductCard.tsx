@@ -18,23 +18,23 @@ export default function ProductCard({ product }: ProductCardProps) {
     <div className="group bg-surface rounded-2xl overflow-hidden shadow-soft hover:shadow-lg transition-all duration-300 relative">
       {/* شارة (جديد/الأكثر مبيعاً) */}
       {product.isNew && (
-        <span className="absolute top-4 right-4 bg-primary text-secondary text-xs font-bold px-3 py-1 rounded-full z-10">
+        <span className="absolute top-4 right-4 bg-primary text-background text-xs font-bold px-3 py-1 rounded-full z-10">
           {language === "ar" ? "جديد" : "New"}
         </span>
       )}
       {!product.isNew && product.isBestSeller && (
-        <span className="absolute top-4 right-4 bg-secondary text-white text-xs font-bold px-3 py-1 rounded-full z-10">
+        <span className="absolute top-4 right-4 bg-accent text-background text-xs font-bold px-3 py-1 rounded-full z-10">
           {language === "ar" ? "الأكثر مبيعاً" : "Best Seller"}
         </span>
       )}
 
       {/* زر المفضلة */}
-      <button className="absolute top-4 left-4 z-10 w-8 h-8 bg-white/80 backdrop-blur rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-white transition-colors">
+      <button className="absolute top-4 left-4 z-10 w-8 h-8 bg-background/80 backdrop-blur rounded-full flex items-center justify-center text-secondary/50 hover:text-wishlist hover:bg-background transition-colors">
         <Heart size={16} />
       </button>
 
       {/* صورة المنتج */}
-      <Link href={`/product/${product.id}`} className="block relative aspect-square overflow-hidden bg-gray-50">
+      <Link href={`/product/${product.id}`} className="block relative aspect-square overflow-hidden bg-surface/50">
         <Image
           src={product.image}
           alt={product.name[language]}
@@ -44,7 +44,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         
         {/* تأثير الظهور عند مرور المؤشر (Hover Overlay) */}
         <div className="absolute inset-x-0 bottom-0 p-4 opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
-          <button className="w-full bg-secondary text-white py-3 rounded-lg flex items-center justify-center space-x-2 space-x-reverse rtl:space-x-reverse ltr:space-x hover:bg-primary hover:text-secondary transition-colors font-medium">
+          <button className="w-full bg-secondary text-background py-3 rounded-lg flex items-center justify-center space-x-2 space-x-reverse rtl:space-x-reverse ltr:space-x hover:bg-primary hover:text-secondary transition-colors font-medium">
             <ShoppingBag size={18} />
             <span>{language === "ar" ? "أضف للسلة" : "Add to Cart"}</span>
           </button>
@@ -53,7 +53,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
       {/* تفاصيل المنتج */}
       <div className="p-3 md:p-4 flex flex-col items-start text-start">
-        <p className="text-gray-500 text-[9px] tracking-[0.15em] uppercase mb-1">{product.brand}</p>
+        <p className="text-secondary/70 text-[9px] tracking-[0.15em] uppercase mb-1">{product.brand}</p>
         <Link href={`/product/${product.id}`} className="w-full">
           <h3 className="text-secondary font-medium text-sm md:text-base mb-1.5 truncate hover:text-primary transition-colors">
             {product.name[language]}
@@ -66,7 +66,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               <Star key={i} size={10} fill={i < Math.floor(product.rating) ? "currentColor" : "none"} className={i < Math.floor(product.rating) ? "text-primary" : "text-gray-300"} />
             ))}
           </div>
-          <span className="text-gray-400 text-[9px] ms-1">({product.reviews})</span>
+          <span className="text-secondary/50 text-[9px] ms-1">({product.reviews})</span>
         </div>
 
         <div className="flex items-center gap-2 mt-auto pt-1">
@@ -74,7 +74,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             {product.price} {language === "ar" ? "ر.س" : "SAR"}
           </span>
           {product.oldPrice && (
-            <span className="text-gray-400 line-through text-[10px]">
+            <span className="text-secondary/50 line-through text-[10px]">
               {product.oldPrice} {language === "ar" ? "ر.س" : "SAR"}
             </span>
           )}

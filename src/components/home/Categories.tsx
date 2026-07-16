@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import Image from "next/image";
@@ -29,7 +29,7 @@ export default function Categories() {
                 className="object-cover transition-transform duration-700 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-4 md:p-5">
-                <h3 className="text-white text-lg md:text-xl font-medium mb-2 transform group-hover:-translate-y-2 transition-transform duration-300">
+                <h3 className="text-background text-lg md:text-xl font-medium mb-2 transform group-hover:-translate-y-2 transition-transform duration-300">
                   {category.name[language]}
                 </h3>
                 <span className="text-primary text-xs md:text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-500 block uppercase tracking-widest">
