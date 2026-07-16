@@ -93,7 +93,7 @@ export default function Hero() {
 
   return (
     <section 
-      className="relative h-[100vh] min-h-[600px] flex items-center bg-black overflow-hidden group"
+      className="relative h-[100svh] min-h-[600px] flex items-center bg-black overflow-hidden group"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
