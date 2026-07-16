@@ -9,7 +9,7 @@ export default function Footer() {
   const { language } = useLanguage();
 
   return (
-    <footer className="bg-background text-secondary pt-16 pb-8 border-t border-surface">
+    <footer className="bg-background text-secondary pt-16 pb-8 border-t border-surface/40">
       <div className="container mx-auto px-4 md:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
           {/* القسم الأول: عن العلامة */}
@@ -89,7 +89,7 @@ export default function Footer() {
         </div>
 
         {/* الحقوق */}
-        <div className="border-t border-surface pt-6 flex flex-col md:flex-row justify-between items-center text-secondary/70 text-xs md:text-sm gap-4">
+        <div className="border-t border-surface/40 pt-6 flex flex-col md:flex-row justify-between items-center text-secondary/70 text-xs md:text-sm gap-4">
           <p className="mb-0 text-center md:text-start">
             &copy; {new Date().getFullYear()} PARADISE. {language === "ar" ? "جميع الحقوق محفوظة." : "All rights reserved."}
           </p>
