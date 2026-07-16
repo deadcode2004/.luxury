@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 import { ShieldCheck, Truck, PackageOpen, HeadphonesIcon } from "lucide-react";
@@ -31,13 +31,13 @@ export default function Features() {
   ];
 
   return (
-    <section className="py-12 bg-background border-b border-surface">
+    <section className="relative z-20 -mt-16 pb-12 pt-0">
       <div className="container mx-auto px-4 md:px-8">
         <div className="text-center mb-10 md:mb-14">
-          <h2 className="text-2xl md:text-3xl font-bold font-sans text-secondary mb-3">
+          <h2 className="text-2xl md:text-3xl font-bold font-sans text-background mb-3 drop-shadow-md">
             {language === "ar" ? "لماذا تختارنا؟" : "Why Choose Us?"}
           </h2>
-          <div className="w-16 h-1 bg-surface mx-auto"></div>
+          <div className="w-16 h-1 bg-primary mx-auto drop-shadow-sm"></div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">

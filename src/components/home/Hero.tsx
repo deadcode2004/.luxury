@@ -169,7 +169,7 @@ export default function Hero() {
       </button>
 
       {/* Pagination Dots */}
-      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-30 flex items-center gap-2">
+      <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 z-30 flex items-center gap-2">
         {SLIDES.map((_, index) => (
           <button
             key={index}

@@ -18,6 +18,7 @@ export default function Home() {
       <Header />
       <main className="flex-grow">
         <Hero />
+        <Features />
         <Categories />
         <ProductGrid 
           title={{ ar: "المنتجات المميزة", en: "Featured Products" }}
@@ -30,7 +31,6 @@ export default function Home() {
           subtitle={{ ar: "الأكثر طلباً", en: "Most Loved" }}
           products={bestSellers} 
         />
-        <Features />
         <Reviews />
         <InstagramGallery />
       </main>
