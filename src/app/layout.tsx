@@ -12,7 +12,7 @@ const alexandria = Alexandria({
 export const metadata: Metadata = {
   title: {
     template: "%s | PARADISE",
-    default: "الرئيسية | PARADISE",
+    default: "PARADISE",
   },
   description: "أرقى المنتجات لأصحاب الذوق الرفيع",
 };
