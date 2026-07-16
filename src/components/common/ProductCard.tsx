@@ -15,7 +15,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { language } = useLanguage();
 
   return (
-    <div className="group bg-surface rounded-2xl overflow-hidden shadow-soft hover:shadow-lg transition-all duration-300 relative">
+    <div className="group bg-white rounded-3xl p-3 shadow-soft-3d hover:shadow-floating hover:-translate-y-2 transition-all duration-500 relative flex flex-col border border-white/50">
       {/* شارة (جديد/الأكثر مبيعاً) */}
       {product.isNew && (
         <span className="absolute top-4 right-4 bg-primary text-background text-xs font-bold px-3 py-1 rounded-full z-10">
@@ -34,12 +34,12 @@ export default function ProductCard({ product }: ProductCardProps) {
       </button>
 
       {/* صورة المنتج */}
-      <Link href={`/product/${product.id}`} className="block relative aspect-square overflow-hidden bg-surface/50">
+      <Link href={`/product/${product.id}`} className="block relative aspect-square overflow-hidden rounded-2xl bg-gray-50/50">
         <Image
           src={product.image}
           alt={product.name[language]}
           fill
-          className="object-cover transition-transform duration-700 group-hover:scale-105"
+          className="object-cover mix-blend-multiply transition-transform duration-700 group-hover:scale-105"
         />
         
         {/* تأثير الظهور عند مرور المؤشر (Hover Overlay) */}
@@ -52,10 +52,10 @@ export default function ProductCard({ product }: ProductCardProps) {
       </Link>
 
       {/* تفاصيل المنتج */}
-      <div className="p-3 md:p-4 flex flex-col items-start text-start">
-        <p className="text-secondary/70 text-[9px] tracking-[0.15em] uppercase mb-1">{product.brand[language]}</p>
+      <div className="pt-5 pb-3 px-2 flex flex-col items-start text-start flex-grow">
+        <p className="text-secondary/50 text-[10px] tracking-[0.2em] uppercase mb-2 font-medium">{product.brand[language]}</p>
         <Link href={`/product/${product.id}`} className="w-full">
-          <h3 className="text-secondary font-medium text-sm md:text-base mb-1.5 truncate hover:text-primary transition-colors">
+          <h3 className="text-secondary font-bold text-base md:text-lg mb-2 truncate hover:text-primary transition-colors">
             {product.name[language]}
           </h3>
         </Link>
@@ -69,12 +69,12 @@ export default function ProductCard({ product }: ProductCardProps) {
           <span className="text-secondary/70 text-[9px] ms-1">({product.reviews})</span>
         </div>
 
-        <div className="flex items-center gap-2 mt-auto pt-1">
-          <span className="text-secondary font-bold text-sm">
+        <div className="flex items-center gap-3 mt-auto pt-4 border-t border-gray-50 w-full">
+          <span className="text-secondary font-bold text-lg tracking-tight">
             {product.price} {language === "ar" ? "ر.س" : "SAR"}
           </span>
           {product.oldPrice && (
-            <span className="text-secondary/70 line-through text-[10px]">
+            <span className="text-gray-400 line-through text-xs font-medium">
               {product.oldPrice} {language === "ar" ? "ر.س" : "SAR"}
             </span>
           )}

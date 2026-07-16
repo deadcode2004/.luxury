@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 import Image from "next/image";
@@ -19,21 +19,30 @@ export default function Categories() {
           <div className="w-20 h-1 bg-surface mx-auto"></div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {categories.map((category) => (
-            <Link href={`/category/${category.id}`} key={category.id} className="group relative overflow-hidden rounded-lg aspect-[4/5] block shadow-soft hover:shadow-lg transition-all duration-300">
-              <Image
-                src={category.image}
-                alt={category.name[language]}
-                fill
-                className="object-cover transition-transform duration-700 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-4 md:p-5">
-                <h3 className="text-background text-lg md:text-xl font-medium mb-2 transform group-hover:-translate-y-2 transition-transform duration-300">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-16 lg:gap-y-0 pt-4 pb-12">
+          {categories.map((category, index) => (
+            <Link href={`/category/${category.id}`} key={category.id} className="group block relative">
+              {/* Image Container with Soft 3D shadow */}
+              <div className={`relative overflow-hidden rounded-3xl shadow-soft-3d transition-transform duration-500 group-hover:-translate-y-2 ${index % 2 === 0 ? "aspect-[4/5]" : "aspect-square lg:mt-12"}`}>
+                <Image
+                  src={category.image}
+                  alt={category.name[language]}
+                  fill
+                  className="object-cover transition-transform duration-[10s] group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-secondary/10 group-hover:bg-transparent transition-colors duration-500"></div>
+              </div>
+              
+              {/* Floating Layered Card */}
+              <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-10/12 bg-white/90 backdrop-blur-md rounded-2xl p-4 md:p-5 shadow-floating text-center transform transition-all duration-500 group-hover:-translate-y-3 group-hover:bg-white border border-white/50 z-10">
+                <h3 className="text-secondary text-base md:text-lg font-bold mb-1 truncate">
                   {category.name[language]}
                 </h3>
-                <span className="text-primary text-xs md:text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-500 block uppercase tracking-widest">
-                  {language === "ar" ? "استكشف المجموعة" : "Explore Collection"}
+                <span className="text-primary text-[10px] md:text-xs font-bold uppercase tracking-widest opacity-70 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                  {language === "ar" ? "استكشف" : "Explore"}
+                  <span className={`transform transition-transform duration-300 ${language === "ar" ? "group-hover:-translate-x-1" : "group-hover:translate-x-1"}`}>
+                    →
+                  </span>
                 </span>
               </div>
             </Link>

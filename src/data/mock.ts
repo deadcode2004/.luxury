@@ -24,10 +24,10 @@ export interface Category {
 }
 
 export const categories: Category[] = [
-  { id: "c1", name: { ar: "عطور", en: "Perfumes" }, image: "/images/products/paradisecare-home02.jpg" },
-  { id: "c2", name: { ar: "عناية بالبشرة", en: "Skincare" }, image: "/images/products/paradisecare-home03.jpg" },
-  { id: "c3", name: { ar: "مكياج", en: "Makeup" }, image: "/images/products/paradisecare-shop-hyaluronic-with-gold-and-silver-01-300x300.jpg" },
-  { id: "c4", name: { ar: "عناية بالشعر", en: "Haircare" }, image: "/images/products/paradisecare-shop-biomagneti-01-300x300.jpeg" },
+  { id: "c1", name: { ar: "بخاخ ذهبي فضي", en: "Gold Silver Spray" }, image: "/images/products/paradisecare-home02.jpg" },
+  { id: "c2", name: { ar: "كريمة الزعفران الذهبية", en: "Golden Saffron Cream" }, image: "/images/products/paradisecare-home03.jpg" },
+  { id: "c3", name: { ar: "حمض الهالورونيك مع الذهب و الفضة", en: "Hyaluronic Acid with Gold & Silver" }, image: "/images/products/paradisecare-shop-hyaluronic-with-gold-and-silver-01-300x300.jpg" },
+  { id: "c4", name: { ar: "المغناطيس الحيوي", en: "Biomagnet" }, image: "/images/products/paradisecare-shop-biomagneti-01-300x300.jpeg" },
 ];
 
 export const products: Product[] = [
