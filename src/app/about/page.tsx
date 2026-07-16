@@ -36,43 +36,33 @@ export default function AboutPage() {
   return (
     <>
       <Header />
-      <main className="flex-grow pt-32 pb-24 bg-background min-h-screen">
+      <main className="flex-grow pb-24 bg-background min-h-screen">
         
-        {/* Page Header */}
-        <div className="container mx-auto px-4 md:px-8 mb-20 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold font-sans text-secondary mb-4">
-            {language === "ar" ? "قصتنا" : "Our Story"}
-          </h1>
-          <div className="w-20 h-1 bg-surface mx-auto"></div>
-        </div>
-
-        {/* Hero Section */}
-        <div className="container mx-auto px-4 md:px-8 mb-32">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-            <div className="relative aspect-square md:aspect-[4/3] w-full rounded-2xl overflow-hidden shadow-soft">
-              <Image 
-                src="/images/about/paradisecare-chisiamo01.jpg" 
-                alt="Paradise Care" 
-                fill 
-                className="object-cover"
-              />
-            </div>
-            
-            <div className="flex flex-col">
-              <span className="text-primary font-bold tracking-widest uppercase mb-4 text-sm">
-                {language === "ar" ? "رؤيتنا" : "Our Vision"}
-              </span>
-              <h2 className="text-3xl md:text-4xl font-bold text-secondary mb-8 leading-tight">
-                {language === "ar" ? "معادن من أجل صحتك الحقيقية" : "Minerals for your true health"}
-              </h2>
-              <p className="text-secondary/80 text-lg leading-loose">
-                {language === "ar" 
-                  ? "بارادايس كير هي علامة تجارية فاخرة للعافية المعدنية مستوحاة من التقاليد المصرية، ودقة التركيبة النانوية، وفلسفة توفير منتجات ممتازة لحياتنا اليومية."
-                  : "Paradise Care is a luxury mineral wellness brand inspired by Egyptian tradition, precision nano-formulation, and a philosophy of providing excellent products for our daily lives."}
-              </p>
-            </div>
+        {/* Full-width Hero Section */}
+        <section className="relative h-[100vh] min-h-[600px] flex items-center justify-center overflow-hidden mb-24">
+          <Image 
+            src="/images/about/paradisecare-chisiamo01.jpg" 
+            alt="Paradise Care" 
+            fill 
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-black/50"></div>
+          
+          <div className="relative z-10 flex flex-col items-center justify-center container mx-auto px-4 md:px-8 text-center text-background">
+            <span className="text-primary font-bold tracking-[0.2em] uppercase mb-4 block text-xs md:text-sm drop-shadow-md">
+              {language === "ar" ? "قصتنا" : "Our Story"}
+            </span>
+            <h1 className="text-4xl md:text-[40px] lg:text-[50px] font-bold mb-6 font-sans drop-shadow-lg max-w-4xl leading-tight">
+              {language === "ar" ? "معادن من أجل صحتك الحقيقية" : "Minerals for your true health"}
+            </h1>
+            <p className="text-base md:text-lg text-gray-200 max-w-3xl mx-auto drop-shadow-md leading-relaxed">
+              {language === "ar" 
+                ? "بارادايس كير هي علامة تجارية فاخرة للعافية المعدنية مستوحاة من التقاليد المصرية، ودقة التركيبة النانوية، وفلسفة توفير منتجات ممتازة لحياتنا اليومية."
+                : "Paradise Care is a luxury mineral wellness brand inspired by Egyptian tradition, precision nano-formulation, and a philosophy of providing excellent products for our daily lives."}
+            </p>
           </div>
-        </div>
+        </section>
 
         {/* Values Grid */}
         <div className="bg-background py-24 border-y border-surface">
