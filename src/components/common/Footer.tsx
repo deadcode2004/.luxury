@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import Link from "next/link";
@@ -23,13 +23,13 @@ export default function Footer() {
                 : "Your ultimate destination for luxury products and exceptional care. We bring you the finest global brands to highlight your beauty."}
             </p>
             <div className="flex items-center gap-4">
-              <a href="#" className="w-10 h-10 rounded-full bg-surface/50 border border-surface flex items-center justify-center hover:bg-primary hover:border-primary hover:text-background transition-all">
+              <a href="#" className="w-10 h-10 rounded-full bg-primary text-background flex items-center justify-center hover:bg-primary-hover transition-all">
                 <FaInstagram size={16} />
               </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-surface/50 border border-surface flex items-center justify-center hover:bg-primary hover:border-primary hover:text-background transition-all">
+              <a href="#" className="w-10 h-10 rounded-full bg-primary text-background flex items-center justify-center hover:bg-primary-hover transition-all">
                 <FaFacebookF size={16} />
               </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-surface/50 border border-surface flex items-center justify-center hover:bg-primary hover:border-primary hover:text-background transition-all">
+              <a href="#" className="w-10 h-10 rounded-full bg-primary text-background flex items-center justify-center hover:bg-primary-hover transition-all">
                 <FaTwitter size={16} />
               </a>
             </div>

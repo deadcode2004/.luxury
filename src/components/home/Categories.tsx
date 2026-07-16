@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import Image from "next/image";
@@ -16,7 +16,7 @@ export default function Categories() {
           <h2 className="text-2xl md:text-3xl font-bold font-sans text-secondary mb-3">
             {language === "ar" ? "تسوق حسب التصنيف" : "Shop by Category"}
           </h2>
-          <div className="w-20 h-1 bg-primary mx-auto"></div>
+          <div className="w-20 h-1 bg-surface mx-auto"></div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">

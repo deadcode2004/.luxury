@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import { Product } from "@/data/mock";
@@ -26,7 +26,7 @@ export default function ProductGrid({ title, subtitle, products }: ProductGridPr
           <h2 className="text-2xl md:text-3xl font-bold font-sans text-secondary mb-4">
             {title[language]}
           </h2>
-          <div className="w-16 h-1 bg-primary mx-auto"></div>
+          <div className="w-16 h-1 bg-surface mx-auto"></div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 lg:gap-10">

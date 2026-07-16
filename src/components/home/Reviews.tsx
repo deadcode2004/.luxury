@@ -19,7 +19,7 @@ export default function Reviews() {
           <h2 className="text-2xl md:text-3xl font-bold font-sans text-secondary mb-3">
             {language === "ar" ? "ماذا يقول عملاؤنا" : "What Our Clients Say"}
           </h2>
-          <div className="w-16 h-1 bg-primary mx-auto"></div>
+          <div className="w-16 h-1 bg-surface mx-auto"></div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
