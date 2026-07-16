@@ -89,7 +89,7 @@ export default function Footer() {
         </div>
 
         {/* الحقوق */}
-        <div className=" pt-6 flex flex-col md:flex-row justify-between items-center text-secondary/70 text-xs md:text-sm gap-4">
+        <div className="border-t border-surface pt-6 flex flex-col md:flex-row justify-between items-center text-secondary/70 text-xs md:text-sm gap-4">
           <p className="mb-0 text-center md:text-start">
             &copy; {new Date().getFullYear()} PARADISE. {language === "ar" ? "جميع الحقوق محفوظة." : "All rights reserved."}
           </p>
