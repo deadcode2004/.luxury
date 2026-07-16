@@ -36,8 +36,7 @@ export const products: Product[] = [
     name: { ar: "بخاخ ذهبي فضي", en: "Gold Silver Spray" },
     brand: { ar: "بارادايس إيسنس", en: "Paradise Essence" },
     price: 1250,
-    image: "/images/products/paradisecare-shop-gold-silver-spray-01-300x300.jpg",
-
+    image: "/images/products/paradisecare-home02.jpg",
     rating: 4.9,
     reviews: 128,
     isNew: true,
@@ -63,8 +62,7 @@ export const products: Product[] = [
     brand: { ar: "أورا رويال", en: "Aura Royale" },
     price: 850,
     oldPrice: 1000,
-    image: "/images/products/paradisecare-shop-gold-saffron-cream-01-300x300.jpg",
-
+    image: "/images/products/paradisecare-home03.jpg",
     rating: 4.8,
     reviews: 95,
     isBestSeller: true, isFeatured: true, category: "c2",
@@ -79,101 +77,6 @@ export const products: Product[] = [
     usage: {
       ar: "ضعي 3-4 قطرات على بشرة نظيفة وجافة صباحاً ومساءً. دلكي بلطف بحركات دائرية لأعلى حتى يمتص تماماً قبل وضع المرطب.",
       en: "Apply 3-4 drops onto clean, dry skin morning and evening. Gently massage in upward circular motions until fully absorbed before applying moisturizer."
-    }
-  },
-  {
-    id: "p3",
-    name: { ar: "حمض الهالورونيك مع الذهب و الفضة", en: "Hyaluronic Acid with Gold & Silver" },
-    brand: { ar: "أورا رويال", en: "Aura Royale" },
-    price: 450,
-    image: "/images/products/paradisecare-shop-hyaluronic-with-gold-and-silver-01-300x300.jpg",
-
-    rating: 4.7,
-    reviews: 210,
-    isFeatured: true,
-    category: "c2",
-    description: {
-      ar: "كريم ترطيب مكثف بقوام مخملي يذوب في البشرة فوراً. يغذي البشرة بعمق ويعيد حاجز الرطوبة الطبيعي لحماية تدوم 48 ساعة.",
-      en: "An intensive moisturizing cream with a velvet texture that melts into the skin instantly. It deeply nourishes and restores the natural moisture barrier for 48-hour protection."
-    },
-    ingredients: {
-      ar: ["زبدة الشيا العضوية", "زيت الجوجوبا", "سيراميد", "فيتامين هـ"],
-      en: ["Organic Shea Butter", "Jojoba Oil", "Ceramides", "Vitamin E"]
-    },
-    usage: {
-      ar: "استخدميه كخطوة أخيرة في روتين العناية بالبشرة. خذي كمية بحجم حبة اللؤلؤ ووزعيها بالتساوي على الوجه والرقبة.",
-      en: "Use as the last step in your skincare routine. Take a pearl-sized amount and distribute evenly over the face and neck."
-    }
-  },
-  {
-    id: "p4",
-    name: { ar: "المغناطيس الحيوي", en: "Biomagnet" },
-    brand: { ar: "جلو آند كو", en: "Glow & Co" },
-    price: 320,
-    image: "/images/products/paradisecare-shop-biomagneti-01-300x300.jpeg",
-
-    rating: 4.9,
-    reviews: 340,
-    isFeatured: true, category: "c3",
-    description: {
-      ar: "مجموعة مذهلة من 12 لون مستوحاة من ألوان الصحراء وقت الغروب. تركيبة غنية بالصبغات وسهلة الدمج تتيح لك ابتكار إطلالات طبيعية أو درامية جذابة.",
-      en: "A stunning collection of 12 shades inspired by desert sunset colors. Highly pigmented and easily blendable formula that allows you to create natural or dramatic looks."
-    },
-    ingredients: {
-      ar: ["ميكا نقية", "زيت بذور العنب", "بدون بارابين", "بدون عطور صناعية"],
-      en: ["Pure Mica", "Grape Seed Oil", "Paraben-free", "No Synthetic Fragrances"]
-    },
-    usage: {
-      ar: "استخدمي فرشاة دمج ناعمة للألوان الانتقالية، وفرشاة مسطحة للألوان اللامعة على الجفن المتحرك. يمكن استخدام الألوان اللامعة بإصبعك للحصول على تأثير أقوى.",
-      en: "Use a fluffy blending brush for transition shades, and a flat brush for shimmer shades on the lid. Shimmers can be applied with your finger for a more intense effect."
-    }
-  },
-  {
-    id: "p5",
-    name: { ar: "عطر الأزهار الملكية", en: "Royal Blooms Perfume" },
-    brand: { ar: "بارادايس إيسنس", en: "Paradise Essence" },
-    price: 980,
-    image: "https://picsum.photos/seed/p5/800/800",
-
-    rating: 4.6,
-    reviews: 82,
-    isNew: true,
-    category: "c1",
-    description: {
-      ar: "عطر زهري منعش يجسد الأنوثة الكلاسيكية. باقة من الياسمين الأبيض، زنبق الوادي، وقاعدة دافئة من المسك وخشب الأرز.",
-      en: "A fresh floral perfume that embodies classic femininity. A bouquet of white jasmine, lily of the valley, with a warm base of musk and cedarwood."
-    },
-    ingredients: {
-      ar: ["ياسمين أبيض", "زنبق الوادي", "خشب الأرز", "مسك نقي"],
-      en: ["White Jasmine", "Lily of the Valley", "Cedarwood", "Pure Musk"]
-    },
-    usage: {
-      ar: "يرش على أماكن النبض للحصول على أفضل ثبات.",
-      en: "Spray on pulse points for best longevity."
-    }
-  },
-  {
-    id: "p6",
-    name: { ar: "زيت الشعر بالأرغان المقطر", en: "Distilled Argan Hair Oil" },
-    brand: { ar: "نيتشرز جولد", en: "Nature's Gold" },
-    price: 290,
-    oldPrice: 350,
-    image: "https://picsum.photos/seed/p6/800/800",
-
-    rating: 4.8,
-    reviews: 415,
-    category: "c4",
-    description: {
-      ar: "إكسير ذهبي لشعرك. زيت أرغان مغربي عضوي معصور على البارد بنسبة 100%. يعالج التقصف، يضفي لمعاناً حريرياً، ويحمي الشعر من حرارة التصفيف.",
-      en: "A golden elixir for your hair. 100% cold-pressed organic Moroccan argan oil. Treats split ends, imparts silky shine, and protects hair from heat styling."
-    },
-    ingredients: {
-      ar: ["زيت أرغان عضوي 100%", "فيتامين هـ طبيعي", "أوميجا 6 و 9"],
-      en: ["100% Organic Argan Oil", "Natural Vitamin E", "Omega 6 and 9"]
-    },
-    usage: {
-      ar: "ضعي بضع قطرات في راحة يدك، دلكيها بلطف ثم وزعيها على أطراف الشعر المبلل أو الجاف. لا يُغسل.",
-      en: "Place a few drops in the palm of your hand, massage gently, then distribute through damp or dry hair ends. Do not rinse."
     }
   }
 ];
