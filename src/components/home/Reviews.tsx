@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 import { Star, Quote } from "lucide-react";
@@ -38,7 +38,7 @@ export default function Reviews() {
               </p>
               
               <div className="flex items-center">
-                <div className="w-10 h-10 bg-secondary text-secondary rounded-full flex items-center justify-center font-bold text-sm me-3 shadow-md">
+                <div className="w-10 h-10 bg-secondary text-background rounded-full flex items-center justify-center font-bold text-sm me-3 shadow-md">
                   {review.author[language].charAt(0)}
                 </div>
                 <div>
