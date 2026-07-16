@@ -68,13 +68,16 @@ export default function AboutPage() {
         {/* Section 1: Paradise Care Vision */}
         <div className="container mx-auto px-4 md:px-8 mb-32">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-            <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden shadow-soft">
-              <Image 
-                src="/images/about/paradisecare-chisiamo02-980x653_jIRM.jpg" 
-                alt="Paradise Care Vision" 
-                fill 
-                className="object-cover"
-              />
+            <div className="relative">
+              <div className="absolute inset-0 bg-primary/20 rounded-2xl transform -translate-x-4 translate-y-4 rtl:translate-x-4"></div>
+              <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden shadow-xl border-4 border-background">
+                <Image 
+                  src="/images/about/paradisecare-chisiamo02-980x653_jIRM.jpg" 
+                  alt="Paradise Care Vision" 
+                  fill 
+                  className="object-cover"
+                />
+              </div>
             </div>
             
             <div className="flex flex-col">
@@ -172,13 +175,16 @@ export default function AboutPage() {
               </div>
             </div>
             
-            <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden shadow-soft order-1 lg:order-2">
-              <Image 
-                src="/images/about/paradisecare-chisiamo03-980x653_jIRM.jpg" 
-                alt="Ancient Wisdom" 
-                fill 
-                className="object-cover"
-              />
+            <div className="relative order-1 lg:order-2">
+              <div className="absolute inset-0 bg-primary/20 rounded-2xl transform translate-x-4 translate-y-4 rtl:-translate-x-4"></div>
+              <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden shadow-xl border-4 border-background">
+                <Image 
+                  src="/images/about/paradisecare-chisiamo03-980x653_jIRM.jpg" 
+                  alt="Ancient Wisdom" 
+                  fill 
+                  className="object-cover"
+                />
+              </div>
             </div>
           </div>
         </div>
