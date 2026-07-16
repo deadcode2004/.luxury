@@ -33,10 +33,10 @@ export const categories: Category[] = [
 export const products: Product[] = [
   {
     id: "p1",
-    name: { ar: "عطر ليالي الشرق", en: "Oriental Nights Perfume" },
+    name: { ar: "بخاخ ذهبي فضي", en: "Gold Silver Spray" },
     brand: "Paradise Essence",
     price: 1250,
-    image: "https://picsum.photos/seed/p1/800/800",
+    image: "/images/products/paradisecare-shop-gold-silver-spray-01-300x300.jpg",
     gallery: [
       "https://picsum.photos/seed/p1/800/800",
       "https://picsum.photos/seed/p1_2/800/800",
@@ -63,11 +63,11 @@ export const products: Product[] = [
   },
   {
     id: "p2",
-    name: { ar: "سيروم الذهب عيار 24", en: "24K Gold Serum" },
+    name: { ar: "كريمة الزعفران الذهبية", en: "Golden Saffron Cream" },
     brand: "Aura Royale",
     price: 850,
     oldPrice: 1000,
-    image: "https://picsum.photos/seed/p2/800/800",
+    image: "/images/products/paradisecare-shop-gold-saffron-cream-01-300x300.jpg",
     gallery: [
       "https://picsum.photos/seed/p2/800/800",
       "https://picsum.photos/seed/p2_2/800/800",
@@ -75,8 +75,7 @@ export const products: Product[] = [
     ],
     rating: 4.8,
     reviews: 95,
-    isBestSeller: true,
-    category: "c2",
+    isBestSeller: true, isFeatured: true, category: "c2",
     description: {
       ar: "سيروم مغذي غني برقائق الذهب عيار 24 قيراط وحمض الهيالورونيك. يعمل على تجديد خلايا البشرة، تقليل الخطوط الدقيقة، وإعطاء إشراقة شبابية فورية.",
       en: "A nourishing serum enriched with 24K gold flakes and Hyaluronic Acid. It works to renew skin cells, reduce fine lines, and provide an instant youthful glow."
@@ -92,10 +91,10 @@ export const products: Product[] = [
   },
   {
     id: "p3",
-    name: { ar: "كريم الترطيب المخملي", en: "Velvet Moisture Cream" },
+    name: { ar: "حمض الهالورونيك مع الذهب و الفضة", en: "Hyaluronic Acid with Gold & Silver" },
     brand: "Aura Royale",
     price: 450,
-    image: "https://picsum.photos/seed/p3/800/800",
+    image: "/images/products/paradisecare-shop-hyaluronic-with-gold-and-silver-01-300x300.jpg",
     gallery: [
       "https://picsum.photos/seed/p3/800/800",
       "https://picsum.photos/seed/p3_2/800/800"
@@ -119,10 +118,10 @@ export const products: Product[] = [
   },
   {
     id: "p4",
-    name: { ar: "باليت ظلال العيون الصحراوي", en: "Desert Oasis Palette" },
+    name: { ar: "المغناطيس الحيوي", en: "Biomagnet" },
     brand: "Glow & Co",
     price: 320,
-    image: "https://picsum.photos/seed/p4/800/800",
+    image: "/images/products/paradisecare-shop-biomagneti-01-300x300.jpeg",
     gallery: [
       "https://picsum.photos/seed/p4/800/800",
       "https://picsum.photos/seed/p4_2/800/800",
@@ -130,8 +129,7 @@ export const products: Product[] = [
     ],
     rating: 4.9,
     reviews: 340,
-    isBestSeller: true,
-    category: "c3",
+    isFeatured: true, category: "c3",
     description: {
       ar: "مجموعة مذهلة من 12 لون مستوحاة من ألوان الصحراء وقت الغروب. تركيبة غنية بالصبغات وسهلة الدمج تتيح لك ابتكار إطلالات طبيعية أو درامية جذابة.",
       en: "A stunning collection of 12 shades inspired by desert sunset colors. Highly pigmented and easily blendable formula that allows you to create natural or dramatic looks."
@@ -185,9 +183,7 @@ export const products: Product[] = [
     ],
     rating: 4.8,
     reviews: 415,
-    isFeatured: true,
-    isBestSeller: true,
-    category: "c4",
+    isBestSeller: true, category: "c4",
     description: {
       ar: "إكسير ذهبي لشعرك. زيت أرغان مغربي عضوي معصور على البارد بنسبة 100%. يعالج التقصف، يضفي لمعاناً حريرياً، ويحمي الشعر من حرارة التصفيف.",
       en: "A golden elixir for your hair. 100% cold-pressed organic Moroccan argan oil. Treats split ends, imparts silky shine, and protects hair from heat styling."
