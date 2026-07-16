@@ -108,7 +108,7 @@ export default function AboutPage() {
         </div>
 
         {/* Section 2: Values Grid */}
-        <div className="bg-surface/30 py-24 border-y border-surface mb-32">
+        <div className="py-24 border-y border-surface mb-32">
           <div className="container mx-auto px-4 md:px-8">
             <div className="text-center mb-16 max-w-4xl mx-auto">
               <h2 className="text-3xl md:text-4xl font-bold text-secondary mb-6 leading-tight">
@@ -123,7 +123,7 @@ export default function AboutPage() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 mb-12">
               {values.map((val, idx) => (
-                <div key={idx} className="bg-background p-8 rounded-2xl border border-surface text-center shadow-soft hover:shadow-lg transition-all duration-300">
+                <div key={idx} className="bg-surface p-8 rounded-2xl border border-transparent text-center shadow-soft hover:shadow-lg transition-all duration-300">
                   <div className="flex justify-center transform group-hover:-translate-y-1.5 transition-transform duration-300">{val.icon}</div>
                   <h3 className="text-xl font-bold text-secondary mb-4">{val.title[language]}</h3>
                   <p className="text-secondary/70 leading-relaxed text-sm">{val.desc[language]}</p>
