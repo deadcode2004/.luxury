@@ -114,6 +114,7 @@ export default function Hero() {
               index === currentSlide ? "scale-105" : "scale-100"
             }`}
             priority={index === 0}
+            quality={100}
           />
           <div className="absolute inset-0 bg-black/40"></div>
           

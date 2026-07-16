@@ -19,12 +19,19 @@ export default function Header() {
   const hoverColorClass = isTransparent ? "hover:text-gray-300" : "hover:text-primary";
   const logoDotColorClass = isTransparent ? "text-background" : "text-primary";
 
-  // تأثير التمرير (Scroll Effect)
+  // تأثير التمرير (Scroll Effect) - Optimized for INP
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setIsScrolled(window.scrollY > 20);
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 

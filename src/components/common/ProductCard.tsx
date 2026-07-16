@@ -39,6 +39,8 @@ export default function ProductCard({ product }: ProductCardProps) {
           src={product.image}
           alt={product.name[language]}
           fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          quality={90}
           className="object-cover mix-blend-multiply transition-transform duration-1000 ease-out group-hover:scale-105"
         />
         

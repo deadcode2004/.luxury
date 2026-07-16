@@ -33,10 +33,10 @@ export default function CollectionsPage() {
         <div className="container mx-auto px-4 md:px-8">
           <div className="flex flex-col gap-16 md:gap-24 lg:gap-32">
             {categories.map((category, index) => (
-              <div key={category.id} className={`flex flex-col ${index % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"} items-center gap-8 md:gap-0`}>
+              <div key={category.id} className={`flex flex-col ${index % 2 === 0 ? "lg:flex-row" : "lg:flex-row-reverse"} items-center gap-8 lg:gap-0`}>
                 
                 {/* Image Section */}
-                <Link href="/shop" className="w-full md:w-2/3 group relative h-[400px] md:h-[600px] rounded-[2rem] overflow-hidden shadow-soft-3d block shrink-0 z-10">
+                <Link href="/shop" className="w-full lg:w-2/3 group relative h-[400px] lg:h-[600px] rounded-[2rem] overflow-hidden shadow-soft-3d block shrink-0 z-10">
                   <Image 
                     src={category.image} 
                     alt={category.name[language]} 
@@ -47,7 +47,7 @@ export default function CollectionsPage() {
                 </Link>
 
                 {/* Text Section (Overlapping) */}
-                <div className={`w-11/12 mx-auto md:w-5/12 bg-gradient-to-br from-white/60 to-white/10 backdrop-blur-xl p-8 md:p-12 lg:p-16 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] z-20 -mt-16 md:mt-0 ${index % 2 === 0 ? "md:-ms-24" : "md:-me-24"} border border-white transform transition-transform duration-500 hover:-translate-y-2`}>
+                <div className={`w-11/12 mx-auto lg:w-5/12 bg-gradient-to-br from-white/60 to-white/10 backdrop-blur-xl glass-fix p-8 md:p-12 lg:p-16 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] z-20 -mt-16 lg:mt-0 ${index % 2 === 0 ? "lg:-ms-24" : "lg:-me-24"} border border-white transform transition-transform duration-500 hover:-translate-y-2`}>
                   <span className="text-primary font-bold tracking-[0.2em] uppercase text-xs mb-4 block">
                     {language === "ar" ? "المجموعة الحصرية" : "Exclusive Collection"}
                   </span>
