@@ -47,6 +47,7 @@ export const products: Product[] = [
     reviews: 128,
     isNew: true,
     isFeatured: true,
+    isBestSeller: true,
     category: "c1",
     description: {
       ar: "عطر شرقي فاخر يجمع بين الأصالة والعصرية. مزيج ساحر من العود والزعفران مع نفحات رقيقة من الورد الدمشقي، مصمم خصيصاً لأصحاب الذوق الرفيع ليترك بصمة لا تُنسى في كل مكان.",
@@ -183,7 +184,7 @@ export const products: Product[] = [
     ],
     rating: 4.8,
     reviews: 415,
-    isBestSeller: true, category: "c4",
+    category: "c4",
     description: {
       ar: "إكسير ذهبي لشعرك. زيت أرغان مغربي عضوي معصور على البارد بنسبة 100%. يعالج التقصف، يضفي لمعاناً حريرياً، ويحمي الشعر من حرارة التصفيف.",
       en: "A golden elixir for your hair. 100% cold-pressed organic Moroccan argan oil. Treats split ends, imparts silky shine, and protects hair from heat styling."
