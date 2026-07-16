@@ -59,7 +59,7 @@ export default function Header() {
       <div className="container mx-auto px-4 md:px-8 flex justify-between items-center">
         {/* زر القائمة للموبايل */}
         <button
-          className={`md:hidden transition-colors p-2 -ml-2 ${textColorClass} ${hoverColorClass}`}
+          className={`lg:hidden transition-colors p-2 -ml-2 ${textColorClass} ${hoverColorClass}`}
           onClick={() => setIsMobileMenuOpen(true)}
         >
           <Menu size={24} />
@@ -71,7 +71,7 @@ export default function Header() {
         </Link>
 
         {/* قائمة التنقل - شاشات كبيرة */}
-        <nav className="hidden md:flex items-center gap-8 absolute left-1/2 transform -translate-x-1/2">
+        <nav className="hidden lg:flex items-center gap-6 xl:gap-8 absolute left-1/2 transform -translate-x-1/2">
           {navLinks.map((link, index) => (
             <Link
               key={index}
@@ -85,8 +85,8 @@ export default function Header() {
         </nav>
 
         {/* الأيقونات (بحث، سلة، مفضلة، حساب، لغة) */}
-        <div className={`flex items-center gap-4 ${textColorClass}`}>
-          <button onClick={toggleLanguage} className={`hidden md:flex items-center text-xs font-medium transition-colors ${hoverColorClass}`} title="تغيير اللغة">
+        <div className={`flex items-center gap-2 sm:gap-4 ${textColorClass}`}>
+          <button onClick={toggleLanguage} className={`hidden lg:flex items-center text-xs font-medium transition-colors ${hoverColorClass}`} title="تغيير اللغة">
             <Globe size={16} className="me-1.5" />
             <span className="mt-0.5">{language === "ar" ? "EN" : "AR"}</span>
           </button>
@@ -94,7 +94,7 @@ export default function Header() {
           <button className={`transition-colors p-2 flex items-center justify-center ${hoverColorClass}`}>
             <Search size={18} />
           </button>
-          <Link href="/favorites" className={`transition-colors relative hidden md:flex items-center justify-center p-2 ${hoverColorClass}`}>
+          <Link href="/favorites" className={`transition-colors relative hidden lg:flex items-center justify-center p-2 ${hoverColorClass}`}>
             <Heart size={18} />
             <span className={`absolute top-0.5 right-0.5 text-[9px] font-bold w-[14px] h-[14px] rounded-full flex items-center justify-center ${isTransparent ? "bg-background text-secondary" : "bg-primary text-background"}`}>2</span>
           </Link>
@@ -102,7 +102,7 @@ export default function Header() {
             <ShoppingBag size={18} />
             <span className={`absolute top-0.5 right-0.5 text-[9px] font-bold w-[14px] h-[14px] rounded-full flex items-center justify-center ${isTransparent ? "bg-background text-secondary" : "bg-primary text-background"}`}>2</span>
           </Link>
-          <div className="relative group hidden md:block h-full flex items-center">
+          <div className="relative group hidden lg:flex h-full items-center">
             <button className={`transition-colors flex items-center justify-center p-2 ${hoverColorClass}`}>
               <User size={18} />
             </button>
@@ -138,7 +138,7 @@ export default function Header() {
 
       {/* خلفية داكنة (Backdrop) */}
       <div 
-        className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300 md:hidden ${
+        className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300 lg:hidden ${
           isMobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"
         }`}
         onClick={() => setIsMobileMenuOpen(false)}
@@ -146,7 +146,7 @@ export default function Header() {
 
       {/* قائمة الموبايل الجانبية (Drawer Menu) */}
       <div
-        className={`fixed top-0 bottom-0 bg-background z-50 w-[85vw] max-w-sm flex flex-col shadow-2xl transform transition-transform duration-300 ease-in-out md:hidden ${
+        className={`fixed top-0 bottom-0 bg-background z-50 w-[85vw] max-w-sm flex flex-col shadow-2xl transform transition-transform duration-300 ease-in-out lg:hidden ${
           dir === "rtl" ? "right-0" : "left-0"
         } ${
           isMobileMenuOpen 
