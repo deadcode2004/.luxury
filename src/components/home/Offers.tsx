@@ -11,6 +11,13 @@ export default function Offers() {
   return (
     <section className="py-12 bg-background border-b border-surface">
       <div className="container mx-auto px-4 md:px-8">
+        <div className="text-center mb-10 md:mb-12">
+          <h2 className="text-2xl md:text-3xl font-bold font-sans text-secondary mb-3 drop-shadow-md">
+            {language === "ar" ? "مجموعاتنا الحصرية" : "Exclusive Collections"}
+          </h2>
+          <div className="w-16 h-1 bg-primary mx-auto drop-shadow-sm"></div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
           {/* العرض الأول */}
           <div className="relative rounded-2xl overflow-hidden aspect-[16/9] group flex items-center shadow-soft hover:shadow-lg transition-all duration-300">
