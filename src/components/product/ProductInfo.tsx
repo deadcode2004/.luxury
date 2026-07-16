@@ -30,7 +30,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
       </div>
 
       {/* Title */}
-      <h1 className="text-4xl md:text-5xl font-bold font-sans text-secondary mb-4 leading-tight">
+      <h1 className="text-3xl md:text-4xl font-bold font-sans text-secondary mb-4 leading-tight">
         {product.name[language]}
       </h1>
 
