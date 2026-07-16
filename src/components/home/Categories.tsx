@@ -34,7 +34,7 @@ export default function Categories() {
               </div>
               
               {/* Floating Layered Card */}
-              <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-10/12 bg-gradient-to-br from-white/60 to-white/10 backdrop-blur-xl rounded-2xl p-4 md:p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-center transform transition-all duration-500 group-hover:-translate-y-3 border border-white z-10">
+              <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-10/12 bg-white/95 rounded-2xl p-4 md:p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-center transform transition-all duration-500 group-hover:-translate-y-3 border border-white z-10">
                 <h3 className="text-secondary text-sm md:text-base font-bold mb-1 leading-tight">
                   {category.name[language]}
                 </h3>
