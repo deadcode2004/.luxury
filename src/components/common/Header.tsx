@@ -205,9 +205,6 @@ export default function Header() {
                   <Link href="/account" className="text-sm text-gray-500 hover:text-primary py-2 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
                     {language === "ar" ? "الملف الشخصي" : "Profile"}
                   </Link>
-                  <Link href="/account/orders" className="text-sm text-gray-500 hover:text-primary py-2 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
-                    {language === "ar" ? "طلباتي" : "My Orders"}
-                  </Link>
                   <Link href="/admin" className="text-sm font-bold text-gray-500 hover:text-primary py-2 transition-colors flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
                     <LayoutDashboard size={14} />
                     {language === "ar" ? "لوحة الإدارة" : "Admin Dashboard"}
