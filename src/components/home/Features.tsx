@@ -31,7 +31,7 @@ export default function Features() {
   ];
 
   return (
-    <section className="py-12 bg-surface border-t border-b border-surface">
+    <section className="py-12 bg-background">
       <div className="container mx-auto px-4 md:px-8">
         <div className="text-center mb-10 md:mb-14">
           <h2 className="text-2xl md:text-3xl font-bold font-sans text-secondary mb-3">
