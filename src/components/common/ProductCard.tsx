@@ -15,7 +15,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { language } = useLanguage();
 
   return (
-    <div className="group bg-white/95 rounded-3xl p-3 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-floating hover:-translate-y-2 transition-all duration-500 relative flex flex-col border border-white/40">
+    <div className="group bg-gradient-to-br from-white/60 to-white/10 backdrop-blur-xl glass-fix rounded-3xl p-3 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-floating hover:-translate-y-2 transition-all duration-500 relative flex flex-col border border-white/40">
       {/* شارة (جديد/الأكثر مبيعاً) */}
       {product.isNew && (
         <span className="absolute top-4 right-4 bg-primary text-background text-xs font-bold px-3 py-1 rounded-full z-10">
@@ -29,7 +29,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       )}
 
       {/* زر المفضلة */}
-      <button className="absolute top-4 left-4 z-10 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center text-secondary/70 hover:text-wishlist hover:bg-white transition-colors shadow-sm">
+      <button className="absolute top-4 left-4 z-10 w-8 h-8 bg-background/80 backdrop-blur glass-fix rounded-full flex items-center justify-center text-secondary/70 hover:text-wishlist hover:bg-background transition-colors">
         <Heart size={16} />
       </button>
 

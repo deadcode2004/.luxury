@@ -89,7 +89,7 @@ export default function Offers() {
                 }`}
                 onClick={(e) => { e.stopPropagation(); setExpandedOffer(expandedOffer === 1 ? null : 1); }}
               >
-                <div className={`bg-white/95 h-full w-full py-6 px-5 ${language === "ar" ? "pl-12" : "pr-12"} flex flex-col justify-center relative shadow-2xl border-x border-white/40`}>
+                <div className={`bg-gradient-to-br from-white/70 to-white/20 backdrop-blur-xl glass-fix h-full w-full py-6 px-5 ${language === "ar" ? "pl-12" : "pr-12"} flex flex-col justify-center relative shadow-2xl border-x border-white/40`}>
                   <div className={`absolute top-1/2 -translate-y-1/2 ${language === "ar" ? "left-3" : "right-3"} text-primary`}>
                     {expandedOffer === 1 ? (language === "ar" ? <ChevronRight size={28} /> : <ChevronLeft size={28} />) : (language === "ar" ? <ChevronLeft size={28} /> : <ChevronRight size={28} />)}
                   </div>
@@ -102,7 +102,7 @@ export default function Offers() {
 
             {/* DESKTOP Overlapping Text Card */}
             <div className={`hidden md:flex absolute top-1/2 -translate-y-1/2 w-[60%] lg:w-[75%] xl:w-[60%] z-20 -start-8 ${language === "ar" ? "justify-end" : "justify-start"}`}>
-              <div className="bg-white/95 p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/40 transform transition-transform duration-700 hover:-translate-y-2 w-full">
+              <div className="bg-gradient-to-br from-white/60 to-white/10 backdrop-blur-xl glass-fix p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/40 transform transition-transform duration-700 hover:-translate-y-2 w-full">
                 {offer1Content(false)}
               </div>
             </div>
@@ -131,7 +131,7 @@ export default function Offers() {
                 }`}
                 onClick={(e) => { e.stopPropagation(); setExpandedOffer(expandedOffer === 2 ? null : 2); }}
               >
-                <div className={`bg-white/95 h-full w-full py-6 px-5 ${language === "ar" ? "pr-12" : "pl-12"} flex flex-col justify-center relative shadow-2xl border-x border-white/40`}>
+                <div className={`bg-gradient-to-br from-white/70 to-white/20 backdrop-blur-xl glass-fix h-full w-full py-6 px-5 ${language === "ar" ? "pr-12" : "pl-12"} flex flex-col justify-center relative shadow-2xl border-x border-white/40`}>
                   <div className={`absolute top-1/2 -translate-y-1/2 ${language === "ar" ? "right-3" : "left-3"} text-primary`}>
                     {expandedOffer === 2 ? (language === "ar" ? <ChevronLeft size={28} /> : <ChevronRight size={28} />) : (language === "ar" ? <ChevronRight size={28} /> : <ChevronLeft size={28} />)}
                   </div>
@@ -144,7 +144,7 @@ export default function Offers() {
 
             {/* DESKTOP Overlapping Text Card */}
             <div className={`hidden md:flex absolute top-1/2 -translate-y-1/2 w-[60%] lg:w-[75%] xl:w-[60%] z-20 -end-8 ${language === "ar" ? "justify-start" : "justify-end"}`}>
-              <div className="bg-white/95 p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/40 transform transition-transform duration-700 hover:-translate-y-2 w-full">
+              <div className="bg-gradient-to-br from-white/60 to-white/10 backdrop-blur-xl glass-fix p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/40 transform transition-transform duration-700 hover:-translate-y-2 w-full">
                 {offer2Content(false)}
               </div>
             </div>

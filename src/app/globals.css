@@ -40,6 +40,15 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
+/* Fix for WebKit/Blink Sub-pixel Rendering Corruption on Scaled Viewports */
+.glass-fix {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  isolation: isolate;
+}
+
 .dark .glass {
   background: rgba(18, 18, 18, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.1);

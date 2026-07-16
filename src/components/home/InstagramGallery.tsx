@@ -35,7 +35,7 @@ export default function InstagramGallery() {
               src={src}
               alt={`Instagram post ${index + 1}`}
               fill
-              className="object-cover transition-transform duration-1000 ease-out group-hover:scale-110"
+              className="object-cover transition-transform duration-1000 ease-out group-hover:scale-110 transform-gpu"
             />
             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
               <FaInstagram size={32} className="text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300" />
