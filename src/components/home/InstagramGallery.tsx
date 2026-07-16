@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import Image from "next/image";
@@ -17,7 +17,7 @@ export default function InstagramGallery() {
   ];
 
   return (
-    <section className="py-24 bg-background overflow-hidden">
+    <section className="py-24 bg-background border-b border-surface overflow-hidden">
       <div className="text-center mb-16 md:mb-20">
         <div className="flex items-center justify-center space-x-3 space-x-reverse rtl:space-x-reverse ltr:space-x mb-6 text-primary">
           <FaInstagram size={28} />

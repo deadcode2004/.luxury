@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import Image from "next/image";
@@ -9,7 +9,7 @@ export default function Offers() {
   const { language } = useLanguage();
 
   return (
-    <section className="py-12 bg-background">
+    <section className="py-12 bg-background border-b border-surface">
       <div className="container mx-auto px-4 md:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
           {/* العرض الأول */}

@@ -9,7 +9,7 @@ export default function Reviews() {
   const { language } = useLanguage();
 
   return (
-    <section className="py-12 bg-background relative overflow-hidden">
+    <section className="py-12 bg-background border-b border-surface relative overflow-hidden">
       {/* لمسة تصميمية في الخلفية */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
       <div className="absolute bottom-0 left-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4"></div>
