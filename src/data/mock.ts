@@ -37,12 +37,7 @@ export const products: Product[] = [
     brand: { ar: "بارادايس إيسنس", en: "Paradise Essence" },
     price: 1250,
     image: "/images/products/paradisecare-shop-gold-silver-spray-01-300x300.jpg",
-    gallery: [
-      "https://picsum.photos/seed/p1/800/800",
-      "https://picsum.photos/seed/p1_2/800/800",
-      "https://picsum.photos/seed/p1_3/800/800",
-      "https://picsum.photos/seed/p1_4/800/800"
-    ],
+
     rating: 4.9,
     reviews: 128,
     isNew: true,
@@ -69,11 +64,7 @@ export const products: Product[] = [
     price: 850,
     oldPrice: 1000,
     image: "/images/products/paradisecare-shop-gold-saffron-cream-01-300x300.jpg",
-    gallery: [
-      "https://picsum.photos/seed/p2/800/800",
-      "https://picsum.photos/seed/p2_2/800/800",
-      "https://picsum.photos/seed/p2_3/800/800"
-    ],
+
     rating: 4.8,
     reviews: 95,
     isBestSeller: true, isFeatured: true, category: "c2",
@@ -96,10 +87,7 @@ export const products: Product[] = [
     brand: { ar: "أورا رويال", en: "Aura Royale" },
     price: 450,
     image: "/images/products/paradisecare-shop-hyaluronic-with-gold-and-silver-01-300x300.jpg",
-    gallery: [
-      "https://picsum.photos/seed/p3/800/800",
-      "https://picsum.photos/seed/p3_2/800/800"
-    ],
+
     rating: 4.7,
     reviews: 210,
     isFeatured: true,
@@ -123,11 +111,7 @@ export const products: Product[] = [
     brand: { ar: "جلو آند كو", en: "Glow & Co" },
     price: 320,
     image: "/images/products/paradisecare-shop-biomagneti-01-300x300.jpeg",
-    gallery: [
-      "https://picsum.photos/seed/p4/800/800",
-      "https://picsum.photos/seed/p4_2/800/800",
-      "https://picsum.photos/seed/p4_3/800/800"
-    ],
+
     rating: 4.9,
     reviews: 340,
     isFeatured: true, category: "c3",
@@ -150,10 +134,7 @@ export const products: Product[] = [
     brand: { ar: "بارادايس إيسنس", en: "Paradise Essence" },
     price: 980,
     image: "https://picsum.photos/seed/p5/800/800",
-    gallery: [
-      "https://picsum.photos/seed/p5/800/800",
-      "https://picsum.photos/seed/p5_2/800/800"
-    ],
+
     rating: 4.6,
     reviews: 82,
     isNew: true,
@@ -178,10 +159,7 @@ export const products: Product[] = [
     price: 290,
     oldPrice: 350,
     image: "https://picsum.photos/seed/p6/800/800",
-    gallery: [
-      "https://picsum.photos/seed/p6/800/800",
-      "https://picsum.photos/seed/p6_2/800/800"
-    ],
+
     rating: 4.8,
     reviews: 415,
     category: "c4",
