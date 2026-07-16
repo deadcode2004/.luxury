@@ -11,22 +11,22 @@ export default function ContactPage() {
 
   const contactInfo = [
     {
-      icon: <MapPin className="text-primary w-6 h-6" />,
+      icon: <MapPin className="w-6 h-6" />,
       title: { ar: "العنوان", en: "Address" },
       desc: { ar: "شارع العليا، الرياض، المملكة العربية السعودية", en: "Olaya Street, Riyadh, Saudi Arabia" }
     },
     {
-      icon: <Phone className="text-primary w-6 h-6" />,
+      icon: <Phone className="w-6 h-6" />,
       title: { ar: "رقم الهاتف", en: "Phone Number" },
       desc: { ar: "+966 50 123 4567", en: "+966 50 123 4567" }
     },
     {
-      icon: <Mail className="text-primary w-6 h-6" />,
+      icon: <Mail className="w-6 h-6" />,
       title: { ar: "البريد الإلكتروني", en: "Email Address" },
       desc: { ar: "support@paradise.com", en: "support@paradise.com" }
     },
     {
-      icon: <Clock className="text-primary w-6 h-6" />,
+      icon: <Clock className="w-6 h-6" />,
       title: { ar: "ساعات العمل", en: "Working Hours" },
       desc: { ar: "الأحد - الخميس: 9 ص - 10 م", en: "Sun - Thu: 9 AM - 10 PM" }
     }
@@ -59,7 +59,7 @@ export default function ContactPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-8">
                 {contactInfo.map((info, idx) => (
                   <div key={idx} className="flex gap-6 items-start">
-                    <div className="w-14 h-14 shrink-0 rounded-2xl bg-surface border border-gray-100 flex items-center justify-center shadow-sm">
+                    <div className="w-14 h-14 shrink-0 rounded-2xl bg-primary text-background border border-transparent flex items-center justify-center shadow-sm hover:bg-primary-hover transition-colors">
                       {info.icon}
                     </div>
                     <div>
