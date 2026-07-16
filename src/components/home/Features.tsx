@@ -31,7 +31,7 @@ export default function Features() {
   ];
 
   return (
-    <section className="relative z-20 -mt-24 md:-mt-48 lg:-mt-[22rem] pb-12 pt-0">
+    <section className="relative z-20 -mt-24 pb-12 pt-0">
       <div className="container mx-auto px-4 md:px-8">
         <div className="text-center mb-10 md:mb-14">
           <h2 className="text-2xl md:text-3xl font-bold font-sans text-background mb-3 drop-shadow-md">
@@ -49,7 +49,7 @@ export default function Features() {
               {/* Vertical line (right/left depending on RTL) */}
               {(index === 0 || index === 1 || index === 2) && (
                 <div 
-                  className={`absolute top-8 bottom-8 rtl:left-0 ltr:right-0 w-px bg-background/20 hidden ${
+                  className={`absolute top-8 bottom-8 rtl:left-0 ltr:right-0 w-px bg-surface/80 hidden ${
                     index === 1 ? 'lg:block' : 'md:block'
                   }`} 
                 />
@@ -58,7 +58,7 @@ export default function Features() {
               {/* Horizontal line (bottom) */}
               {(index === 0 || index === 1 || index === 2) && (
                 <div 
-                  className={`absolute left-8 right-8 bottom-0 h-px bg-background/20 block ${
+                  className={`absolute left-8 right-8 bottom-0 h-px bg-surface/80 block ${
                     index === 2 ? 'md:hidden' : 'lg:hidden'
                   }`} 
                 />
@@ -68,8 +68,8 @@ export default function Features() {
                 <div className="flex justify-center transform group-hover:-translate-y-1.5 transition-transform duration-300 relative z-10">
                   {feature.icon}
                 </div>
-                <h3 className="text-base md:text-lg font-bold mb-2 text-background drop-shadow-sm relative z-10">{feature.title[language]}</h3>
-                <p className="text-background/80 text-xs md:text-sm leading-relaxed font-medium relative z-10">{feature.description[language]}</p>
+                <h3 className="text-base md:text-lg font-bold mb-2 text-secondary drop-shadow-sm relative z-10">{feature.title[language]}</h3>
+                <p className="text-secondary/80 text-xs md:text-sm leading-relaxed font-medium relative z-10">{feature.description[language]}</p>
               </div>
             </div>
           ))}
