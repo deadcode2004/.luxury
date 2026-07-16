@@ -33,17 +33,17 @@ export default function Reviews() {
                 ))}
               </div>
               
-              <p className="text-background/80 mb-6 leading-relaxed italic relative z-10 min-h-[70px] text-xs md:text-sm">
+              <p className="text-secondary/80 mb-6 leading-relaxed italic relative z-10 min-h-[70px] text-xs md:text-sm">
                 "{review.comment[language]}"
               </p>
               
               <div className="flex items-center">
-                <div className="w-10 h-10 bg-secondary text-background rounded-full flex items-center justify-center font-bold text-sm me-3 shadow-md">
+                <div className="w-10 h-10 bg-secondary text-secondary rounded-full flex items-center justify-center font-bold text-sm me-3 shadow-md">
                   {review.author[language].charAt(0)}
                 </div>
                 <div>
-                  <h4 className="font-bold text-background text-xs md:text-sm">{review.author[language]}</h4>
-                  <span className="text-[9px] text-background/50 uppercase tracking-widest mt-0.5 block">
+                  <h4 className="font-bold text-secondary text-xs md:text-sm">{review.author[language]}</h4>
+                  <span className="text-[9px] text-secondary/50 uppercase tracking-widest mt-0.5 block">
                     {language === "ar" ? "عميل موثق" : "Verified Buyer"}
                   </span>
                 </div>

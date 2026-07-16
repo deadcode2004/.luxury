@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 import Image from "next/image";
@@ -29,7 +29,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       )}
 
       {/* زر المفضلة */}
-      <button className="absolute top-4 left-4 z-10 w-8 h-8 bg-background/80 backdrop-blur rounded-full flex items-center justify-center text-background/90 hover:text-wishlist hover:bg-background transition-colors">
+      <button className="absolute top-4 left-4 z-10 w-8 h-8 bg-background/80 backdrop-blur rounded-full flex items-center justify-center text-secondary/70 hover:text-wishlist hover:bg-background transition-colors">
         <Heart size={16} />
       </button>
 
@@ -53,9 +53,9 @@ export default function ProductCard({ product }: ProductCardProps) {
 
       {/* تفاصيل المنتج */}
       <div className="p-3 md:p-4 flex flex-col items-start text-start">
-        <p className="text-background/90 text-[9px] tracking-[0.15em] uppercase mb-1">{product.brand}</p>
+        <p className="text-secondary/70 text-[9px] tracking-[0.15em] uppercase mb-1">{product.brand}</p>
         <Link href={`/product/${product.id}`} className="w-full">
-          <h3 className="text-background font-medium text-sm md:text-base mb-1.5 truncate hover:text-primary transition-colors">
+          <h3 className="text-secondary font-medium text-sm md:text-base mb-1.5 truncate hover:text-primary transition-colors">
             {product.name[language]}
           </h3>
         </Link>
@@ -66,15 +66,15 @@ export default function ProductCard({ product }: ProductCardProps) {
               <Star key={i} size={10} fill={i < Math.floor(product.rating) ? "currentColor" : "none"} className={i < Math.floor(product.rating) ? "text-accent" : "text-gray-300"} />
             ))}
           </div>
-          <span className="text-background/90 text-[9px] ms-1">({product.reviews})</span>
+          <span className="text-secondary/70 text-[9px] ms-1">({product.reviews})</span>
         </div>
 
         <div className="flex items-center gap-2 mt-auto pt-1">
-          <span className="text-background font-bold text-sm">
+          <span className="text-secondary font-bold text-sm">
             {product.price} {language === "ar" ? "ر.س" : "SAR"}
           </span>
           {product.oldPrice && (
-            <span className="text-background/90 line-through text-[10px]">
+            <span className="text-secondary/70 line-through text-[10px]">
               {product.oldPrice} {language === "ar" ? "ر.س" : "SAR"}
             </span>
           )}
