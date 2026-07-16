@@ -58,7 +58,7 @@ export default function ProductGallery({ images }: ProductGalleryProps) {
       {/* Main Image Container */}
       <div 
         ref={containerRef}
-        className="relative w-full aspect-square md:aspect-[4/5] rounded-2xl overflow-hidden bg-gray-50 group cursor-none"
+        className="relative w-full rounded-2xl overflow-hidden bg-gray-50 group cursor-none flex items-center justify-center"
         onMouseMove={handleMouseMove}
         onMouseEnter={() => setIsZoomed(true)}
         onMouseLeave={() => setIsZoomed(false)}
@@ -66,8 +66,9 @@ export default function ProductGallery({ images }: ProductGalleryProps) {
         <Image
           src={activeImage}
           alt="Product Main Image"
-          fill
-          className="object-cover"
+          width={1000}
+          height={1000}
+          className="w-full h-auto object-contain"
           priority
         />
         
