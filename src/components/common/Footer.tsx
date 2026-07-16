@@ -80,7 +80,7 @@ export default function Footer() {
               />
               <button
                 type="button"
-                className="bg-primary hover:bg-primary-hover text-secondary font-bold tracking-wide rounded-md px-4 py-3 text-sm transition-colors w-full"
+                className="bg-primary hover:bg-primary-hover text-background font-bold tracking-wide rounded-md px-4 py-3 text-sm transition-colors w-full"
               >
                 {language === "ar" ? "اشتراك" : "Subscribe"}
               </button>

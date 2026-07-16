@@ -139,7 +139,7 @@ export default function Hero() {
             <div className={`transition-all duration-1000 transform ${index === currentSlide ? "translate-y-0 opacity-100 delay-700" : "translate-y-8 opacity-0"}`}>
               <Link
                 href={slide.link}
-                className="bg-primary text-secondary px-6 py-3 rounded-md font-bold hover:bg-background hover:text-secondary transition-all flex items-center justify-center group tracking-wide text-base"
+                className="bg-primary text-background px-6 py-3 rounded-md font-bold hover:bg-primary-hover hover:text-background transition-all flex items-center justify-center group tracking-wide text-base"
               >
                 {slide.cta[language]}
                 {dir === "rtl" ? (

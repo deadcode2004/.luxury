@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import Image from "next/image";
@@ -44,7 +44,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         
         {/* تأثير الظهور عند مرور المؤشر (Hover Overlay) */}
         <div className="absolute inset-x-0 bottom-0 p-4 opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
-          <button className="w-full bg-secondary text-background py-3 rounded-lg flex items-center justify-center space-x-2 space-x-reverse rtl:space-x-reverse ltr:space-x hover:bg-primary hover:text-secondary transition-colors font-medium">
+          <button className="w-full bg-primary text-background py-3 rounded-lg flex items-center justify-center space-x-2 space-x-reverse rtl:space-x-reverse ltr:space-x hover:bg-primary-hover hover:text-background transition-colors font-medium">
             <ShoppingBag size={18} />
             <span>{language === "ar" ? "أضف للسلة" : "Add to Cart"}</span>
           </button>

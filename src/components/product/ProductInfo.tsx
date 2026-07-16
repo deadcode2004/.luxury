@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { Star, Minus, Plus, Heart, ShoppingBag, Share2 } from "lucide-react";
@@ -109,7 +109,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
         </div>
 
         {/* Buy Now Button */}
-        <button className="w-full bg-primary text-secondary font-bold h-14 rounded-lg flex items-center justify-center hover:bg-primary/90 transition-all shadow-glow">
+        <button className="w-full bg-primary text-background font-bold h-14 rounded-lg flex items-center justify-center hover:bg-primary-hover transition-all shadow-glow">
           {language === "ar" ? "شراء الآن" : "Buy It Now"}
         </button>
 
