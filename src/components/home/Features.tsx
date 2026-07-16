@@ -44,7 +44,7 @@ export default function Features() {
           {features.map((feature, index) => (
             <div 
               key={index} 
-              className="relative text-center group p-8 transition-all duration-300 hover:bg-surface/30"
+              className="relative text-center group p-8 transition-all duration-300"
             >
               {/* Vertical line (right/left depending on RTL) */}
               {(index === 0 || index === 1 || index === 2) && (
