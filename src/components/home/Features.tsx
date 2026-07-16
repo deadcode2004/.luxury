@@ -44,17 +44,31 @@ export default function Features() {
           {features.map((feature, index) => (
             <div 
               key={index} 
-              className={`text-center group p-8 transition-all duration-300 hover:bg-surface/30 ${
-                index === 0 ? "border-b border-surface md:border-e lg:border-b-0" :
-                index === 1 ? "border-b border-surface lg:border-b-0 lg:border-e" :
-                index === 2 ? "border-b border-surface md:border-b-0 md:border-e" : ""
-              }`}
+              className="relative text-center group p-8 transition-all duration-300 hover:bg-surface/30"
             >
-              <div className="flex justify-center transform group-hover:-translate-y-1.5 transition-transform duration-300">
+              {/* Vertical line (right/left depending on RTL) */}
+              {(index === 0 || index === 1 || index === 2) && (
+                <div 
+                  className={`absolute top-8 bottom-8 rtl:left-0 ltr:right-0 w-px bg-surface/80 hidden ${
+                    index === 1 ? 'lg:block' : 'md:block'
+                  }`} 
+                />
+              )}
+              
+              {/* Horizontal line (bottom) */}
+              {(index === 0 || index === 1 || index === 2) && (
+                <div 
+                  className={`absolute left-8 right-8 bottom-0 h-px bg-surface/80 block ${
+                    index === 2 ? 'md:hidden' : 'lg:hidden'
+                  }`} 
+                />
+              )}
+
+              <div className="flex justify-center transform group-hover:-translate-y-1.5 transition-transform duration-300 relative z-10">
                 {feature.icon}
               </div>
-              <h3 className="text-base md:text-lg font-bold mb-2 text-secondary drop-shadow-sm">{feature.title[language]}</h3>
-              <p className="text-secondary/80 text-xs md:text-sm leading-relaxed font-medium">{feature.description[language]}</p>
+              <h3 className="text-base md:text-lg font-bold mb-2 text-secondary drop-shadow-sm relative z-10">{feature.title[language]}</h3>
+              <p className="text-secondary/80 text-xs md:text-sm leading-relaxed font-medium relative z-10">{feature.description[language]}</p>
             </div>
           ))}
         </div>
