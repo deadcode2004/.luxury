@@ -49,10 +49,10 @@ export default function AboutPage() {
         {/* Hero Section */}
         <div className="container mx-auto px-4 md:px-8 mb-32">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-            <div className="relative aspect-square md:aspect-[4/3] lg:aspect-square w-full rounded-2xl overflow-hidden shadow-soft">
+            <div className="relative aspect-square md:aspect-[4/3] w-full rounded-2xl overflow-hidden shadow-soft">
               <Image 
-                src="https://picsum.photos/800/800?random=20" 
-                alt="Luxury Lifestyle" 
+                src="/images/about/paradisecare-chisiamo01.jpg" 
+                alt="Paradise Care" 
                 fill 
                 className="object-cover"
               />
@@ -63,17 +63,12 @@ export default function AboutPage() {
                 {language === "ar" ? "رؤيتنا" : "Our Vision"}
               </span>
               <h2 className="text-3xl md:text-4xl font-bold text-secondary mb-8 leading-tight">
-                {language === "ar" ? "إعادة تعريف مفهوم الرفاهية بلمسة عصرية." : "Redefining the concept of luxury with a modern touch."}
+                {language === "ar" ? "معادن من أجل صحتك الحقيقية" : "Minerals for your true health"}
               </h2>
-              <p className="text-gray-600 text-lg leading-loose mb-6">
+              <p className="text-secondary/80 text-lg leading-loose">
                 {language === "ar" 
-                  ? "تأسس متجرنا من شغف حقيقي بالجمال والأناقة. نحن لا نبيع منتجات فحسب، بل نقدم تجربة استثنائية تأخذك في رحلة من الحواس. بدأنا بخطوة صغيرة نحو تقديم العطور النادرة، واليوم نحن وجهتك الأولى لكل ما هو فاخر."
-                  : "Our store was founded from a genuine passion for beauty and elegance. We don't just sell products; we offer an exceptional experience that takes your senses on a journey. We started with rare perfumes, and today we are your premier destination for all things luxury."}
-              </p>
-              <p className="text-gray-600 text-lg leading-loose">
-                {language === "ar"
-                  ? "كل تفصيلة في منتجاتنا تم اختيارها بعناية فائقة لتلبي توقعات أصحاب الذوق الرفيع. نحن نؤمن بأن الفخامة تكمن في التفاصيل."
-                  : "Every detail in our products is carefully selected to meet the expectations of those with refined taste. We believe that luxury lies in the details."}
+                  ? "بارادايس كير هي علامة تجارية فاخرة للعافية المعدنية مستوحاة من التقاليد المصرية، ودقة التركيبة النانوية، وفلسفة توفير منتجات ممتازة لحياتنا اليومية."
+                  : "Paradise Care is a luxury mineral wellness brand inspired by Egyptian tradition, precision nano-formulation, and a philosophy of providing excellent products for our daily lives."}
               </p>
             </div>
           </div>
