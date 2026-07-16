@@ -31,7 +31,7 @@ export default function Features() {
   ];
 
   return (
-    <section className="relative z-20 -mt-16 pb-12 pt-0">
+    <section className="relative z-20 -mt-32 pb-12 pt-0">
       <div className="container mx-auto px-4 md:px-8">
         <div className="text-center mb-10 md:mb-14">
           <h2 className="text-2xl md:text-3xl font-bold font-sans text-background mb-3 drop-shadow-md">
@@ -40,14 +40,21 @@ export default function Features() {
           <div className="w-16 h-1 bg-primary mx-auto drop-shadow-sm"></div>
         </div>
 
-        <div className="flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x rtl:lg:divide-x-reverse divide-surface">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 relative">
           {features.map((feature, index) => (
-            <div key={index} className="flex-1 text-center group p-8 text-secondary transition-all duration-300 hover:bg-surface/30">
+            <div 
+              key={index} 
+              className={`text-center group p-8 transition-all duration-300 hover:bg-surface/30 ${
+                index === 0 ? "border-b border-surface md:border-e lg:border-b-0" :
+                index === 1 ? "border-b border-surface lg:border-b-0 lg:border-e" :
+                index === 2 ? "border-b border-surface md:border-b-0 md:border-e" : ""
+              }`}
+            >
               <div className="flex justify-center transform group-hover:-translate-y-1.5 transition-transform duration-300">
                 {feature.icon}
               </div>
-              <h3 className="text-base md:text-lg font-bold mb-2 text-secondary">{feature.title[language]}</h3>
-              <p className="text-secondary/70 text-xs md:text-sm leading-relaxed">{feature.description[language]}</p>
+              <h3 className="text-base md:text-lg font-bold mb-2 text-secondary drop-shadow-sm">{feature.title[language]}</h3>
+              <p className="text-secondary/80 text-xs md:text-sm leading-relaxed font-medium">{feature.description[language]}</p>
             </div>
           ))}
         </div>
