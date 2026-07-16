@@ -24,10 +24,10 @@ export interface Category {
 }
 
 export const categories: Category[] = [
-  { id: "c1", name: { ar: "عطور", en: "Perfumes" }, image: "https://picsum.photos/seed/c1/800/800" },
-  { id: "c2", name: { ar: "عناية بالبشرة", en: "Skincare" }, image: "https://picsum.photos/seed/c2/800/800" },
-  { id: "c3", name: { ar: "مكياج", en: "Makeup" }, image: "https://picsum.photos/seed/c3/800/800" },
-  { id: "c4", name: { ar: "عناية بالشعر", en: "Haircare" }, image: "https://picsum.photos/seed/c4/800/800" },
+  { id: "c1", name: { ar: "عطور", en: "Perfumes" }, image: "/images/products/paradisecare-home02.jpg" },
+  { id: "c2", name: { ar: "عناية بالبشرة", en: "Skincare" }, image: "/images/products/paradisecare-home03.jpg" },
+  { id: "c3", name: { ar: "مكياج", en: "Makeup" }, image: "/images/products/paradisecare-shop-hyaluronic-with-gold-and-silver-01-300x300.jpg" },
+  { id: "c4", name: { ar: "عناية بالشعر", en: "Haircare" }, image: "/images/products/paradisecare-shop-biomagneti-01-300x300.jpeg" },
 ];
 
 export const products: Product[] = [
@@ -77,6 +77,51 @@ export const products: Product[] = [
     usage: {
       ar: "ضعي 3-4 قطرات على بشرة نظيفة وجافة صباحاً ومساءً. دلكي بلطف بحركات دائرية لأعلى حتى يمتص تماماً قبل وضع المرطب.",
       en: "Apply 3-4 drops onto clean, dry skin morning and evening. Gently massage in upward circular motions until fully absorbed before applying moisturizer."
+    }
+  },
+  {
+    id: "p3",
+    name: { ar: "حمض الهالورونيك مع الذهب و الفضة", en: "Hyaluronic Acid with Gold & Silver" },
+    brand: { ar: "أورا رويال", en: "Aura Royale" },
+    price: 450,
+    image: "/images/products/paradisecare-shop-hyaluronic-with-gold-and-silver-01-300x300.jpg",
+    rating: 4.7,
+    reviews: 210,
+    isFeatured: true,
+    category: "c2",
+    description: {
+      ar: "كريم ترطيب مكثف بقوام مخملي يذوب في البشرة فوراً. يغذي البشرة بعمق ويعيد حاجز الرطوبة الطبيعي لحماية تدوم 48 ساعة.",
+      en: "An intensive moisturizing cream with a velvet texture that melts into the skin instantly. It deeply nourishes and restores the natural moisture barrier for 48-hour protection."
+    },
+    ingredients: {
+      ar: ["زبدة الشيا العضوية", "زيت الجوجوبا", "سيراميد", "فيتامين هـ"],
+      en: ["Organic Shea Butter", "Jojoba Oil", "Ceramides", "Vitamin E"]
+    },
+    usage: {
+      ar: "استخدميه كخطوة أخيرة في روتين العناية بالبشرة. خذي كمية بحجم حبة اللؤلؤ ووزعيها بالتساوي على الوجه والرقبة.",
+      en: "Use as the last step in your skincare routine. Take a pearl-sized amount and distribute evenly over the face and neck."
+    }
+  },
+  {
+    id: "p4",
+    name: { ar: "المغناطيس الحيوي", en: "Biomagnet" },
+    brand: { ar: "جلو آند كو", en: "Glow & Co" },
+    price: 320,
+    image: "/images/products/paradisecare-shop-biomagneti-01-300x300.jpeg",
+    rating: 4.9,
+    reviews: 340,
+    isFeatured: true, category: "c3",
+    description: {
+      ar: "مجموعة مذهلة من 12 لون مستوحاة من ألوان الصحراء وقت الغروب. تركيبة غنية بالصبغات وسهلة الدمج تتيح لك ابتكار إطلالات طبيعية أو درامية جذابة.",
+      en: "A stunning collection of 12 shades inspired by desert sunset colors. Highly pigmented and easily blendable formula that allows you to create natural or dramatic looks."
+    },
+    ingredients: {
+      ar: ["ميكا نقية", "زيت بذور العنب", "بدون بارابين", "بدون عطور صناعية"],
+      en: ["Pure Mica", "Grape Seed Oil", "Paraben-free", "No Synthetic Fragrances"]
+    },
+    usage: {
+      ar: "استخدمي فرشاة دمج ناعمة للألوان الانتقالية، وفرشاة مسطحة للألوان اللامعة على الجفن المتحرك. يمكن استخدام الألوان اللامعة بإصبعك للحصول على تأثير أقوى.",
+      en: "Use a fluffy blending brush for transition shades, and a flat brush for shimmer shades on the lid. Shimmers can be applied with your finger for a more intense effect."
     }
   }
 ];

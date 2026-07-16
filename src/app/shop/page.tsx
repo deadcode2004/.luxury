@@ -18,7 +18,7 @@ export default function ShopPage() {
 
   // Filter and Sort Logic
   const filteredProducts = useMemo(() => {
-    let result = [...products];
+    let result = products.filter(p => p.id === 'p1' || p.id === 'p2');
 
     // Filter
     if (selectedCategory) {
