@@ -9,19 +9,26 @@ interface ProductGalleryProps {
 
 export default function ProductGallery({ images }: ProductGalleryProps) {
   const [activeImage, setActiveImage] = useState(images[0]);
-  const [zoomStyle, setZoomStyle] = useState({});
+  const [lensPos, setLensPos] = useState({ x: 0, y: 0 });
+  const [bgSize, setBgSize] = useState({ w: 0, h: 0 });
   const [isZoomed, setIsZoomed] = useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  const LENS_SIZE = 240;
+  const LENS_RADIUS = LENS_SIZE / 2;
+  const ZOOM_SCALE = 2.5;
 
   if (!images || images.length === 0) return null;
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - left) / width) * 100;
-    const y = ((e.clientY - top) / height) * 100;
+    if (!containerRef.current) return;
+    const { left, top, width, height } = containerRef.current.getBoundingClientRect();
     
-    setZoomStyle({
-      transformOrigin: `${x}% ${y}%`
+    setLensPos({ 
+      x: e.clientX - left, 
+      y: e.clientY - top 
     });
+    setBgSize({ w: width, h: height });
   };
 
   return (
@@ -46,25 +53,53 @@ export default function ProductGallery({ images }: ProductGalleryProps) {
         ))}
       </div>
 
-      {/* Main Image */}
+      {/* Main Image Container */}
       <div 
-        className="relative w-full aspect-square md:aspect-[4/5] rounded-2xl overflow-hidden bg-gray-50 group cursor-zoom-in"
+        ref={containerRef}
+        className="relative w-full aspect-square md:aspect-[4/5] rounded-2xl overflow-hidden bg-gray-50 group cursor-none"
         onMouseMove={handleMouseMove}
         onMouseEnter={() => setIsZoomed(true)}
-        onMouseLeave={() => {
-          setIsZoomed(false);
-          // Optional: reset origin when leaving
-          setTimeout(() => setZoomStyle({}), 300);
-        }}
+        onMouseLeave={() => setIsZoomed(false)}
       >
         <Image
           src={activeImage}
           alt="Product Main Image"
           fill
-          className={`object-cover transition-transform duration-300 ease-out ${isZoomed ? "scale-[1.8]" : "scale-100"}`}
-          style={isZoomed ? zoomStyle : {}}
+          className="object-cover"
           priority
         />
+        
+        {/* Modern Floating Magnifying Glass Lens */}
+        {isZoomed && (
+          <div 
+            className="absolute z-10 pointer-events-none rounded-full border border-white/30 shadow-[0_10px_40px_rgba(0,0,0,0.3)] overflow-hidden flex items-center justify-center transition-opacity duration-200"
+            style={{
+              width: `${LENS_SIZE}px`,
+              height: `${LENS_SIZE}px`,
+              left: `${lensPos.x - LENS_RADIUS}px`,
+              top: `${lensPos.y - LENS_RADIUS}px`,
+            }}
+          >
+            {/* The zoomed image inside the lens */}
+            <div 
+              className="absolute inset-0"
+              style={{
+                backgroundImage: `url(${activeImage})`,
+                backgroundSize: `${bgSize.w * ZOOM_SCALE}px ${bgSize.h * ZOOM_SCALE}px`,
+                backgroundPosition: `-${lensPos.x * ZOOM_SCALE - LENS_RADIUS}px -${lensPos.y * ZOOM_SCALE - LENS_RADIUS}px`,
+                backgroundRepeat: 'no-repeat',
+              }}
+            />
+            {/* Professional Watermark / Logo on the lens */}
+            <div className="absolute bottom-5 left-0 right-0 text-center z-20">
+              <span className="text-[10px] font-bold tracking-[0.4em] uppercase text-white/90 drop-shadow-md">
+                PARADISE
+              </span>
+            </div>
+            {/* Inner ring for aesthetic */}
+            <div className="absolute inset-2 rounded-full border border-white/10 pointer-events-none"></div>
+          </div>
+        )}
       </div>
     </div>
   );
