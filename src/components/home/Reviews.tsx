@@ -9,11 +9,7 @@ export default function Reviews() {
   const { language } = useLanguage();
 
   return (
-    <section className="py-12 bg-background border-b border-surface relative overflow-hidden">
-      {/* لمسة تصميمية في الخلفية */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
-      <div className="absolute bottom-0 left-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4"></div>
-
+    <section className="py-16 relative overflow-hidden border-b border-surface bg-background">
       <div className="container mx-auto px-4 md:px-8 relative z-10">
         <div className="text-center mb-10 md:mb-14">
           <h2 className="text-2xl md:text-3xl font-bold font-sans text-secondary mb-3">
@@ -24,7 +20,7 @@ export default function Reviews() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {reviews.map((review) => (
-            <div key={review.id} className="bg-surface p-6 rounded-2xl shadow-soft hover:shadow-lg border border-transparent hover:border-primary/10 relative group hover:-translate-y-1 transition-all duration-300">
+            <div key={review.id} className="bg-white p-6 rounded-3xl shadow-sm hover:shadow-md hover:-translate-y-2 border border-surface/50 relative group transition-all duration-500 flex flex-col">
               <Quote size={28} className="text-primary/10 absolute top-5 right-5 transform -scale-x-100 rtl:scale-x-100 group-hover:text-primary/20 transition-colors" />
               
               <div className="flex text-accent mb-5 relative z-10">

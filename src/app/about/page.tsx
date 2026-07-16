@@ -124,12 +124,20 @@ export default function AboutPage() {
               </p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 mb-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10 mb-12 mt-8">
               {values.map((val, idx) => (
-                <div key={idx} className="bg-surface p-8 rounded-2xl border border-transparent text-center shadow-soft hover:shadow-lg transition-all duration-300">
-                  <div className="flex justify-center transform group-hover:-translate-y-1.5 transition-transform duration-300">{val.icon}</div>
-                  <h3 className="text-xl font-bold text-secondary mb-4">{val.title[language]}</h3>
-                  <p className="text-secondary/70 leading-relaxed text-sm">{val.desc[language]}</p>
+                <div key={idx} className="relative group w-full">
+                  {/* Back 3D Layer */}
+                  <div className="absolute inset-0 bg-primary/10 rounded-2xl transform translate-x-3 translate-y-3 md:translate-x-4 md:translate-y-4 transition-transform duration-500 group-hover:translate-x-5 group-hover:translate-y-5"></div>
+                  
+                  {/* Front Card */}
+                  <div className="relative bg-white p-8 rounded-2xl border border-surface shadow-sm text-center hover:-translate-y-1 transition-all duration-500 h-full flex flex-col items-center">
+                    <div className="flex justify-center transform group-hover:-translate-y-1.5 transition-transform duration-300 mb-2">
+                      {val.icon}
+                    </div>
+                    <h3 className="text-xl font-bold text-secondary mb-3">{val.title[language]}</h3>
+                    <p className="text-secondary/70 leading-relaxed text-sm">{val.desc[language]}</p>
+                  </div>
                 </div>
               ))}
             </div>

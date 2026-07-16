@@ -77,7 +77,7 @@ export default function ShopPage() {
               </button>
 
               <div className={`lg:block ${isFilterOpen ? "block" : "hidden"}`}>
-                <div className="bg-surface rounded-2xl p-8 border border-gray-100 sticky top-32">
+                <div className="bg-gradient-to-br from-white/60 to-white/10 backdrop-blur-xl rounded-2xl p-8 border border-white/50 shadow-md sticky top-32">
                   
                   {/* Categories Filter */}
                   <div className="mb-10">
@@ -154,7 +154,7 @@ export default function ShopPage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-24 bg-surface rounded-2xl border border-gray-100">
+                <div className="text-center py-24 bg-gradient-to-br from-white/60 to-white/10 backdrop-blur-xl rounded-2xl border border-white/50 shadow-md">
                   <h3 className="text-2xl font-bold text-gray-400">
                     {language === "ar" ? "لا توجد منتجات تطابق هذا الفلتر." : "No products match this filter."}
                   </h3>

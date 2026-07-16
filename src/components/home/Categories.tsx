@@ -28,17 +28,17 @@ export default function Categories() {
                   src={category.image}
                   alt={category.name[language]}
                   fill
-                  className="object-cover transition-transform duration-[10s] group-hover:scale-110"
+                  className="object-cover transition-transform duration-1000 ease-out group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-secondary/10 group-hover:bg-transparent transition-colors duration-500"></div>
               </div>
               
               {/* Floating Layered Card */}
-              <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-10/12 bg-white/90 backdrop-blur-md rounded-2xl p-4 md:p-5 shadow-floating text-center transform transition-all duration-500 group-hover:-translate-y-3 group-hover:bg-white border border-white/50 z-10">
-                <h3 className="text-secondary text-base md:text-lg font-bold mb-1 truncate">
+              <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-10/12 bg-gradient-to-br from-white/60 to-white/10 backdrop-blur-xl rounded-2xl p-4 md:p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-center transform transition-all duration-500 group-hover:-translate-y-3 border border-white z-10">
+                <h3 className="text-secondary text-sm md:text-base font-bold mb-1 leading-tight">
                   {category.name[language]}
                 </h3>
-                <span className="text-primary text-[10px] md:text-xs font-bold uppercase tracking-widest opacity-70 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                <span className="text-primary text-[9px] md:text-[10px] font-bold uppercase tracking-widest opacity-70 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
                   {language === "ar" ? "استكشف" : "Explore"}
                   <span className={`transform transition-transform duration-300 ${language === "ar" ? "group-hover:-translate-x-1" : "group-hover:translate-x-1"}`}>
                     →

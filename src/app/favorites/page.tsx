@@ -33,12 +33,12 @@ export default function FavoritesPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {favoriteItems.map((product) => (
-              <div key={product.id} className="group relative bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-soft transition-all duration-300 flex flex-col">
+              <div key={product.id} className="group relative bg-gradient-to-br from-white/60 to-white/10 backdrop-blur-xl border border-white/40 rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-floating transition-all duration-300 flex flex-col">
                 
-                {/* Remove Button */}
-                <button className="absolute top-4 right-4 z-10 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-white transition-colors">
+                {/* زر إزالة */}
+                <button className="absolute top-4 right-4 z-10 w-8 h-8 bg-white/50 backdrop-blur-sm rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-white transition-colors">
                   <Trash2 size={16} />
                 </button>
 
@@ -48,7 +48,7 @@ export default function FavoritesPage() {
                     src={product.image} 
                     alt={product.name[language]} 
                     fill 
-                    className="object-cover mix-blend-multiply transform transition-transform duration-700 group-hover:scale-105"
+                    className="object-cover mix-blend-multiply transform transition-transform duration-1000 ease-out group-hover:scale-105"
                   />
                 </Link>
 

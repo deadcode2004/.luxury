@@ -56,7 +56,7 @@ export default function CartPage() {
               {/* Cart Items List */}
               <div className="lg:w-2/3 flex flex-col gap-6">
                 {cartItems.map((item) => (
-                  <div key={item.id} className="bg-white rounded-2xl p-6 flex flex-col sm:flex-row gap-6 items-center border border-gray-100 shadow-sm relative group transition-all hover:shadow-soft">
+                  <div key={item.id} className="bg-gradient-to-br from-white/60 to-white/10 backdrop-blur-xl rounded-2xl p-6 flex flex-col sm:flex-row gap-6 items-center border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative group transition-all hover:shadow-floating">
                     
                     {/* Remove Button */}
                     <button 
@@ -147,7 +147,7 @@ export default function CartPage() {
 
             </div>
           ) : (
-            <div className="text-center py-32 bg-white rounded-3xl border border-gray-100 shadow-sm">
+            <div className="text-center py-32 bg-gradient-to-br from-white/60 to-white/10 backdrop-blur-xl rounded-3xl border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
               <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
                 <ShoppingBag size={48} className="text-gray-300" />
               </div>

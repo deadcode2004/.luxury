@@ -15,7 +15,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { language } = useLanguage();
 
   return (
-    <div className="group bg-white rounded-3xl p-3 shadow-soft-3d hover:shadow-floating hover:-translate-y-2 transition-all duration-500 relative flex flex-col border border-white/50">
+    <div className="group bg-gradient-to-br from-white/60 to-white/10 backdrop-blur-xl rounded-3xl p-3 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-floating hover:-translate-y-2 transition-all duration-500 relative flex flex-col border border-white/40">
       {/* شارة (جديد/الأكثر مبيعاً) */}
       {product.isNew && (
         <span className="absolute top-4 right-4 bg-primary text-background text-xs font-bold px-3 py-1 rounded-full z-10">
@@ -34,12 +34,12 @@ export default function ProductCard({ product }: ProductCardProps) {
       </button>
 
       {/* صورة المنتج */}
-      <Link href={`/product/${product.id}`} className="block relative aspect-square overflow-hidden rounded-2xl bg-gray-50/50">
+      <Link href={`/product/${product.id}`} className="block relative aspect-square overflow-hidden rounded-2xl bg-transparent">
         <Image
           src={product.image}
           alt={product.name[language]}
           fill
-          className="object-cover mix-blend-multiply transition-transform duration-700 group-hover:scale-105"
+          className="object-cover mix-blend-multiply transition-transform duration-1000 ease-out group-hover:scale-105"
         />
         
         {/* تأثير الظهور عند مرور المؤشر (Hover Overlay) */}

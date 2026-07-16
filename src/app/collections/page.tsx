@@ -41,13 +41,13 @@ export default function CollectionsPage() {
                     src={category.image} 
                     alt={category.name[language]} 
                     fill 
-                    className="object-cover transition-transform duration-[15s] group-hover:scale-110"
+                    className="object-cover transition-transform duration-1000 ease-out group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-secondary/5 group-hover:bg-transparent transition-colors duration-500"></div>
                 </Link>
 
                 {/* Text Section (Overlapping) */}
-                <div className={`w-11/12 mx-auto md:w-5/12 bg-white/90 backdrop-blur-xl p-8 md:p-12 lg:p-16 rounded-[2rem] shadow-floating z-20 -mt-16 md:mt-0 ${index % 2 === 0 ? "md:-ms-24" : "md:-me-24"} border border-white/60 transform transition-transform duration-500 hover:-translate-y-2`}>
+                <div className={`w-11/12 mx-auto md:w-5/12 bg-gradient-to-br from-white/60 to-white/10 backdrop-blur-xl p-8 md:p-12 lg:p-16 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] z-20 -mt-16 md:mt-0 ${index % 2 === 0 ? "md:-ms-24" : "md:-me-24"} border border-white transform transition-transform duration-500 hover:-translate-y-2`}>
                   <span className="text-primary font-bold tracking-[0.2em] uppercase text-xs mb-4 block">
                     {language === "ar" ? "المجموعة الحصرية" : "Exclusive Collection"}
                   </span>

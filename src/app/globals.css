@@ -22,12 +22,7 @@
   --foreground: #1F1F1F;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #121212;
-    --foreground: #E0E0DE;
-  }
-}
+/* Dark mode removed to enforce light luxury theme */
 
 body {
   background-color: var(--background);
@@ -50,9 +45,4 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* تحسينات عامة للانتقالات */
-* {
-  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
-  transition-duration: 300ms;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-}
+

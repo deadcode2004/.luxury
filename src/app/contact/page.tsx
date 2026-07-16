@@ -83,7 +83,7 @@ export default function ContactPage() {
             </div>
 
             {/* Right Column: Contact Form */}
-            <div className="lg:w-7/12 w-full bg-white rounded-3xl p-8 md:p-12 border border-gray-100 shadow-soft">
+            <div className="lg:w-7/12 w-full bg-gradient-to-br from-white/60 to-white/10 backdrop-blur-xl rounded-3xl p-8 md:p-12 border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
               <h2 className="text-3xl font-bold text-secondary mb-8">
                 {language === "ar" ? "أرسل لنا رسالة" : "Send us a Message"}
               </h2>
@@ -136,7 +136,7 @@ export default function ContactPage() {
 
                 <button 
                   type="button" 
-                  className="mt-4 bg-primary text-secondary font-bold h-14 px-8 rounded-lg flex items-center justify-center gap-3 hover:bg-primary/90 transition-all shadow-glow w-full md:w-auto"
+                  className="mt-4 bg-primary text-white font-bold h-14 px-8 rounded-lg flex items-center justify-center gap-3 hover:bg-primary-hover transition-all shadow-glow w-full md:w-auto"
                 >
                   {language === "ar" ? "إرسال الرسالة" : "Send Message"}
                   <Send size={20} className={language === "ar" ? "rotate-180" : ""} />

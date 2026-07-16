@@ -39,7 +39,7 @@ export default function CheckoutPage() {
             <div className="lg:w-2/3 flex flex-col gap-12">
               
               {/* 1. Shipping Information */}
-              <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm">
+              <div className="bg-gradient-to-br from-white/60 to-white/10 backdrop-blur-xl rounded-2xl p-8 border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
                 <h2 className="text-2xl font-bold text-secondary mb-8 pb-4 border-b border-gray-100 flex items-center gap-3">
                   <span className="w-8 h-8 rounded-full bg-secondary text-white flex items-center justify-center text-sm">1</span>
                   {language === "ar" ? "بيانات الشحن" : "Shipping Information"}
@@ -89,7 +89,7 @@ export default function CheckoutPage() {
               </div>
 
               {/* 2. Payment Method */}
-              <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm">
+              <div className="bg-gradient-to-br from-white/60 to-white/10 backdrop-blur-xl rounded-2xl p-8 border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
                 <h2 className="text-2xl font-bold text-secondary mb-8 pb-4 border-b border-gray-100 flex items-center gap-3">
                   <span className="w-8 h-8 rounded-full bg-secondary text-white flex items-center justify-center text-sm">2</span>
                   {language === "ar" ? "طريقة الدفع" : "Payment Method"}
@@ -147,7 +147,7 @@ export default function CheckoutPage() {
 
             {/* Order Summary Sidebar */}
             <div className="lg:w-1/3 shrink-0">
-              <div className="bg-surface rounded-2xl p-8 border border-gray-100 sticky top-32 shadow-soft">
+              <div className="bg-gradient-to-br from-white/60 to-white/10 backdrop-blur-xl rounded-2xl p-8 border border-white/50 sticky top-32 shadow-md">
                 <h3 className="text-2xl font-bold mb-8 pb-4 border-b border-gray-100 text-secondary">
                   {language === "ar" ? "ملخص الطلب" : "Order Summary"}
                 </h3>

@@ -9,7 +9,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 const SLIDES = [
   {
     id: 1,
-    image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop",
+    image: "/images/products/paradisecare-home02.jpg",
     subtitle: { ar: "المجموعة الجديدة ٢٠٢٦", en: "NEW COLLECTION 2026" },
     title: { ar: "جوهر الفخامة الحقيقية", en: "Essence of True Luxury" },
     description: { 
@@ -21,7 +21,7 @@ const SLIDES = [
   },
   {
     id: 2,
-    image: "https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=2071&auto=format&fit=crop",
+    image: "/images/products/paradisecare-home03.jpg",
     subtitle: { ar: "أناقة بلا تكلف", en: "EFFORTLESS ELEGANCE" },
     title: { ar: "تصاميم تعكس شخصيتك", en: "Designs Reflecting You" },
     description: { 
@@ -33,7 +33,7 @@ const SLIDES = [
   },
   {
     id: 3,
-    image: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=2074&auto=format&fit=crop",
+    image: "/images/products/paradisecare-shop-biomagneti-01-300x300.jpeg",
     subtitle: { ar: "عروض حصرية", en: "EXCLUSIVE OFFERS" },
     title: { ar: "فخامة بمتناول يديك", en: "Luxury at Your Fingertips" },
     description: { 

@@ -76,7 +76,7 @@ export default function Footer() {
               <input
                 type="email"
                 placeholder={language === "ar" ? "البريد الإلكتروني" : "Email Address"}
-                className="bg-surface/50 border border-surface rounded-md px-4 py-3 text-sm focus:outline-none focus:border-primary transition-colors w-full text-secondary placeholder-secondary/50"
+                className="bg-transparent border border-surface rounded-md px-4 py-3 text-sm focus:outline-none focus:border-primary transition-colors w-full text-secondary placeholder-secondary/50"
               />
               <button
                 type="button"

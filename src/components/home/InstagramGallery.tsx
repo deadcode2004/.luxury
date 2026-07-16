@@ -9,11 +9,11 @@ export default function InstagramGallery() {
   const { language } = useLanguage();
 
   const images = [
-    "https://picsum.photos/seed/insta1/500/500",
-    "https://picsum.photos/seed/insta2/500/500",
-    "https://picsum.photos/seed/insta3/500/500",
-    "https://picsum.photos/seed/insta4/500/500",
-    "https://picsum.photos/seed/insta5/500/500",
+    "/images/products/paradisecare-home02.jpg",
+    "/images/products/paradisecare-shop-gold-saffron-cream-01-300x300.jpg",
+    "/images/products/paradisecare-shop-biomagneti-01-300x300.jpeg",
+    "/images/products/paradisecare-shop-hyaluronic-with-gold-and-silver-01-300x300.jpg",
+    "/images/products/paradisecare-home03.jpg",
   ];
 
   return (
@@ -35,7 +35,7 @@ export default function InstagramGallery() {
               src={src}
               alt={`Instagram post ${index + 1}`}
               fill
-              className="object-cover transition-transform duration-700 group-hover:scale-110"
+              className="object-cover transition-transform duration-1000 ease-out group-hover:scale-110"
             />
             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
               <FaInstagram size={32} className="text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300" />
