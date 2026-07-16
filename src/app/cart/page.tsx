@@ -73,7 +73,7 @@ export default function CartPage() {
                     </Link>
 
                     <div className="flex-grow flex flex-col text-center sm:text-start w-full">
-                      <span className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{item.brand}</span>
+                      <span className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{item.brand[language]}</span>
                       <Link href={`/product/${item.id}`}>
                         <h3 className="text-lg md:text-xl font-bold text-secondary mb-2 hover:text-primary transition-colors">
                           {item.name[language]}
