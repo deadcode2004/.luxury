@@ -20,7 +20,7 @@ export default function Reviews() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {reviews.map((review) => (
-            <div key={review.id} className="bg-white p-6 rounded-3xl shadow-sm hover:shadow-md hover:-translate-y-2 border border-surface/50 relative group transition-all duration-500 flex flex-col">
+            <div key={review.id} className="bg-white p-6 rounded-3xl shadow-sm hover:shadow-md border border-surface/50 relative group transition-all duration-500 flex flex-col">
               <Quote size={28} className="text-primary/10 absolute top-5 right-5 transform -scale-x-100 rtl:scale-x-100 group-hover:text-primary/20 transition-colors" />
               
               <div className="flex text-accent mb-5 relative z-10">

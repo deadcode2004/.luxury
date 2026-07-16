@@ -64,7 +64,7 @@ export default function Offers() {
           <div className="w-16 h-1 bg-primary mx-auto drop-shadow-sm"></div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10">
           
           {/* العرض الأول */}
           <div className="relative group pt-4 lg:pt-8 w-full md:flex md:justify-end">
@@ -101,7 +101,7 @@ export default function Offers() {
             </div>
 
             {/* DESKTOP Overlapping Text Card */}
-            <div className={`hidden md:flex absolute top-1/2 -translate-y-1/2 w-[55%] z-20 -start-8 ${language === "ar" ? "justify-end" : "justify-start"}`}>
+            <div className={`hidden md:flex absolute top-1/2 -translate-y-1/2 w-[60%] lg:w-[75%] xl:w-[60%] z-20 -start-8 ${language === "ar" ? "justify-end" : "justify-start"}`}>
               <div className="bg-gradient-to-br from-white/60 to-white/10 backdrop-blur-xl p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/40 transform transition-transform duration-700 hover:-translate-y-2 w-full">
                 {offer1Content(false)}
               </div>
@@ -143,7 +143,7 @@ export default function Offers() {
             </div>
 
             {/* DESKTOP Overlapping Text Card */}
-            <div className={`hidden md:flex absolute top-1/2 -translate-y-1/2 w-[55%] z-20 -end-8 ${language === "ar" ? "justify-start" : "justify-end"}`}>
+            <div className={`hidden md:flex absolute top-1/2 -translate-y-1/2 w-[60%] lg:w-[75%] xl:w-[60%] z-20 -end-8 ${language === "ar" ? "justify-start" : "justify-end"}`}>
               <div className="bg-gradient-to-br from-white/60 to-white/10 backdrop-blur-xl p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/40 transform transition-transform duration-700 hover:-translate-y-2 w-full">
                 {offer2Content(false)}
               </div>

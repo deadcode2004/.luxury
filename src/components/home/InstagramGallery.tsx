@@ -30,7 +30,7 @@ export default function InstagramGallery() {
 
       <div className="flex flex-nowrap w-full overflow-hidden">
         {images.map((src, index) => (
-          <div key={index} className="relative w-1/2 md:w-1/5 aspect-square group flex-shrink-0 cursor-pointer">
+          <div key={index} className="relative w-1/2 md:w-1/5 aspect-square group flex-shrink-0 cursor-pointer overflow-hidden">
             <Image
               src={src}
               alt={`Instagram post ${index + 1}`}
