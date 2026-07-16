@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import Image from "next/image";
@@ -12,22 +12,22 @@ export default function AboutPage() {
 
   const values = [
     {
-      icon: <Diamond className="text-primary w-8 h-8 mb-4" />,
+      icon: <div className="w-16 h-16 rounded-full bg-primary text-background flex items-center justify-center mb-4 mx-auto hover:bg-primary-hover transition-colors"><Diamond size={28} /></div>,
       title: { ar: "الأصالة والجودة", en: "Authenticity & Quality" },
       desc: { ar: "ننتقي أفضل المكونات من مصادرها الأصلية لنقدم لك فخامة حقيقية.", en: "We source the finest ingredients to deliver true luxury." }
     },
     {
-      icon: <Sparkles className="text-primary w-8 h-8 mb-4" />,
+      icon: <div className="w-16 h-16 rounded-full bg-primary text-background flex items-center justify-center mb-4 mx-auto hover:bg-primary-hover transition-colors"><Sparkles size={28} /></div>,
       title: { ar: "الأناقة العصرية", en: "Modern Elegance" },
       desc: { ar: "نواكب أحدث خطوط الموضة لابتكار تصاميم تعكس ذوقك الرفيع.", en: "We stay ahead of trends to create designs reflecting refined taste." }
     },
     {
-      icon: <Leaf className="text-primary w-8 h-8 mb-4" />,
+      icon: <div className="w-16 h-16 rounded-full bg-primary text-background flex items-center justify-center mb-4 mx-auto hover:bg-primary-hover transition-colors"><Leaf size={28} /></div>,
       title: { ar: "الاستدامة", en: "Sustainability" },
       desc: { ar: "نلتزم بممارسات صديقة للبيئة لضمان مستقبل أجمل.", en: "We commit to eco-friendly practices for a more beautiful future." }
     },
     {
-      icon: <HeartHandshake className="text-primary w-8 h-8 mb-4" />,
+      icon: <div className="w-16 h-16 rounded-full bg-primary text-background flex items-center justify-center mb-4 mx-auto hover:bg-primary-hover transition-colors"><HeartHandshake size={28} /></div>,
       title: { ar: "ثقة العملاء", en: "Customer Trust" },
       desc: { ar: "رضاكم هو غايتنا الأولى، ونبني علاقاتنا على الشفافية.", en: "Your satisfaction is our goal; we build relationships on transparency." }
     }
@@ -43,7 +43,7 @@ export default function AboutPage() {
           <h1 className="text-4xl md:text-5xl font-bold font-sans text-secondary mb-4">
             {language === "ar" ? "قصتنا" : "Our Story"}
           </h1>
-          <div className="w-20 h-1 bg-primary mx-auto"></div>
+          <div className="w-20 h-1 bg-surface mx-auto"></div>
         </div>
 
         {/* Hero Section */}
@@ -80,7 +80,7 @@ export default function AboutPage() {
         </div>
 
         {/* Values Grid */}
-        <div className="bg-surface py-24 border-y border-gray-100">
+        <div className="bg-background py-24 border-t border-surface">
           <div className="container mx-auto px-4 md:px-8">
             <div className="text-center mb-16">
               <span className="text-primary font-bold tracking-widest uppercase mb-2 block text-sm">
@@ -93,10 +93,10 @@ export default function AboutPage() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12">
               {values.map((val, idx) => (
-                <div key={idx} className="bg-white p-8 rounded-2xl border border-gray-100 text-center shadow-sm hover:shadow-soft transition-shadow">
-                  <div className="flex justify-center">{val.icon}</div>
+                <div key={idx} className="bg-surface p-8 rounded-2xl border border-transparent text-center shadow-soft hover:shadow-lg transition-all duration-300">
+                  <div className="flex justify-center transform group-hover:-translate-y-1.5 transition-transform duration-300">{val.icon}</div>
                   <h3 className="text-xl font-bold text-secondary mb-4">{val.title[language]}</h3>
-                  <p className="text-gray-500 leading-relaxed">{val.desc[language]}</p>
+                  <p className="text-secondary/70 leading-relaxed">{val.desc[language]}</p>
                 </div>
               ))}
             </div>
