@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Alexandria } from "next/font/google";
 import "./globals.css";
-import { LanguageProvider } from "@/contexts/LanguageContext";
-import { ToastProvider } from "@/components/ui/Toast";
+import AppProviders from "@/components/providers/AppProviders";
 
 const alexandria = Alexandria({
   variable: "--font-alexandria",
@@ -27,9 +26,7 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl" className={`${alexandria.variable} antialiased h-full`}>
       <body className="min-h-full flex flex-col bg-background text-foreground" suppressHydrationWarning>
-        <LanguageProvider>
-          <ToastProvider>{children}</ToastProvider>
-        </LanguageProvider>
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   );

@@ -8,11 +8,11 @@ type SpinnerProps = {
   size?: number;
 };
 
-export default function Spinner({ className, size = 24 }: SpinnerProps) {
+export default function Spinner({ className, size = 18 }: SpinnerProps) {
   return (
     <span
       className={cn(
-        "inline-block rounded-full border-2 border-primary/30 border-t-primary animate-spin",
+        "inline-block rounded-full border-2 border-current/30 border-t-current animate-spin",
         className
       )}
       style={{ width: size, height: size }}

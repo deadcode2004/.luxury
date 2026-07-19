@@ -8,6 +8,7 @@ export interface Product {
   gallery?: string[];
   rating: number;
   reviews: number;
+  stock?: number;
   isNew?: boolean;
   isFeatured?: boolean;
   isBestSeller?: boolean;
@@ -39,6 +40,7 @@ export const products: Product[] = [
     image: "/images/products/paradisecare-home02.jpg",
     rating: 4.9,
     reviews: 128,
+    stock: 45,
     isNew: true,
     isFeatured: true,
     isBestSeller: true,
@@ -65,6 +67,7 @@ export const products: Product[] = [
     image: "/images/products/paradisecare-home03.jpg",
     rating: 4.8,
     reviews: 95,
+    stock: 12,
     isBestSeller: true, isFeatured: true, category: "c2",
     description: {
       ar: "سيروم مغذي غني برقائق الذهب عيار 24 قيراط وحمض الهيالورونيك. يعمل على تجديد خلايا البشرة، تقليل الخطوط الدقيقة، وإعطاء إشراقة شبابية فورية.",
@@ -87,6 +90,7 @@ export const products: Product[] = [
     image: "/images/products/paradisecare-shop-hyaluronic-with-gold-and-silver-01-300x300.jpg",
     rating: 4.7,
     reviews: 210,
+    stock: 0,
     isFeatured: true,
     category: "c2",
     description: {
@@ -110,6 +114,7 @@ export const products: Product[] = [
     image: "/images/products/paradisecare-shop-biomagneti-01-300x300.jpeg",
     rating: 4.9,
     reviews: 340,
+    stock: 80,
     isFeatured: true, category: "c3",
     description: {
       ar: "مجموعة مذهلة من 12 لون مستوحاة من ألوان الصحراء وقت الغروب. تركيبة غنية بالصبغات وسهلة الدمج تتيح لك ابتكار إطلالات طبيعية أو درامية جذابة.",

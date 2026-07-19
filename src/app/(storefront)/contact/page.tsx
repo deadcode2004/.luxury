@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { MapPin, Phone, Mail, Clock, Send } from "lucide-react";
 import Card from "@/components/ui/Card";
@@ -8,9 +8,36 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
 import FormField from "@/components/ui/FormField";
+import { useToast } from "@/components/ui/Toast";
 
 export default function ContactPage() {
   const { language } = useLanguage();
+  const { toast } = useToast();
+  const [sending, setSending] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [form, setForm] = useState({ name: "", phone: "", email: "", subject: "", message: "" });
+
+  const submitContact = async () => {
+    const next: Record<string, string> = {};
+    if (!form.name.trim()) next.name = language === "ar" ? "مطلوب" : "Required";
+    if (!form.email.includes("@")) next.email = language === "ar" ? "بريد غير صالح" : "Invalid email";
+    if (!form.subject.trim()) next.subject = language === "ar" ? "مطلوب" : "Required";
+    if (!form.message.trim()) next.message = language === "ar" ? "مطلوب" : "Required";
+    setErrors(next);
+    if (Object.keys(next).length) {
+      toast(language === "ar" ? "يرجى تعبئة الحقول المطلوبة" : "Please fill required fields", "warning");
+      return;
+    }
+    setSending(true);
+    try {
+      await new Promise((r) => setTimeout(r, 600));
+      setForm({ name: "", phone: "", email: "", subject: "", message: "" });
+      toast(language === "ar" ? "تم إرسال رسالتك بنجاح" : "Message sent successfully", "success");
+    } finally {
+      setSending(false);
+    }
+  };
+
 
   const contactInfo = [
     {
@@ -83,48 +110,41 @@ export default function ContactPage() {
 
             </div>
 
+            
             <Card variant="glass" padding="none" className="lg:w-7/12 w-full rounded-3xl p-8 md:p-12">
               <h2 className="text-3xl font-bold text-secondary mb-8">
                 {language === "ar" ? "أرسل لنا رسالة" : "Send us a Message"}
               </h2>
 
-              <form className="flex flex-col gap-6">
+              <form className="flex flex-col gap-6" onSubmit={(e) => { e.preventDefault(); void submitContact(); }}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField label={language === "ar" ? "الاسم الكامل" : "Full Name"}>
-                    <Input placeholder={language === "ar" ? "أدخل اسمك" : "Enter your name"} />
+                  <FormField label={language === "ar" ? "الاسم الكامل" : "Full Name"} error={errors.name}>
+                    <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} className={errors.name ? "border-red-300" : ""} placeholder={language === "ar" ? "أدخل اسمك" : "Enter your name"} />
                   </FormField>
-                  <FormField label={language === "ar" ? "رقم الهاتف" : "Phone Number"}>
-                    <Input
-                      type="tel"
-                      className="text-start dir-ltr"
-                      placeholder="+966 5X XXX XXXX"
-                    />
+                  <FormField label={language === "ar" ? "رقم الهاتف" : "Phone Number"} error={errors.phone}>
+                    <Input type="tel" value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} className={`text-start dir-ltr ${errors.phone ? "border-red-300" : ""}`} placeholder="+966 5X XXX XXXX" />
                   </FormField>
                 </div>
 
-                <FormField label={language === "ar" ? "البريد الإلكتروني" : "Email Address"}>
-                  <Input type="email" placeholder="example@email.com" />
+                <FormField label={language === "ar" ? "البريد الإلكتروني" : "Email Address"} error={errors.email}>
+                  <Input type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} className={errors.email ? "border-red-300" : ""} placeholder="example@email.com" />
                 </FormField>
 
-                <FormField label={language === "ar" ? "الموضوع" : "Subject"}>
-                  <Input placeholder={language === "ar" ? "عنوان الرسالة" : "Message subject"} />
+                <FormField label={language === "ar" ? "الموضوع" : "Subject"} error={errors.subject}>
+                  <Input value={form.subject} onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))} className={errors.subject ? "border-red-300" : ""} placeholder={language === "ar" ? "عنوان الرسالة" : "Message subject"} />
                 </FormField>
 
-                <FormField label={language === "ar" ? "الرسالة" : "Message"}>
-                  <Textarea
-                    className="min-h-[160px] resize-y"
-                    placeholder={
-                      language === "ar" ? "اكتب رسالتك هنا..." : "Write your message here..."
-                    }
-                  />
+                <FormField label={language === "ar" ? "الرسالة" : "Message"} error={errors.message}>
+                  <Textarea className={`min-h-[160px] resize-y ${errors.message ? "border-red-300" : ""}`} value={form.message} onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))} placeholder={language === "ar" ? "اكتب رسالتك هنا..." : "Write your message here..."} />
                 </FormField>
 
-                <Button type="button" variant="primary" size="lg" className="mt-4 w-full md:w-auto text-white">
+                <Button type="submit" variant="primary" size="lg" className="mt-4 w-full md:w-auto text-white" loading={sending}>
                   {language === "ar" ? "إرسال الرسالة" : "Send Message"}
                   <Send size={20} className={language === "ar" ? "rotate-180" : ""} />
                 </Button>
               </form>
             </Card>
+
 
           </div>
         </div>

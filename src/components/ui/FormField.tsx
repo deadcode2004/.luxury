@@ -10,6 +10,7 @@ type FormFieldProps = {
   className?: string;
   children: React.ReactNode;
   hint?: React.ReactNode;
+  error?: React.ReactNode;
 };
 
 export default function FormField({
@@ -18,12 +19,17 @@ export default function FormField({
   className,
   children,
   hint,
+  error,
 }: FormFieldProps) {
   return (
     <div className={cn("w-full", className)}>
       {label != null && <Label htmlFor={htmlFor}>{label}</Label>}
       {children}
-      {hint != null && <p className="mt-1 text-xs text-gray-400">{hint}</p>}
+      {error != null && error !== "" ? (
+        <p className="mt-1 text-xs text-red-500 font-medium">{error}</p>
+      ) : hint != null ? (
+        <p className="mt-1 text-xs text-gray-400">{hint}</p>
+      ) : null}
     </div>
   );
 }

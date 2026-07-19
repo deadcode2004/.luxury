@@ -1,11 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Heart, ShoppingBag, Star } from "lucide-react";
 import { Product } from "@/data/mock";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
 import { formatMoney } from "@/lib/format/currency";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
@@ -17,6 +19,34 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { language } = useLanguage();
+  const { addItem } = useCart();
+  const { has, toggle } = useWishlist();
+  const [cartLoading, setCartLoading] = useState(false);
+  const [wishLoading, setWishLoading] = useState(false);
+  const wished = has(product.id);
+  const outOfStock = (product.stock ?? 0) <= 0;
+
+  const onAdd = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCartLoading(true);
+    try {
+      await addItem(product.id, 1);
+    } finally {
+      setCartLoading(false);
+    }
+  };
+
+  const onWish = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setWishLoading(true);
+    try {
+      await toggle(product.id);
+    } finally {
+      setWishLoading(false);
+    }
+  };
 
   return (
     <Card
@@ -35,8 +65,18 @@ export default function ProductCard({ product }: ProductCardProps) {
         </Badge>
       )}
 
-      <button className="absolute top-4 left-4 z-10 w-8 h-8 bg-background/80 backdrop-blur glass-fix rounded-full flex items-center justify-center text-secondary/70 hover:text-wishlist hover:bg-background transition-colors">
-        <Heart size={16} />
+      <button
+        type="button"
+        disabled={wishLoading}
+        onClick={onWish}
+        className={`absolute top-4 left-4 z-10 w-8 h-8 backdrop-blur glass-fix rounded-full flex items-center justify-center transition-all active:scale-95 disabled:opacity-50 ${
+          wished
+            ? "bg-wishlist/20 text-wishlist"
+            : "bg-background/80 text-secondary/70 hover:text-wishlist hover:bg-background"
+        }`}
+        aria-label="Wishlist"
+      >
+        <Heart size={16} fill={wished ? "currentColor" : "none"} />
       </button>
 
       <Link href={`/product/${product.id}`} className="block relative aspect-square overflow-hidden rounded-2xl bg-transparent">
@@ -50,9 +90,25 @@ export default function ProductCard({ product }: ProductCardProps) {
         />
 
         <div className="absolute inset-x-0 bottom-0 p-4 opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
-          <Button variant="primary" size="md" fullWidth className="rounded-lg">
+          <Button
+            variant="primary"
+            size="md"
+            fullWidth
+            className="rounded-lg"
+            loading={cartLoading}
+            disabled={outOfStock}
+            onClick={onAdd}
+          >
             <ShoppingBag size={18} />
-            <span>{language === "ar" ? "أضف للسلة" : "Add to Cart"}</span>
+            <span>
+              {outOfStock
+                ? language === "ar"
+                  ? "غير متوفر"
+                  : "Out of Stock"
+                : language === "ar"
+                  ? "أضف للسلة"
+                  : "Add to Cart"}
+            </span>
           </Button>
         </div>
       </Link>

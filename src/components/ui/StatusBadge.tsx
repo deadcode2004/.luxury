@@ -11,6 +11,7 @@ export type StatusKey =
   | "cancelled"
   | "active"
   | "inactive"
+  | "banned"
   | "expired"
   | "in_stock"
   | "low_stock"
@@ -23,6 +24,7 @@ const statusVariant: Record<StatusKey, BadgeVariant> = {
   cancelled: "danger",
   active: "success",
   inactive: "neutral",
+  banned: "danger",
   expired: "danger",
   in_stock: "success",
   low_stock: "warning",
@@ -36,6 +38,7 @@ const statusLabels: Record<StatusKey, { ar: string; en: string }> = {
   cancelled: { ar: "ملغي", en: "Cancelled" },
   active: { ar: "نشط", en: "Active" },
   inactive: { ar: "غير نشط", en: "Inactive" },
+  banned: { ar: "محظور", en: "Banned" },
   expired: { ar: "منتهي", en: "Expired" },
   in_stock: { ar: "متوفر", en: "In Stock" },
   low_stock: { ar: "مخزون منخفض", en: "Low Stock" },

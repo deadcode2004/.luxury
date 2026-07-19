@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useToast } from "@/components/ui/Toast";
 import { Image as ImageIcon, Type, Layout, Save } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
@@ -11,6 +12,41 @@ import Alert from "@/components/ui/Alert";
 
 export default function AdminCMS() {
   const { language } = useLanguage();
+  const { toast } = useToast();
+  const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [form, setForm] = useState({
+    headingAr: "اكتشف جوهر الفخامة",
+    headingEn: "Discover the Essence of Luxury",
+    announcementEnabled: true,
+    announcement: "شحن مجاني للطلبات فوق 500 ريال",
+  });
+
+  const save = async () => {
+    const next: Record<string, string> = {};
+    if (!form.headingAr.trim()) {
+      next.headingAr = language === "ar" ? "مطلوب" : "Required";
+    }
+    if (!form.headingEn.trim()) {
+      next.headingEn = language === "ar" ? "مطلوب" : "Required";
+    }
+    if (form.announcementEnabled && !form.announcement.trim()) {
+      next.announcement = language === "ar" ? "نص الإعلان مطلوب" : "Announcement required";
+    }
+    setErrors(next);
+    if (Object.keys(next).length) {
+      toast(
+        language === "ar" ? "يرجى تعبئة الحقول المطلوبة" : "Please fill required fields",
+        "warning"
+      );
+      return;
+    }
+
+    setSaving(true);
+    await new Promise((r) => setTimeout(r, 500));
+    setSaving(false);
+    toast(language === "ar" ? "✔ تم حفظ محتوى المتجر" : "✔ Store content saved", "success");
+  };
 
   return (
     <div className="flex flex-col gap-8">
@@ -29,7 +65,13 @@ export default function AdminCMS() {
               : "Edit texts and images on the home page"}
           </p>
         </div>
-        <Button variant="secondary" size="md" className="w-full sm:w-auto">
+        <Button
+          variant="secondary"
+          size="md"
+          className="w-full sm:w-auto"
+          loading={saving}
+          onClick={() => void save()}
+        >
           <Save size={18} />
           {language === "ar" ? "حفظ جميع التغييرات" : "Save All Changes"}
         </Button>
@@ -48,16 +90,23 @@ export default function AdminCMS() {
             <div className="p-6 flex flex-col gap-6">
               <FormField
                 label={language === "ar" ? "العنوان الرئيسي (عربي)" : "Main Heading (Arabic)"}
+                error={errors.headingAr}
               >
-                <Input defaultValue="اكتشف جوهر الفخامة" className="h-12" />
+                <Input
+                  value={form.headingAr}
+                  onChange={(e) => setForm((f) => ({ ...f, headingAr: e.target.value }))}
+                  className="h-12"
+                />
               </FormField>
               <FormField
                 label={
                   language === "ar" ? "العنوان الرئيسي (إنجليزي)" : "Main Heading (English)"
                 }
+                error={errors.headingEn}
               >
                 <Input
-                  defaultValue="Discover the Essence of Luxury"
+                  value={form.headingEn}
+                  onChange={(e) => setForm((f) => ({ ...f, headingEn: e.target.value }))}
                   className="h-12 text-start dir-ltr"
                 />
               </FormField>
@@ -67,12 +116,23 @@ export default function AdminCMS() {
                   <ImageIcon size={16} />
                   {language === "ar" ? "صورة الخلفية" : "Background Image"}
                 </label>
-                <div className="w-full h-40 bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center text-gray-400 hover:border-primary hover:text-primary transition-colors cursor-pointer">
+                <button
+                  type="button"
+                  className="w-full h-40 bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center text-gray-400 hover:border-primary hover:text-primary active:scale-[0.99] transition-all"
+                  onClick={() =>
+                    toast(
+                      language === "ar"
+                        ? "✔ جاهز لرفع صورة جديدة (عرض تجريبي)"
+                        : "✔ Ready to upload a new image (demo)",
+                      "info"
+                    )
+                  }
+                >
                   <ImageIcon size={32} className="mb-2" />
                   <span className="text-sm font-medium">
                     {language === "ar" ? "اضغط لرفع صورة جديدة" : "Click to upload new image"}
                   </span>
-                </div>
+                </button>
               </div>
             </div>
           </Card>
@@ -88,17 +148,39 @@ export default function AdminCMS() {
             <div className="p-6 flex flex-col gap-6">
               <div className="flex items-center gap-4 mb-2">
                 <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" value="" className="sr-only peer" defaultChecked />
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={form.announcementEnabled}
+                    onChange={(e) => {
+                      setForm((f) => ({ ...f, announcementEnabled: e.target.checked }));
+                      toast(
+                        e.target.checked
+                          ? language === "ar"
+                            ? "✔ تم تفعيل الشريط"
+                            : "✔ Announcement bar enabled"
+                          : language === "ar"
+                            ? "تم إيقاف الشريط"
+                            : "Announcement bar disabled",
+                        e.target.checked ? "success" : "info"
+                      );
+                    }}
+                  />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] rtl:after:right-[2px] rtl:after:left-auto after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
                   <span className="ms-3 text-sm font-bold text-gray-600">
                     {language === "ar" ? "تفعيل الشريط" : "Enable Bar"}
                   </span>
                 </label>
               </div>
-              <FormField label={language === "ar" ? "نص الإعلان" : "Announcement Text"}>
+              <FormField
+                label={language === "ar" ? "نص الإعلان" : "Announcement Text"}
+                error={errors.announcement}
+              >
                 <Input
-                  defaultValue="شحن مجاني للطلبات فوق 500 ريال"
+                  value={form.announcement}
+                  onChange={(e) => setForm((f) => ({ ...f, announcement: e.target.value }))}
                   className="h-12"
+                  disabled={!form.announcementEnabled}
                 />
               </FormField>
             </div>
@@ -106,14 +188,18 @@ export default function AdminCMS() {
         </div>
 
         <div className="lg:col-span-1">
-          <Alert variant="info" className="sticky top-24 rounded-2xl p-6" title={
-            <span className="flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-xs">
-                i
+          <Alert
+            variant="info"
+            className="sticky top-24 rounded-2xl p-6"
+            title={
+              <span className="flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-xs">
+                  i
+                </span>
+                {language === "ar" ? "ملاحظات هامة" : "Important Notes"}
               </span>
-              {language === "ar" ? "ملاحظات هامة" : "Important Notes"}
-            </span>
-          }>
+            }
+          >
             <ul className="text-sm text-gray-600 space-y-3 leading-relaxed">
               <li className="flex items-start gap-2">
                 <span className="text-primary mt-1">•</span>

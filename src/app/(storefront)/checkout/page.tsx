@@ -1,29 +1,117 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { products } from "@/data/mock";
-import { CreditCard, Banknote, ShieldCheck } from "lucide-react";
-import { calcOrderTotals } from "@/lib/cart/totals";
+import { CreditCard, Banknote, ShieldCheck, ShoppingBag } from "lucide-react";
 import { formatMoneyFixed } from "@/lib/format/currency";
+import { useCart } from "@/contexts/CartContext";
+import { useToast } from "@/components/ui/Toast";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import FormField from "@/components/ui/FormField";
 import PageHeader from "@/components/layout/PageHeader";
+import EmptyState from "@/components/ui/EmptyState";
 
 export default function CheckoutPage() {
   const { language } = useLanguage();
-  const [paymentMethod, setPaymentMethod] = useState<"card" | "paypal" | "cod">("card");
+  const router = useRouter();
+  const { toast } = useToast();
+  const { lines, totals, clear } = useCart();
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "cod">("card");
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [form, setForm] = useState({
+    first_name: "",
+    last_name: "",
+    phone: "",
+    email: "",
+    full_address: "",
+    city: language === "ar" ? "الرياض" : "Riyadh",
+    zip_code: "",
+    card_number: "",
+    expiry: "",
+    cvv: "",
+  });
 
-  const cartLines = [
-    { price: products[0].price, quantity: 1 },
-    { price: products[1].price, quantity: 2 },
-  ];
-  const { subtotal, tax, total } = calcOrderTotals(cartLines);
-  const grandTotal = paymentMethod === "cod" ? total + 15 : total;
+  const grandTotal = useMemo(
+    () => (paymentMethod === "cod" ? totals.total + 15 : totals.total),
+    [paymentMethod, totals.total]
+  );
+
+  const validate = () => {
+    const next: Record<string, string> = {};
+    if (!form.first_name.trim()) next.first_name = language === "ar" ? "مطلوب" : "Required";
+    if (!form.last_name.trim()) next.last_name = language === "ar" ? "مطلوب" : "Required";
+    if (!form.phone.trim()) next.phone = language === "ar" ? "مطلوب" : "Required";
+    if (!form.email.trim() || !form.email.includes("@")) {
+      next.email = language === "ar" ? "بريد غير صالح" : "Invalid email";
+    }
+    if (!form.full_address.trim()) next.full_address = language === "ar" ? "مطلوب" : "Required";
+    if (paymentMethod === "card") {
+      if (form.card_number.replace(/\s/g, "").length < 12) {
+        next.card_number = language === "ar" ? "رقم البطاقة غير صالح" : "Invalid card";
+      }
+      if (!form.expiry.trim()) next.expiry = language === "ar" ? "مطلوب" : "Required";
+      if (form.cvv.trim().length < 3) next.cvv = language === "ar" ? "مطلوب" : "Required";
+    }
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
+  const placeOrder = async () => {
+    if (!validate()) {
+      toast(
+        language === "ar" ? "يرجى تصحيح الحقول المطلوبة" : "Please fix the highlighted fields",
+        "warning"
+      );
+      return;
+    }
+    setLoading(true);
+    try {
+      await new Promise((r) => setTimeout(r, 700));
+      await clear();
+      toast(
+        language === "ar" ? "تم تأكيد الطلب بنجاح" : "Order placed successfully",
+        "success"
+      );
+      router.push("/account");
+    } catch {
+      toast(
+        language === "ar" ? "حدث خطأ أثناء إنشاء الطلب" : "Failed to place order",
+        "danger"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (lines.length === 0) {
+    return (
+      <main className="flex-grow pt-32 pb-24 bg-background min-h-screen">
+        <div className="container mx-auto px-4 md:px-8">
+          <EmptyState
+            icon={<ShoppingBag size={48} className="text-gray-300" />}
+            title={language === "ar" ? "السلة فارغة" : "Your cart is empty"}
+            description={
+              language === "ar"
+                ? "أضف منتجات قبل إتمام الطلب."
+                : "Add products before checkout."
+            }
+            action={
+              <Link href="/shop">
+                <Button variant="secondary">{language === "ar" ? "تسوق الآن" : "Shop now"}</Button>
+              </Link>
+            }
+          />
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="flex-grow pt-32 pb-24 bg-background min-h-screen">
@@ -47,51 +135,64 @@ export default function CheckoutPage() {
                 {language === "ar" ? "بيانات الشحن" : "Shipping Information"}
               </h2>
 
-              <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="md:col-span-2 flex gap-6 flex-col sm:flex-row">
-                  <FormField label={language === "ar" ? "الاسم الأول" : "First Name"}>
-                    <Input placeholder={language === "ar" ? "أحمد" : "Ahmed"} />
-                  </FormField>
-                  <FormField label={language === "ar" ? "اسم العائلة" : "Last Name"}>
-                    <Input placeholder={language === "ar" ? "محمد" : "Mohammad"} />
-                  </FormField>
-                </div>
-
-                <FormField label={language === "ar" ? "رقم الهاتف" : "Phone Number"}>
-                  <Input type="tel" className="text-start dir-ltr" placeholder="+966 5X XXX XXXX" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField label={language === "ar" ? "الاسم الأول" : "First Name"} error={errors.first_name}>
+                  <Input
+                    value={form.first_name}
+                    onChange={(e) => setForm((f) => ({ ...f, first_name: e.target.value }))}
+                    className={errors.first_name ? "border-red-300" : ""}
+                  />
                 </FormField>
-
-                <FormField label={language === "ar" ? "البريد الإلكتروني" : "Email Address"}>
-                  <Input type="email" placeholder="example@email.com" />
+                <FormField label={language === "ar" ? "اسم العائلة" : "Last Name"} error={errors.last_name}>
+                  <Input
+                    value={form.last_name}
+                    onChange={(e) => setForm((f) => ({ ...f, last_name: e.target.value }))}
+                    className={errors.last_name ? "border-red-300" : ""}
+                  />
                 </FormField>
-
+                <FormField label={language === "ar" ? "رقم الهاتف" : "Phone Number"} error={errors.phone}>
+                  <Input
+                    value={form.phone}
+                    onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                    className={`text-start dir-ltr ${errors.phone ? "border-red-300" : ""}`}
+                  />
+                </FormField>
+                <FormField label={language === "ar" ? "البريد الإلكتروني" : "Email"} error={errors.email}>
+                  <Input
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                    className={errors.email ? "border-red-300" : ""}
+                  />
+                </FormField>
                 <FormField
                   className="md:col-span-2"
                   label={language === "ar" ? "العنوان بالكامل" : "Full Address"}
+                  error={errors.full_address}
                 >
                   <Input
-                    placeholder={
-                      language === "ar"
-                        ? "اسم الشارع، الحي، رقم المبنى"
-                        : "Street name, District, Building number"
-                    }
+                    value={form.full_address}
+                    onChange={(e) => setForm((f) => ({ ...f, full_address: e.target.value }))}
+                    className={errors.full_address ? "border-red-300" : ""}
                   />
                 </FormField>
-
                 <FormField label={language === "ar" ? "المدينة" : "City"}>
-                  <Select>
+                  <Select
+                    value={form.city}
+                    onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
+                  >
                     <option>{language === "ar" ? "الرياض" : "Riyadh"}</option>
                     <option>{language === "ar" ? "جدة" : "Jeddah"}</option>
                     <option>{language === "ar" ? "الدمام" : "Dammam"}</option>
                   </Select>
                 </FormField>
-
-                <FormField
-                  label={language === "ar" ? "الرمز البريدي (اختياري)" : "Zip Code (Optional)"}
-                >
-                  <Input type="text" />
+                <FormField label={language === "ar" ? "الرمز البريدي" : "Zip Code"}>
+                  <Input
+                    value={form.zip_code}
+                    onChange={(e) => setForm((f) => ({ ...f, zip_code: e.target.value }))}
+                  />
                 </FormField>
-              </form>
+              </div>
             </Card>
 
             <Card variant="glass" padding="lg">
@@ -103,85 +204,54 @@ export default function CheckoutPage() {
               </h2>
 
               <div className="flex flex-col gap-4">
-                <label
-                  className={`relative flex items-center justify-between p-6 rounded-xl border-2 cursor-pointer transition-all ${
-                    paymentMethod === "card"
-                      ? "border-primary bg-primary/5"
-                      : "border-gray-100 hover:border-gray-200"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="payment"
-                    className="sr-only"
-                    checked={paymentMethod === "card"}
-                    onChange={() => setPaymentMethod("card")}
-                  />
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                        paymentMethod === "card" ? "border-primary" : "border-gray-300"
-                      }`}
-                    >
-                      {paymentMethod === "card" && (
-                        <div className="w-3 h-3 rounded-full bg-primary" />
-                      )}
+                {([
+                  {
+                    id: "card" as const,
+                    title: language === "ar" ? "البطاقة الائتمانية" : "Credit Card",
+                    desc:
+                      language === "ar"
+                        ? "دفع آمن بواسطة مدى، فيزا، ماستركارد"
+                        : "Secure payment via Mada, Visa, Mastercard",
+                    icon: CreditCard,
+                  },
+                  {
+                    id: "cod" as const,
+                    title: language === "ar" ? "الدفع عند الاستلام" : "Cash on Delivery",
+                    desc: language === "ar" ? "رسوم إضافية 15 ر.س" : "Additional fee 15 SAR",
+                    icon: Banknote,
+                  },
+                ]).map((method) => (
+                  <button
+                    key={method.id}
+                    type="button"
+                    onClick={() => setPaymentMethod(method.id)}
+                    className={`relative flex items-center justify-between p-6 rounded-xl border-2 text-start transition-all active:scale-[0.99] ${
+                      paymentMethod === method.id
+                        ? "border-primary bg-primary/5"
+                        : "border-gray-100 hover:border-gray-200"
+                    }`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div
+                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                          paymentMethod === method.id ? "border-primary" : "border-gray-300"
+                        }`}
+                      >
+                        {paymentMethod === method.id && (
+                          <div className="w-3 h-3 rounded-full bg-primary" />
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-secondary text-lg">{method.title}</h4>
+                        <p className="text-sm text-gray-500">{method.desc}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-bold text-secondary text-lg">
-                        {language === "ar" ? "البطاقة الائتمانية" : "Credit Card"}
-                      </h4>
-                      <p className="text-sm text-gray-500">
-                        {language === "ar"
-                          ? "دفع آمن وموثوق بواسطة مدى، فيزا، ماستركارد"
-                          : "Secure payment via Mada, Visa, Mastercard"}
-                      </p>
-                    </div>
-                  </div>
-                  <CreditCard
-                    size={32}
-                    className={paymentMethod === "card" ? "text-primary" : "text-gray-300"}
-                  />
-                </label>
-
-                <label
-                  className={`relative flex items-center justify-between p-6 rounded-xl border-2 cursor-pointer transition-all ${
-                    paymentMethod === "cod"
-                      ? "border-primary bg-primary/5"
-                      : "border-gray-100 hover:border-gray-200"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="payment"
-                    className="sr-only"
-                    checked={paymentMethod === "cod"}
-                    onChange={() => setPaymentMethod("cod")}
-                  />
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                        paymentMethod === "cod" ? "border-primary" : "border-gray-300"
-                      }`}
-                    >
-                      {paymentMethod === "cod" && (
-                        <div className="w-3 h-3 rounded-full bg-primary" />
-                      )}
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-secondary text-lg">
-                        {language === "ar" ? "الدفع عند الاستلام" : "Cash on Delivery"}
-                      </h4>
-                      <p className="text-sm text-gray-500">
-                        {language === "ar" ? "رسوم إضافية 15 ر.س" : "Additional fee 15 SAR"}
-                      </p>
-                    </div>
-                  </div>
-                  <Banknote
-                    size={32}
-                    className={paymentMethod === "cod" ? "text-primary" : "text-gray-300"}
-                  />
-                </label>
+                    <method.icon
+                      size={32}
+                      className={paymentMethod === method.id ? "text-primary" : "text-gray-300"}
+                    />
+                  </button>
+                ))}
               </div>
 
               {paymentMethod === "card" && (
@@ -189,14 +259,27 @@ export default function CheckoutPage() {
                   <FormField
                     className="col-span-2"
                     label={language === "ar" ? "رقم البطاقة" : "Card Number"}
+                    error={errors.card_number}
                   >
-                    <Input placeholder="XXXX XXXX XXXX XXXX" />
+                    <Input
+                      value={form.card_number}
+                      onChange={(e) => setForm((f) => ({ ...f, card_number: e.target.value }))}
+                      className={errors.card_number ? "border-red-300" : ""}
+                    />
                   </FormField>
-                  <FormField label={language === "ar" ? "تاريخ الانتهاء" : "Expiry Date"}>
-                    <Input placeholder="MM/YY" />
+                  <FormField label={language === "ar" ? "تاريخ الانتهاء" : "Expiry"} error={errors.expiry}>
+                    <Input
+                      value={form.expiry}
+                      onChange={(e) => setForm((f) => ({ ...f, expiry: e.target.value }))}
+                      className={errors.expiry ? "border-red-300" : ""}
+                    />
                   </FormField>
-                  <FormField label={language === "ar" ? "رمز الأمان" : "CVV"}>
-                    <Input placeholder="123" />
+                  <FormField label="CVV" error={errors.cvv}>
+                    <Input
+                      value={form.cvv}
+                      onChange={(e) => setForm((f) => ({ ...f, cvv: e.target.value }))}
+                      className={errors.cvv ? "border-red-300" : ""}
+                    />
                   </FormField>
                 </div>
               )}
@@ -210,67 +293,42 @@ export default function CheckoutPage() {
               </h3>
 
               <div className="flex flex-col gap-4 mb-8 pb-8 border-b border-gray-100">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gray-50 rounded-md overflow-visible relative border border-gray-200">
-                      <Image
-                        src={products[0].image}
-                        alt=""
-                        fill
-                        className="object-cover mix-blend-multiply rounded-md"
-                      />
-                      <span className="absolute -top-2 -right-2 bg-secondary text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center z-10 font-bold border border-white">
-                        1
+                {lines.map((item) => (
+                  <div key={item.id} className="flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-gray-50 rounded-md overflow-visible relative border border-gray-200">
+                        <Image
+                          src={item.image}
+                          alt=""
+                          fill
+                          className="object-cover mix-blend-multiply rounded-md"
+                        />
+                        <span className="absolute -top-2 -right-2 bg-secondary text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center z-10 font-bold border border-white">
+                          {item.quantity}
+                        </span>
+                      </div>
+                      <span className="font-bold text-sm text-gray-600 truncate max-w-[120px]">
+                        {item.name[language]}
                       </span>
                     </div>
-                    <span className="font-bold text-sm text-gray-600 truncate max-w-[120px]">
-                      {products[0].name[language]}
+                    <span className="font-bold text-secondary">
+                      {formatMoneyFixed(item.price * item.quantity, language, 0)}
                     </span>
                   </div>
-                  <span className="font-bold text-secondary">
-                    {formatMoneyFixed(products[0].price, language, 0)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gray-50 rounded-md overflow-visible relative border border-gray-200">
-                      <Image
-                        src={products[1].image}
-                        alt=""
-                        fill
-                        className="object-cover mix-blend-multiply rounded-md"
-                      />
-                      <span className="absolute -top-2 -right-2 bg-secondary text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center z-10 font-bold border border-white">
-                        2
-                      </span>
-                    </div>
-                    <span className="font-bold text-sm text-gray-600 truncate max-w-[120px]">
-                      {products[1].name[language]}
-                    </span>
-                  </div>
-                  <span className="font-bold text-secondary">
-                    {formatMoneyFixed(products[1].price * 2, language, 0)}
-                  </span>
-                </div>
+                ))}
               </div>
 
               <div className="flex flex-col gap-4 mb-8">
                 <div className="flex justify-between text-gray-500">
                   <span>{language === "ar" ? "المجموع الفرعي" : "Subtotal"}</span>
                   <span className="font-bold text-secondary">
-                    {formatMoneyFixed(subtotal, language)}
+                    {formatMoneyFixed(totals.subtotal, language)}
                   </span>
                 </div>
                 <div className="flex justify-between text-gray-500">
                   <span>{language === "ar" ? "الضريبة (15%)" : "Tax (15%)"}</span>
                   <span className="font-bold text-secondary">
-                    {formatMoneyFixed(tax, language)}
-                  </span>
-                </div>
-                <div className="flex justify-between text-gray-500">
-                  <span>{language === "ar" ? "التوصيل" : "Shipping"}</span>
-                  <span className="font-bold text-green-500">
-                    {language === "ar" ? "مجاني" : "Free"}
+                    {formatMoneyFixed(totals.tax, language)}
                   </span>
                 </div>
                 {paymentMethod === "cod" && (
@@ -292,16 +350,16 @@ export default function CheckoutPage() {
                 </span>
               </div>
 
-              <Button variant="secondary" size="xl" fullWidth>
+              <Button
+                variant="secondary"
+                size="xl"
+                fullWidth
+                loading={loading}
+                onClick={() => void placeOrder()}
+              >
                 <ShieldCheck size={22} />
                 {language === "ar" ? "تأكيد الطلب والدفع" : "Place Order & Pay"}
               </Button>
-
-              <p className="text-center text-xs text-gray-400 mt-4 leading-relaxed">
-                {language === "ar"
-                  ? "بإتمامك للطلب، أنت توافق على شروط الخدمة وسياسة الخصوصية الخاصة بنا."
-                  : "By placing your order, you agree to our Terms of Service and Privacy Policy."}
-              </p>
             </Card>
           </div>
         </div>

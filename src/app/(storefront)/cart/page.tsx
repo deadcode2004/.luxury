@@ -4,39 +4,31 @@ import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { products } from "@/data/mock";
 import { Trash2, Minus, Plus, ShoppingBag, ArrowRight, ArrowLeft } from "lucide-react";
-import { calcOrderTotals } from "@/lib/cart/totals";
 import { formatMoneyFixed } from "@/lib/format/currency";
+import { useCart } from "@/contexts/CartContext";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 export default function CartPage() {
   const { language, dir } = useLanguage();
+  const { lines, count, totals, setQuantity, removeItem } = useCart();
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
-  const [cartItems, setCartItems] = useState([
-    { ...products[0], quantity: 1 },
-    { ...products[1], quantity: 2 },
-  ]);
-
-  const updateQuantity = (id: string, delta: number) => {
-    setCartItems((prev) =>
-      prev.map((item) => {
-        if (item.id === id) {
-          return { ...item, quantity: Math.max(1, item.quantity + delta) };
-        }
-        return item;
-      })
-    );
+  const onRemove = async () => {
+    if (!confirmId) return;
+    setBusyId(confirmId);
+    try {
+      await removeItem(confirmId);
+      setConfirmId(null);
+    } finally {
+      setBusyId(null);
+    }
   };
-
-  const removeItem = (id: string) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== id));
-  };
-
-  const { subtotal, tax, total } = calcOrderTotals(cartItems);
 
   return (
     <main className="flex-grow pt-32 pb-24 bg-background min-h-screen">
@@ -46,14 +38,14 @@ export default function CartPage() {
             {language === "ar" ? "سلة المشتريات" : "Shopping Cart"}
           </h1>
           <Badge variant="soft">
-            {cartItems.length} {language === "ar" ? "عناصر" : "Items"}
+            {count} {language === "ar" ? "عناصر" : "Items"}
           </Badge>
         </div>
 
-        {cartItems.length > 0 ? (
+        {lines.length > 0 ? (
           <div className="flex flex-col lg:flex-row gap-12 lg:gap-16">
             <div className="lg:w-2/3 flex flex-col gap-6">
-              {cartItems.map((item) => (
+              {lines.map((item) => (
                 <Card
                   key={item.id}
                   variant="glass"
@@ -61,8 +53,9 @@ export default function CartPage() {
                   className="flex flex-col sm:flex-row gap-6 items-center relative group transition-all hover:shadow-floating"
                 >
                   <button
-                    onClick={() => removeItem(item.id)}
-                    className="absolute top-4 right-4 rtl:left-4 rtl:right-auto text-gray-300 hover:text-red-500 transition-colors"
+                    type="button"
+                    onClick={() => setConfirmId(item.id)}
+                    className="absolute top-4 right-4 rtl:left-4 rtl:right-auto text-gray-300 hover:text-red-500 transition-colors active:scale-95"
                   >
                     <Trash2 size={20} />
                   </button>
@@ -95,8 +88,9 @@ export default function CartPage() {
 
                       <div className="flex items-center justify-center sm:justify-start bg-gray-50 border border-gray-100 rounded-lg h-12 px-2 self-center sm:self-auto">
                         <button
-                          onClick={() => updateQuantity(item.id, -1)}
-                          className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-primary transition-colors"
+                          type="button"
+                          onClick={() => void setQuantity(item.id, item.quantity - 1)}
+                          className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-primary transition-colors active:scale-95"
                         >
                           <Minus size={16} />
                         </button>
@@ -104,8 +98,9 @@ export default function CartPage() {
                           {item.quantity}
                         </span>
                         <button
-                          onClick={() => updateQuantity(item.id, 1)}
-                          className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-primary transition-colors"
+                          type="button"
+                          onClick={() => void setQuantity(item.id, item.quantity + 1)}
+                          className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-primary transition-colors active:scale-95"
                         >
                           <Plus size={16} />
                         </button>
@@ -136,13 +131,13 @@ export default function CartPage() {
                   <div className="flex justify-between text-gray-300">
                     <span>{language === "ar" ? "المجموع الفرعي" : "Subtotal"}</span>
                     <span className="font-bold text-white">
-                      {formatMoneyFixed(subtotal, language)}
+                      {formatMoneyFixed(totals.subtotal, language)}
                     </span>
                   </div>
                   <div className="flex justify-between text-gray-300">
                     <span>{language === "ar" ? "الضريبة (15%)" : "Tax (15%)"}</span>
                     <span className="font-bold text-white">
-                      {formatMoneyFixed(tax, language)}
+                      {formatMoneyFixed(totals.tax, language)}
                     </span>
                   </div>
                   <div className="flex justify-between text-gray-300">
@@ -158,12 +153,17 @@ export default function CartPage() {
                     {language === "ar" ? "الإجمالي" : "Total"}
                   </span>
                   <span className="text-3xl font-bold text-primary">
-                    {total.toFixed(2)} <span className="text-lg">SAR</span>
+                    {totals.total.toFixed(2)} <span className="text-lg">SAR</span>
                   </span>
                 </div>
 
                 <Link href="/checkout" className="block">
-                  <Button variant="primary" size="xl" fullWidth className="text-secondary hover:text-secondary">
+                  <Button
+                    variant="primary"
+                    size="xl"
+                    fullWidth
+                    className="text-secondary hover:text-secondary"
+                  >
                     <ShoppingBag size={22} />
                     {language === "ar" ? "إتمام الطلب" : "Proceed to Checkout"}
                   </Button>
@@ -177,8 +177,8 @@ export default function CartPage() {
             title={language === "ar" ? "سلة المشتريات فارغة" : "Your cart is empty"}
             description={
               language === "ar"
-                ? "يبدو أنك لم تقم بإضافة أي منتجات إلى سلة المشتريات بعد. اكتشف تشكيلتنا الفاخرة الآن."
-                : "Looks like you haven't added any items to your cart yet. Discover our luxury collection now."
+                ? "يبدو أنك لم تقم بإضافة أي منتجات إلى سلة المشتريات بعد."
+                : "Looks like you haven't added any items to your cart yet."
             }
             action={
               <Link href="/shop">
@@ -191,6 +191,20 @@ export default function CartPage() {
           />
         )}
       </div>
+
+      <ConfirmDialog
+        open={!!confirmId}
+        onClose={() => setConfirmId(null)}
+        onConfirm={() => void onRemove()}
+        loading={!!busyId}
+        title={language === "ar" ? "حذف المنتج؟" : "Remove item?"}
+        description={
+          language === "ar"
+            ? "هل أنت متأكد من حذف هذا المنتج من السلة؟"
+            : "Are you sure you want to remove this item from your cart?"
+        }
+        confirmLabel={language === "ar" ? "حذف" : "Remove"}
+      />
     </main>
   );
 }

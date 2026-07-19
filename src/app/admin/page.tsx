@@ -1,13 +1,31 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
+import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useToast } from "@/components/ui/Toast";
 import { TrendingUp, Users, ShoppingBag, DollarSign, ChevronDown } from "lucide-react";
 import Card from "@/components/ui/Card";
 import StatusBadge from "@/components/ui/StatusBadge";
 
 export default function AdminOverview() {
   const { language } = useLanguage();
+  const { toast } = useToast();
+  const [period, setPeriod] = useState<"week" | "month" | "year">("week");
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const periodLabel =
+    period === "week"
+      ? language === "ar"
+        ? "هذا الأسبوع"
+        : "This Week"
+      : period === "month"
+        ? language === "ar"
+          ? "هذا الشهر"
+          : "This Month"
+        : language === "ar"
+          ? "هذا العام"
+          : "This Year";
 
   const stats = [
     {
@@ -83,25 +101,51 @@ export default function AdminOverview() {
               {language === "ar" ? "نظرة عامة على الإيرادات" : "Revenue Overview"}
             </h3>
 
-            <div className="relative group z-20">
-              <button className="flex items-center gap-2 bg-gray-50 border border-gray-200 text-sm rounded-lg px-4 py-2 font-medium text-gray-700 hover:border-primary transition-colors">
-                {language === "ar" ? "هذا الأسبوع" : "This Week"}
-                <ChevronDown size={16} className="text-gray-400 group-hover:text-primary transition-colors" />
+            <div className="relative z-20">
+              <button
+                type="button"
+                className="flex items-center gap-2 bg-gray-50 border border-gray-200 text-sm rounded-lg px-4 py-2 font-medium text-gray-700 hover:border-primary active:scale-[0.98] transition-all"
+                onClick={() => setMenuOpen((v) => !v)}
+              >
+                {periodLabel}
+                <ChevronDown size={16} className="text-gray-400" />
               </button>
 
-              <div className="absolute top-full mt-2 w-40 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-50 ltr:right-0 rtl:left-0 before:absolute before:-top-2 before:left-0 before:w-full before:h-2">
-                <div className="bg-white/95 backdrop-blur-xl border border-gray-100 rounded-xl shadow-floating overflow-hidden flex flex-col p-1">
-                  <button className="text-start px-4 py-2.5 text-sm font-bold text-primary bg-primary/5 rounded-lg transition-colors">
-                    {language === "ar" ? "هذا الأسبوع" : "This Week"}
-                  </button>
-                  <button className="text-start px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-primary rounded-lg transition-colors">
-                    {language === "ar" ? "هذا الشهر" : "This Month"}
-                  </button>
-                  <button className="text-start px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-primary rounded-lg transition-colors">
-                    {language === "ar" ? "هذا العام" : "This Year"}
-                  </button>
+              {menuOpen && (
+                <div className="absolute top-full mt-2 w-40 z-50 ltr:right-0 rtl:left-0">
+                  <div className="bg-white/95 backdrop-blur-xl border border-gray-100 rounded-xl shadow-floating overflow-hidden flex flex-col p-1">
+                    {(
+                      [
+                        ["week", language === "ar" ? "هذا الأسبوع" : "This Week"],
+                        ["month", language === "ar" ? "هذا الشهر" : "This Month"],
+                        ["year", language === "ar" ? "هذا العام" : "This Year"],
+                      ] as const
+                    ).map(([key, label]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        className={`text-start px-4 py-2.5 text-sm rounded-lg transition-colors ${
+                          period === key
+                            ? "font-bold text-primary bg-primary/5"
+                            : "font-medium text-gray-600 hover:bg-gray-50 hover:text-primary"
+                        }`}
+                        onClick={() => {
+                          setPeriod(key);
+                          setMenuOpen(false);
+                          toast(
+                            language === "ar"
+                              ? `✔ تم تحديث الفترة: ${label}`
+                              : `✔ Period updated: ${label}`,
+                            "success"
+                          );
+                        }}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
@@ -119,9 +163,12 @@ export default function AdminOverview() {
             <h3 className="text-lg font-bold text-secondary">
               {language === "ar" ? "أحدث الطلبات" : "Recent Orders"}
             </h3>
-            <button className="text-sm font-bold text-primary hover:underline">
+            <Link
+              href="/admin/orders"
+              className="text-sm font-bold text-primary hover:underline transition-colors"
+            >
               {language === "ar" ? "عرض الكل" : "View All"}
-            </button>
+            </Link>
           </div>
 
           <div className="flex flex-col gap-4">
