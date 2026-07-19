@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { Star, Minus, Plus, Heart, ShoppingBag, Share2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Product } from "@/data/mock";
+import { formatMoney } from "@/lib/format/currency";
+import Button from "@/components/ui/Button";
 
 interface ProductInfoProps {
   product: Product;
@@ -54,11 +56,11 @@ export default function ProductInfo({ product }: ProductInfoProps) {
       {/* Price */}
       <div className="flex items-end gap-4 mb-8">
         <span className="text-3xl font-bold text-secondary">
-          {product.price} {language === "ar" ? "ر.س" : "SAR"}
+          {formatMoney(product.price, language)}
         </span>
         {product.oldPrice && (
           <span className="text-xl text-gray-400 line-through mb-1">
-            {product.oldPrice} {language === "ar" ? "ر.س" : "SAR"}
+            {formatMoney(product.oldPrice, language)}
           </span>
         )}
       </div>
@@ -91,27 +93,26 @@ export default function ProductInfo({ product }: ProductInfoProps) {
             </button>
           </div>
 
-          <button className="flex-1 bg-secondary text-white h-14 rounded-lg flex items-center justify-center gap-2 font-bold hover:bg-secondary/90 transition-all shadow-md">
+          <Button variant="secondary" size="lg" className="flex-1 rounded-lg">
             <ShoppingBag size={20} />
             {language === "ar" ? "إضافة للسلة" : "Add to Cart"}
-          </button>
+          </Button>
 
           <button
             onClick={() => setIsFavorite(!isFavorite)}
             className={`w-14 h-14 rounded-lg flex items-center justify-center border transition-all ${
               isFavorite
-                ? "bg-[#8FA89A]/10 border-[#8FA89A] text-[#8FA89A]"
-                : "bg-surface border-gray-100 text-gray-400 hover:border-[#8FA89A] hover:text-[#8FA89A]"
+                ? "bg-wishlist/10 border-wishlist text-wishlist"
+                : "bg-surface border-gray-100 text-gray-400 hover:border-wishlist hover:text-wishlist"
             }`}
           >
             <Heart size={24} fill={isFavorite ? "currentColor" : "none"} />
           </button>
         </div>
 
-        {/* Buy Now Button */}
-        <button className="w-full bg-primary text-background font-bold h-14 rounded-lg flex items-center justify-center hover:bg-primary-hover transition-all shadow-glow">
+        <Button variant="primary" size="lg" fullWidth className="rounded-lg">
           {language === "ar" ? "شراء الآن" : "Buy It Now"}
-        </button>
+        </Button>
 
         {/* Perks */}
         <div className="mt-8 grid grid-cols-2 gap-4">
