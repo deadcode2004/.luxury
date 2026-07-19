@@ -1,5 +1,10 @@
+/**
+ * Default to same-origin `/api/v1` so Local and Vercel behave identically.
+ * Next.js rewrites proxy that path to Laravel (`API_PROXY_ORIGIN`).
+ * Override with an absolute URL only when you intentionally bypass the proxy.
+ */
 const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "http://127.0.0.1:8000/api/v1";
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "/api/v1";
 
 export type ApiError = {
   message: string;
@@ -39,13 +44,25 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     headers.Authorization = `Bearer ${options.token}`;
   }
 
-  const response = await fetch(`${API_BASE}${path}`, {
-    method: options.method || "GET",
-    headers,
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-    signal: options.signal,
-    cache: "no-store",
-  });
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  let response: Response;
+
+  try {
+    response = await fetch(`${API_BASE}${normalizedPath}`, {
+      method: options.method || "GET",
+      headers,
+      body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+      signal: options.signal,
+      cache: "no-store",
+    });
+  } catch {
+    throw new ApiRequestError({
+      message:
+        "Cannot reach API. Check that the backend is running and API_PROXY_ORIGIN / NEXT_PUBLIC_API_URL are set.",
+      code: "NETWORK_ERROR",
+      status: 0,
+    });
+  }
 
   const json = await response.json().catch(() => ({}));
 
