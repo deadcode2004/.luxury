@@ -61,12 +61,6 @@ export default function AdminCMS() {
   const [activeSlide, setActiveSlide] = useState(0);
   const tabsRef = useRef<HTMLDivElement>(null);
 
-  const scrollTabs = (dir: -1 | 1) => {
-    const el = tabsRef.current;
-    if (!el) return;
-    el.scrollBy({ left: dir * Math.min(220, el.clientWidth * 0.7), behavior: "smooth" });
-  };
-
   const selectSlide = (index: number) => {
     setActiveSlide(index);
     // Keep the active tab visible inside the horizontal scroller.
@@ -390,11 +384,15 @@ export default function AdminCMS() {
             <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 w-full">
               <button
                 type="button"
-                onClick={() => scrollTabs(-1)}
-                className="shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-full border border-surface bg-background text-secondary/70 hover:border-primary/40 hover:text-primary transition-colors"
-                aria-label={language === "ar" ? "تمرير الشرائح" : "Scroll slides"}
+                onClick={() => {
+                  if (activeSlide <= 0) return;
+                  selectSlide(activeSlide - 1);
+                }}
+                disabled={activeSlide <= 0}
+                className="shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-full border border-surface bg-background text-secondary/70 hover:border-primary/40 hover:text-primary transition-colors disabled:opacity-40 disabled:pointer-events-none"
+                aria-label={language === "ar" ? "الشريحة السابقة" : "Previous slide"}
               >
-                <ChevronLeft size={16} />
+                {language === "ar" ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
               </button>
 
               <div
@@ -420,11 +418,15 @@ export default function AdminCMS() {
 
               <button
                 type="button"
-                onClick={() => scrollTabs(1)}
-                className="shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-full border border-surface bg-background text-secondary/70 hover:border-primary/40 hover:text-primary transition-colors"
-                aria-label={language === "ar" ? "تمرير الشرائح" : "Scroll slides"}
+                onClick={() => {
+                  if (activeSlide >= form.hero.slides.length - 1) return;
+                  selectSlide(activeSlide + 1);
+                }}
+                disabled={activeSlide >= form.hero.slides.length - 1}
+                className="shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-full border border-surface bg-background text-secondary/70 hover:border-primary/40 hover:text-primary transition-colors disabled:opacity-40 disabled:pointer-events-none"
+                aria-label={language === "ar" ? "الشريحة التالية" : "Next slide"}
               >
-                <ChevronRight size={16} />
+                {language === "ar" ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
               </button>
             </div>
 
@@ -451,8 +453,35 @@ export default function AdminCMS() {
                       type="button"
                       variant="ghost"
                       size="sm"
+                      disabled={activeSlide <= 0}
+                      onClick={() => selectSlide(activeSlide - 1)}
+                      aria-label={language === "ar" ? "الشريحة السابقة" : "Previous slide"}
+                      title={language === "ar" ? "الشريحة السابقة" : "Previous slide"}
+                    >
+                      {language === "ar" ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+                    </Button>
+                    <span className="text-xs font-bold text-secondary/60 tabular-nums px-1">
+                      {activeSlide + 1} / {form.hero.slides.length}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={activeSlide >= form.hero.slides.length - 1}
+                      onClick={() => selectSlide(activeSlide + 1)}
+                      aria-label={language === "ar" ? "الشريحة التالية" : "Next slide"}
+                      title={language === "ar" ? "الشريحة التالية" : "Next slide"}
+                    >
+                      {language === "ar" ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
                       disabled={activeSlide === 0}
                       onClick={() => moveSlide(activeSlide, -1)}
+                      aria-label={language === "ar" ? "نقل الشريحة لأعلى" : "Move slide up"}
+                      title={language === "ar" ? "نقل الشريحة لأعلى" : "Move slide up"}
                     >
                       <ChevronUp size={16} />
                     </Button>
@@ -462,6 +491,8 @@ export default function AdminCMS() {
                       size="sm"
                       disabled={activeSlide >= form.hero.slides.length - 1}
                       onClick={() => moveSlide(activeSlide, 1)}
+                      aria-label={language === "ar" ? "نقل الشريحة لأسفل" : "Move slide down"}
+                      title={language === "ar" ? "نقل الشريحة لأسفل" : "Move slide down"}
                     >
                       <ChevronDown size={16} />
                     </Button>
