@@ -1,38 +1,50 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { readStorage, writeStorage } from "@/lib/storage";
 
-// تعريف أنواع اللغات المتاحة
 type Language = "ar" | "en";
 
 interface LanguageContextType {
   language: Language;
+  setLanguage: (lang: Language) => void;
   toggleLanguage: () => void;
   dir: "rtl" | "ltr";
 }
 
+const STORAGE_KEY = "paradise_language";
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider = ({ children }: { children: React.ReactNode }) => {
-  const [language, setLanguage] = useState<Language>("ar");
+  const [language, setLanguageState] = useState<Language>("ar");
 
-  // تغيير اتجاه الصفحة بناءً على اللغة
+  useEffect(() => {
+    const saved = readStorage<Language | null>(STORAGE_KEY, null);
+    if (saved === "ar" || saved === "en") setLanguageState(saved);
+  }, []);
+
   useEffect(() => {
     document.documentElement.lang = language;
     document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
+    writeStorage(STORAGE_KEY, language);
   }, [language]);
 
-  const toggleLanguage = () => {
-    setLanguage((prev) => (prev === "ar" ? "en" : "ar"));
-  };
+  const setLanguage = useCallback((lang: Language) => setLanguageState(lang), []);
+  const toggleLanguage = useCallback(() => {
+    setLanguageState((prev) => (prev === "ar" ? "en" : "ar"));
+  }, []);
 
-  const dir = language === "ar" ? "rtl" : "ltr";
-
-  return (
-    <LanguageContext.Provider value={{ language, toggleLanguage, dir }}>
-      {children}
-    </LanguageContext.Provider>
+  const value = useMemo(
+    () => ({
+      language,
+      setLanguage,
+      toggleLanguage,
+      dir: (language === "ar" ? "rtl" : "ltr") as "rtl" | "ltr",
+    }),
+    [language, setLanguage, toggleLanguage]
   );
+
+  return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 };
 
 export const useLanguage = () => {

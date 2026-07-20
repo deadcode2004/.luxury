@@ -6,6 +6,7 @@ import { Star, Minus, Plus, Heart, ShoppingBag, Share2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { useToast } from "@/components/ui/Toast";
 import { Product } from "@/data/mock";
 import { formatMoney } from "@/lib/format/currency";
@@ -20,6 +21,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
   const router = useRouter();
   const { addItem } = useCart();
   const { has, toggle } = useWishlist();
+  const { currency, convertFromSar } = useCurrency();
   const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
   const [cartLoading, setCartLoading] = useState(false);
@@ -97,14 +99,19 @@ export default function ProductInfo({ product }: ProductInfoProps) {
 
       <div className="flex items-end gap-4 mb-8">
         <span className="text-3xl font-bold text-secondary">
-          {formatMoney(product.price, language)}
+          {formatMoney(product.price, language, { currency, convertFromSar })}
         </span>
         {product.oldPrice && (
           <span className="text-xl text-gray-400 line-through mb-1">
-            {formatMoney(product.oldPrice, language)}
+            {formatMoney(product.oldPrice, language, { currency, convertFromSar })}
           </span>
         )}
       </div>
+      {stock > 0 && stock <= 15 && (
+        <p className="text-sm text-amber-600 font-medium mb-4">
+          {language === "ar" ? `متبقي ${stock} فقط` : `Only ${stock} left`}
+        </p>
+      )}
 
       {product.description && (
         <p className="text-gray-600 text-base leading-loose mb-10 pb-10 border-b border-gray-100">

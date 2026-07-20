@@ -1,8 +1,10 @@
 "use client";
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { apiRequest, ApiRequestError } from "@/lib/api/client";
 import { readStorage, removeStorage, writeStorage } from "@/lib/storage";
+import { clearAuthCookies, setAuthCookies } from "@/lib/auth/session";
 import { useToast } from "@/components/ui/Toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -21,6 +23,7 @@ type AuthContextValue = {
   token: string | null;
   ready: boolean;
   loading: boolean;
+  isAuthenticated: boolean;
   isOwner: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   register: (payload: {
@@ -31,7 +34,7 @@ type AuthContextValue = {
     password: string;
     password_confirmation: string;
   }) => Promise<boolean>;
-  logout: () => Promise<void>;
+  logout: (redirectTo?: string) => Promise<void>;
   refreshProfile: () => Promise<void>;
   updateProfile: (payload: {
     first_name: string;
@@ -49,6 +52,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   const { language } = useLanguage();
+  const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
@@ -59,6 +63,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const savedUser = readStorage<AuthUser | null>(USER_KEY, null);
     setToken(savedToken);
     setUser(savedUser);
+    if (savedToken && savedUser) {
+      setAuthCookies(savedUser.role);
+    } else {
+      clearAuthCookies();
+    }
     setReady(true);
   }, []);
 
@@ -67,6 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(nextUser);
     writeStorage(TOKEN_KEY, nextToken);
     writeStorage(USER_KEY, nextUser);
+    setAuthCookies(nextUser.role);
   }, []);
 
   const clear = useCallback(() => {
@@ -74,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     removeStorage(TOKEN_KEY);
     removeStorage(USER_KEY);
+    clearAuthCookies();
   }, []);
 
   const login = useCallback(
@@ -143,18 +154,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [language, persist, toast]
   );
 
-  const logout = useCallback(async () => {
-    setLoading(true);
-    try {
-      if (token) {
-        await apiRequest("/auth/logout", { method: "POST", token }).catch(() => undefined);
+  const logout = useCallback(
+    async (redirectTo = "/login") => {
+      setLoading(true);
+      try {
+        if (token) {
+          await apiRequest("/auth/logout", { method: "POST", token }).catch(() => undefined);
+        }
+      } finally {
+        clear();
+        toast(language === "ar" ? "✔ تم تسجيل الخروج" : "✔ Signed out", "success");
+        setLoading(false);
+        router.replace(redirectTo);
+        router.refresh();
       }
-      clear();
-      toast(language === "ar" ? "✔ تم تسجيل الخروج" : "✔ Signed out", "success");
-    } finally {
-      setLoading(false);
-    }
-  }, [clear, language, toast, token]);
+    },
+    [clear, language, router, toast, token]
+  );
 
   const refreshProfile = useCallback(async () => {
     if (!token) return;
@@ -162,6 +178,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await apiRequest<AuthUser>("/auth/me", { token });
       setUser(data);
       writeStorage(USER_KEY, data);
+      setAuthCookies(data.role);
     } catch {
       clear();
     }
@@ -184,6 +201,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
         setUser(data);
         writeStorage(USER_KEY, data);
+        setAuthCookies(data.role);
         toast(
           language === "ar" ? "✔ تم حفظ التعديلات" : "✔ Changes saved",
           "success"
@@ -212,6 +230,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       token,
       ready,
       loading,
+      isAuthenticated: Boolean(token && user),
       isOwner: user?.role === "owner",
       login,
       register,

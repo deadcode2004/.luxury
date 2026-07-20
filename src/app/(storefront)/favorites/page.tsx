@@ -2,20 +2,24 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Heart, ShoppingBag } from "lucide-react";
-import ProductCard from "@/components/common/ProductCard";
+import { Heart, ShoppingBag, Trash2 } from "lucide-react";
 import PageHeader from "@/components/layout/PageHeader";
 import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 import EmptyState from "@/components/ui/EmptyState";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useCart } from "@/contexts/CartContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { formatMoney } from "@/lib/format/currency";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 export default function FavoritesPage() {
   const { language } = useLanguage();
   const { items, count, remove } = useWishlist();
   const { addItem } = useCart();
+  const { currency, convertFromSar } = useCurrency();
   const [movingId, setMovingId] = useState<string | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [removing, setRemoving] = useState(false);
@@ -33,36 +37,71 @@ export default function FavoritesPage() {
         />
 
         {items.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {items.map((product) => (
-              <div key={product.id} className="flex flex-col gap-3">
-                <ProductCard product={product} />
-                <Button
-                  variant="secondary"
-                  size="md"
-                  fullWidth
-                  loading={movingId === product.id}
-                  onClick={async () => {
-                    setMovingId(product.id);
-                    try {
-                      const ok = await addItem(product.id, 1);
-                      if (ok) await remove(product.id);
-                    } finally {
-                      setMovingId(null);
-                    }
-                  }}
+              <Card
+                key={product.id}
+                variant="glass"
+                padding="md"
+                className="flex flex-col sm:flex-row gap-5 items-center"
+              >
+                <Link
+                  href={`/product/${product.id}`}
+                  className="relative w-full sm:w-32 aspect-square rounded-2xl overflow-hidden shrink-0 bg-gray-50"
                 >
-                  <ShoppingBag size={18} />
-                  {language === "ar" ? "نقل للسلة" : "Move to Cart"}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setConfirmId(product.id)}
-                >
-                  {language === "ar" ? "إزالة من المفضلة" : "Remove from wishlist"}
-                </Button>
-              </div>
+                  <Image
+                    src={product.image}
+                    alt={product.name[language]}
+                    fill
+                    sizes="128px"
+                    quality={80}
+                    loading="lazy"
+                    className="object-cover mix-blend-multiply"
+                  />
+                </Link>
+                <div className="flex-1 w-full text-start">
+                  <p className="text-xs uppercase tracking-widest text-gray-400 mb-1">
+                    {product.brand[language]}
+                  </p>
+                  <Link
+                    href={`/product/${product.id}`}
+                    className="font-bold text-lg text-secondary hover:text-primary transition-colors"
+                  >
+                    {product.name[language]}
+                  </Link>
+                  <p className="mt-2 font-bold text-secondary">
+                    {formatMoney(product.price, language, { currency, convertFromSar })}
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      loading={movingId === product.id}
+                      onClick={async () => {
+                        setMovingId(product.id);
+                        try {
+                          const ok = await addItem(product.id, 1);
+                          if (ok) await remove(product.id);
+                        } finally {
+                          setMovingId(null);
+                        }
+                      }}
+                    >
+                      <ShoppingBag size={16} />
+                      {language === "ar" ? "نقل للسلة" : "Move to Cart"}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-500"
+                      onClick={() => setConfirmId(product.id)}
+                    >
+                      <Trash2 size={16} />
+                      {language === "ar" ? "إزالة" : "Remove"}
+                    </Button>
+                  </div>
+                </div>
+              </Card>
             ))}
           </div>
         ) : (

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell, Globe, LogOut, Menu, Settings, X } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 import SidebarNav, { type SidebarNavItem } from "./SidebarNav";
 
 export type DashboardLink = {
@@ -32,9 +33,10 @@ export default function DashboardShell({
   userName = "Admin User",
   userRole = "Store Manager",
   settingsHref = "/admin/settings",
-  logoutHref = "/",
+  logoutHref = "/login",
 }: DashboardShellProps) {
   const { language, toggleLanguage, dir } = useLanguage();
+  const { logout, loading: authLoading, user } = useAuth();
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -101,7 +103,9 @@ export default function DashboardShell({
                 label: language === "ar" ? "تسجيل الخروج" : "Logout",
                 icon: <LogOut size={20} />,
                 danger: true,
-                href: logoutHref,
+                onClick: () => {
+                  if (!authLoading) void logout(logoutHref);
+                },
               },
             ]}
           />

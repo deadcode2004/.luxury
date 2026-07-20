@@ -4,10 +4,13 @@ namespace App\Services\Owner;
 
 use App\Models\Product;
 use App\Services\ProductService;
+use App\Services\Translation\ProductTranslationService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class InventoryService
 {
+    public function __construct(private readonly ProductTranslationService $translator) {}
+
     public function list(array $filters = []): LengthAwarePaginator
     {
         $query = Product::query()->with('category');
@@ -25,6 +28,7 @@ class InventoryService
 
     public function create(array $data): Product
     {
+        $data = $this->translator->fillEnglishLocales($data);
         $product = Product::query()->create($data);
         ProductService::flushListCache();
 
@@ -33,6 +37,8 @@ class InventoryService
 
     public function update(Product $product, array $data): Product
     {
+        $previous = $product->only(['name', 'brand', 'description', 'ingredients', 'usage']);
+        $data = $this->translator->fillEnglishLocales($data, $previous);
         $product->update($data);
         ProductService::flushListCache();
 
@@ -41,6 +47,7 @@ class InventoryService
 
     public function delete(Product $product): void
     {
+        // Localized fields live on the product row; deleting the product removes translations.
         $product->delete();
         ProductService::flushListCache();
     }

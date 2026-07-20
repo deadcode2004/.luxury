@@ -8,8 +8,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency, type CurrencyCode } from "@/contexts/CurrencyContext";
 import { useToast } from "@/components/ui/Toast";
-import AuthModal from "@/components/auth/AuthModal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 function CountBadge({
@@ -36,12 +36,12 @@ export default function Header() {
   const { count: cartCount } = useCart();
   const { count: wishCount } = useWishlist();
   const { user, logout, loading: authLoading, isOwner } = useAuth();
+  const { currency, setCurrency } = useCurrency();
   const { toast } = useToast();
   const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
-  const [authOpen, setAuthOpen] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
   const pathname = usePathname();
 
@@ -123,6 +123,16 @@ export default function Header() {
           </nav>
 
           <div className={`flex items-center gap-2 sm:gap-4 ${textColorClass}`}>
+            <select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
+              className={`hidden md:block bg-transparent text-xs font-bold border border-current/20 rounded-lg px-2 py-1.5 transition-colors ${hoverColorClass}`}
+              aria-label="Currency"
+            >
+              <option value="SAR">SAR</option>
+              <option value="EGP">EGP</option>
+              <option value="USD">USD</option>
+            </select>
             <button
               onClick={toggleLanguage}
               className={`hidden lg:flex items-center text-xs font-medium transition-colors active:scale-95 ${hoverColorClass}`}
@@ -207,20 +217,19 @@ export default function Header() {
                       </>
                     ) : (
                       <>
-                        <button
-                          type="button"
-                          onClick={() => setAuthOpen(true)}
+                        <Link
+                          href="/login"
                           className="w-full flex items-center gap-3 px-4 py-3 text-sm text-secondary/80 hover:bg-surface/50 hover:text-primary transition-all rounded-xl font-bold"
                         >
                           <LogIn size={16} />
                           {language === "ar" ? "تسجيل الدخول" : "Sign In"}
-                        </button>
+                        </Link>
                         <Link
-                          href="/account"
+                          href="/register"
                           className="flex items-center gap-3 px-4 py-3 text-sm text-secondary/80 hover:bg-surface/50 hover:text-primary transition-all rounded-xl font-medium"
                         >
                           <User size={16} />
-                          {language === "ar" ? "حسابي الشخصي" : "My Account"}
+                          {language === "ar" ? "إنشاء حساب" : "Create Account"}
                         </Link>
                       </>
                     )}
@@ -339,16 +348,13 @@ export default function Header() {
                       </button>
                     </>
                   ) : (
-                    <button
-                      type="button"
+                    <Link
+                      href="/login"
                       className="text-sm text-primary py-2 text-start font-bold"
-                      onClick={() => {
-                        setIsMobileMenuOpen(false);
-                        setAuthOpen(true);
-                      }}
+                      onClick={() => setIsMobileMenuOpen(false)}
                     >
                       {language === "ar" ? "تسجيل الدخول" : "Sign In"}
-                    </button>
+                    </Link>
                   )}
                 </div>
               </div>
@@ -394,7 +400,6 @@ export default function Header() {
         </div>
       </div>
 
-      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
       <ConfirmDialog
         open={confirmLogout}
         onClose={() => setConfirmLogout(false)}
@@ -405,8 +410,8 @@ export default function Header() {
         }
         confirmLabel={language === "ar" ? "تسجيل الخروج" : "Sign Out"}
         onConfirm={async () => {
-          await logout();
           setConfirmLogout(false);
+          await logout("/login");
         }}
       />
     </>

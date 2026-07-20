@@ -7,6 +7,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Trash2, Minus, Plus, ShoppingBag, ArrowRight, ArrowLeft } from "lucide-react";
 import { formatMoneyFixed } from "@/lib/format/currency";
 import { useCart } from "@/contexts/CartContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
@@ -16,6 +17,7 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 export default function CartPage() {
   const { language, dir } = useLanguage();
   const { lines, count, totals, setQuantity, removeItem } = useCart();
+  const { currency, convertFromSar } = useCurrency();
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -83,7 +85,7 @@ export default function CartPage() {
 
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-auto gap-4 sm:gap-0 pt-4">
                       <span className="text-xl font-bold text-secondary">
-                        {formatMoneyFixed(item.price, language, 0)}
+                        {formatMoneyFixed(item.price, language, 0, { currency, convertFromSar })}
                       </span>
 
                       <div className="flex items-center justify-center sm:justify-start bg-gray-50 border border-gray-100 rounded-lg h-12 px-2 self-center sm:self-auto">
@@ -131,13 +133,13 @@ export default function CartPage() {
                   <div className="flex justify-between text-gray-300">
                     <span>{language === "ar" ? "المجموع الفرعي" : "Subtotal"}</span>
                     <span className="font-bold text-white">
-                      {formatMoneyFixed(totals.subtotal, language)}
+                      {formatMoneyFixed(totals.subtotal, language, 2, { currency, convertFromSar })}
                     </span>
                   </div>
                   <div className="flex justify-between text-gray-300">
                     <span>{language === "ar" ? "الضريبة (15%)" : "Tax (15%)"}</span>
                     <span className="font-bold text-white">
-                      {formatMoneyFixed(totals.tax, language)}
+                      {formatMoneyFixed(totals.tax, language, 2, { currency, convertFromSar })}
                     </span>
                   </div>
                   <div className="flex justify-between text-gray-300">
@@ -153,7 +155,7 @@ export default function CartPage() {
                     {language === "ar" ? "الإجمالي" : "Total"}
                   </span>
                   <span className="text-3xl font-bold text-primary">
-                    {totals.total.toFixed(2)} <span className="text-lg">SAR</span>
+                    {formatMoneyFixed(totals.total, language, 2, { currency, convertFromSar })}
                   </span>
                 </div>
 
