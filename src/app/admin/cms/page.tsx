@@ -246,11 +246,11 @@ export default function AdminCMS() {
               <h3 className="font-bold text-secondary">
                 {language === "ar" ? "الشريط الإعلاني" : "Announcement bar"}
               </h3>
-              <p className="text-xs text-gray-400">
-                {language === "ar"
-                  ? "يظهر أعلى صفحات المتجر عند التفعيل"
-                  : "Shows above storefront pages when enabled"}
-              </p>
+            <p className="text-xs text-gray-400">
+              {language === "ar"
+                ? "عربي فقط — ترجمة وتحويل العملة تلقائياً للزائر"
+                : "Arabic only — auto-translated and currency-converted for visitors"}
+            </p>
             </div>
           </div>
 
@@ -279,9 +279,9 @@ export default function AdminCMS() {
           </label>
         </div>
 
-        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="p-6 flex flex-col gap-4">
           <FormField
-            label={language === "ar" ? "نص الإعلان (عربي)" : "Announcement (Arabic)"}
+            label={language === "ar" ? "نص الإعلان (عربي فقط)" : "Announcement (Arabic only)"}
             error={errors.announcementAr}
           >
             <Input
@@ -292,33 +292,34 @@ export default function AdminCMS() {
                   ...f,
                   announcement: {
                     ...f.announcement,
-                    text: { ...f.announcement.text, ar: e.target.value },
+                    text: { ...f.announcement.text, ar: e.target.value, en: "" },
                   },
                 }))
               }
-            />
-          </FormField>
-          <FormField label={language === "ar" ? "نص الإعلان (إنجليزي)" : "Announcement (English)"}>
-            <Input
-              className="dir-ltr text-start"
-              disabled={!form.announcement.enabled}
-              value={form.announcement.text.en}
-              onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  announcement: {
-                    ...f.announcement,
-                    text: { ...f.announcement.text, en: e.target.value },
-                  },
-                }))
+              placeholder={
+                language === "ar"
+                  ? "مثال: شحن مجاني للطلبات فوق 500 ج.م"
+                  : "Example: شحن مجاني للطلبات فوق 500 ج.م"
               }
             />
           </FormField>
 
+          <p className="text-xs text-secondary/50 leading-relaxed">
+            {language === "ar"
+              ? "يُترجم النص تلقائياً للإنجليزية عند الحفظ. اكتب المبالغ بالجنيه (مثل 500 ج.م) ليتم تحويلها حسب عملة دولة الزائر."
+              : "Text is auto-translated to English on save. Write amounts in EGP (e.g. 500 ج.م) so visitors see them converted to their currency."}
+          </p>
+
           {form.announcement.enabled && form.announcement.text.ar ? (
-            <div className="md:col-span-2 rounded-xl bg-secondary text-background text-center text-sm py-3 px-4">
-              {form.announcement.text[language] || form.announcement.text.ar}
+            <div className="rounded-xl bg-secondary text-background text-center text-sm py-3 px-4">
+              {form.announcement.text.ar}
             </div>
+          ) : null}
+
+          {form.announcement.text.en ? (
+            <p className="text-xs text-gray-400 dir-ltr text-start">
+              EN: {form.announcement.text.en}
+            </p>
           ) : null}
         </div>
       </section>

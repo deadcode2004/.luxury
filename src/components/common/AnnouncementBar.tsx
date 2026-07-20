@@ -1,11 +1,14 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { fetchPublicCms, type CmsStorefront } from "@/lib/api/owner";
+import { localizeAnnouncementAmounts } from "@/lib/format/announcement";
 
 export default function AnnouncementBar() {
   const { language } = useLanguage();
+  const { currency, convertFromEgp, ready } = useCurrency();
   const [cms, setCms] = useState<CmsStorefront | null>(null);
 
   useEffect(() => {
@@ -22,13 +25,23 @@ export default function AnnouncementBar() {
     };
   }, []);
 
-  if (!cms?.announcement?.enabled) return null;
-  const text = cms.announcement.text?.[language] || cms.announcement.text?.ar;
-  if (!text?.trim()) return null;
+  const displayText = useMemo(() => {
+    if (!cms?.announcement?.enabled) return null;
+    const raw = cms.announcement.text?.[language] || cms.announcement.text?.ar;
+    if (!raw?.trim()) return null;
+    return localizeAnnouncementAmounts(raw, {
+      language,
+      currency: ready ? currency : "EGP",
+      convertFromEgp: ready ? convertFromEgp : (n) => n,
+      sourceAr: cms.announcement.text?.ar,
+    });
+  }, [cms, language, currency, convertFromEgp, ready]);
+
+  if (!displayText) return null;
 
   return (
     <div className="w-full bg-secondary text-background text-center text-xs sm:text-sm font-medium tracking-wide py-2.5 px-4">
-      {text}
+      {displayText}
     </div>
   );
 }

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Exceptions\DomainException;
 use App\Models\CmsSetting;
+use App\Services\Translation\ProductTranslationService;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -11,6 +12,8 @@ use Illuminate\Support\Facades\Schema;
 class CmsService
 {
     public const STOREFRONT_KEY = 'storefront';
+
+    public function __construct(private readonly ProductTranslationService $translator) {}
 
     public function defaults(): array
     {
@@ -75,12 +78,37 @@ class CmsService
             );
         }
 
-        $merged = array_replace_recursive($this->getStorefront(), $payload);
+        $previous = $this->getStorefront();
+        $merged = array_replace_recursive($previous, $payload);
+        $merged = $this->translateAnnouncement($merged, $previous);
 
         CmsSetting::query()->updateOrCreate(
             ['key' => self::STOREFRONT_KEY],
             ['value' => $merged]
         );
+
+        return $merged;
+    }
+
+    /**
+     * Announcement is authored in Arabic only; English is filled automatically.
+     */
+    private function translateAnnouncement(array $merged, array $previous): array
+    {
+        $ar = trim((string) data_get($merged, 'announcement.text.ar', ''));
+        $en = trim((string) data_get($merged, 'announcement.text.en', ''));
+        $prevAr = trim((string) data_get($previous, 'announcement.text.ar', ''));
+
+        if ($ar === '') {
+            $merged['announcement']['text']['en'] = '';
+
+            return $merged;
+        }
+
+        $shouldTranslate = $en === '' || ($prevAr !== '' && $ar !== $prevAr);
+        if ($shouldTranslate) {
+            $merged['announcement']['text']['en'] = $this->translator->translate($ar);
+        }
 
         return $merged;
     }
