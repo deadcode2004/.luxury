@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/Toast";
-import { Plus, Edit, Trash2, RefreshCw } from "lucide-react";
+import { Plus, Edit, Trash2 } from "lucide-react";
 import Table, { TableToolbar, TableRow, TableCell } from "@/components/ui/Table";
 import SearchInput from "@/components/ui/SearchInput";
 import Button from "@/components/ui/Button";
@@ -33,6 +33,7 @@ import {
   type ApiProduct,
 } from "@/lib/api/owner";
 import { pickLocale } from "@/lib/i18n/localeText";
+import { useAutoFetch } from "@/hooks/useAutoFetch";
 
 type FormState = {
   nameAr: string;
@@ -121,9 +122,9 @@ export default function AdminInventory() {
   const [catSaving, setCatSaving] = useState(false);
   const [deleteCat, setDeleteCat] = useState<ApiCategory | null>(null);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (options?: { silent?: boolean }) => {
     if (!token) return;
-    setLoading(true);
+    if (!options?.silent) setLoading(true);
     try {
       const [inv, cats] = await Promise.all([
         fetchOwnerInventory(token, query),
@@ -141,14 +142,12 @@ export default function AdminInventory() {
         "danger"
       );
     } finally {
-      setLoading(false);
+      if (!options?.silent) setLoading(false);
       setHasFetched(true);
     }
   }, [token, query, language, toast]);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useAutoFetch(load);
 
   const previewPrice = useMemo(() => {
     const base = Number(form.basePrice);
@@ -273,7 +272,7 @@ export default function AdminInventory() {
       }
 
       setModalOpen(false);
-      await load();
+      await load({ silent: true });
     } catch (err) {
       toast(
         err instanceof ApiRequestError
@@ -295,7 +294,7 @@ export default function AdminInventory() {
       await deleteProduct(token, deleteId);
       toast(language === "ar" ? "✔ تم حذف المنتج" : "✔ Product deleted", "success");
       setDeleteId(null);
-      await load();
+      await load({ silent: true });
     } catch (err) {
       toast(err instanceof ApiRequestError ? err.message : "Delete failed", "danger");
     } finally {
@@ -366,9 +365,6 @@ export default function AdminInventory() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => void load()} disabled={loading}>
-            <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
-          </Button>
           <Button variant="secondary" size="md" onClick={openCreate}>
             <Plus size={18} />
             {language === "ar" ? "إضافة منتج" : "Add Product"}

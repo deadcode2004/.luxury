@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/Toast";
-import { Plus, Edit, Trash2, RefreshCw } from "lucide-react";
+import { Plus, Edit, Trash2 } from "lucide-react";
 import Table, { TableToolbar, TableRow, TableCell } from "@/components/ui/Table";
 import SearchInput from "@/components/ui/SearchInput";
 import Button from "@/components/ui/Button";
@@ -22,6 +22,7 @@ import {
   updateCoupon,
   type ApiCoupon,
 } from "@/lib/api/owner";
+import { useAutoFetch } from "@/hooks/useAutoFetch";
 
 export default function AdminCoupons() {
   const { language } = useLanguage();
@@ -47,9 +48,9 @@ export default function AdminCoupons() {
     isActive: true,
   });
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (options?: { silent?: boolean }) => {
     if (!token) return;
-    setLoading(true);
+    if (!options?.silent) setLoading(true);
     try {
       setCoupons(await fetchOwnerCoupons(token, query));
     } catch (err) {
@@ -62,14 +63,12 @@ export default function AdminCoupons() {
         "danger"
       );
     } finally {
-      setLoading(false);
+      if (!options?.silent) setLoading(false);
       setHasFetched(true);
     }
   }, [token, query, language, toast]);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useAutoFetch(load);
 
   const openCreate = () => {
     setEditing(null);
@@ -126,7 +125,7 @@ export default function AdminCoupons() {
         toast(language === "ar" ? "✔ تم إنشاء الكوبون" : "✔ Coupon created", "success");
       }
       setModalOpen(false);
-      await load();
+      await load({ silent: true });
     } catch (err) {
       toast(err instanceof ApiRequestError ? err.message : "Save failed", "danger");
     } finally {
@@ -141,7 +140,7 @@ export default function AdminCoupons() {
       await deleteCoupon(token, deleteId);
       toast(language === "ar" ? "✔ تم حذف الكوبون" : "✔ Coupon deleted", "success");
       setDeleteId(null);
-      await load();
+      await load({ silent: true });
     } catch (err) {
       toast(err instanceof ApiRequestError ? err.message : "Delete failed", "danger");
     } finally {
@@ -160,9 +159,6 @@ export default function AdminCoupons() {
             {language === "ar" ? "بيانات حقيقية من قاعدة البيانات" : "Live data from the database"}
           </p>
         </div>
-        <Button variant="ghost" size="sm" onClick={() => void load()} disabled={loading}>
-          <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
-        </Button>
       </div>
 
       <Table

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/Toast";
@@ -27,6 +27,7 @@ import {
 } from "@/lib/cms/hero";
 import { emptyCmsContact, emptyCmsSocial } from "@/lib/cms/footer";
 import { pickLocale } from "@/lib/i18n/localeText";
+import { useAutoFetch } from "@/hooks/useAutoFetch";
 
 const emptyCms = (): CmsStorefront => ({
   hero: {
@@ -72,9 +73,9 @@ export default function AdminCMS() {
     });
   };
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (options?: { silent?: boolean }) => {
     if (!token) return;
-    setLoading(true);
+    if (!options?.silent) setLoading(true);
     try {
       const data = await fetchOwnerCms(token);
       const slides = data.hero?.slides?.length
@@ -132,14 +133,12 @@ export default function AdminCMS() {
         "danger"
       );
     } finally {
-      setLoading(false);
+      if (!options?.silent) setLoading(false);
       setHasFetched(true);
     }
   }, [token, language, toast]);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useAutoFetch(load);
 
   const updateSlide = (index: number, patch: Partial<HeroSlide>, clearEn = false) => {
     setForm((f) => {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,13 +15,13 @@ import {
 } from "lucide-react";
 import Card from "@/components/ui/Card";
 import StatusBadge from "@/components/ui/StatusBadge";
-import Button from "@/components/ui/Button";
 import {
   ApiRequestError,
   fetchOwnerDashboard,
   type DashboardData,
 } from "@/lib/api/owner";
 import { pickLocale } from "@/lib/i18n/localeText";
+import { useAutoFetch } from "@/hooks/useAutoFetch";
 
 export default function AdminOverview() {
   const { language } = useLanguage();
@@ -31,9 +31,9 @@ export default function AdminOverview() {
   // Start false so SSR HTML matches the first client paint.
   const [loading, setLoading] = useState(false);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (options?: { silent?: boolean }) => {
     if (!token) return;
-    setLoading(true);
+    if (!options?.silent) setLoading(true);
     try {
       const res = await fetchOwnerDashboard(token);
       setData(res);
@@ -47,13 +47,11 @@ export default function AdminOverview() {
         "danger"
       );
     } finally {
-      setLoading(false);
+      if (!options?.silent) setLoading(false);
     }
   }, [token, language, toast]);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useAutoFetch(load);
 
   const stats = data?.stats;
   const cards = [
@@ -110,9 +108,6 @@ export default function AdminOverview() {
               : "Live stats from orders and products"}
           </p>
         </div>
-        <Button variant="ghost" size="sm" onClick={() => void load()} disabled={loading}>
-          {language === "ar" ? "تحديث" : "Refresh"}
-        </Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
