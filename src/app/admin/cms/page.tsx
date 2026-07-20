@@ -233,7 +233,7 @@ export default function AdminCMS() {
   const slide = form.hero.slides[activeSlide] ?? form.hero.slides[0];
 
   return (
-    <div className="flex flex-col gap-8 max-w-7xl">
+    <div className="flex flex-col gap-6 w-full max-w-6xl">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-secondary tracking-tight">
@@ -251,14 +251,13 @@ export default function AdminCMS() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-      <section className="xl:col-span-7 rounded-3xl border border-surface bg-white/70 overflow-hidden">
-        <div className="px-6 py-4 border-b border-surface/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-background/60">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+      <section className="w-full rounded-3xl border border-surface bg-white/70 overflow-hidden">
+        <div className="px-4 sm:px-6 py-4 border-b border-surface/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-background/60">
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <Layout size={18} />
             </span>
-            <div>
+            <div className="min-w-0">
               <h3 className="font-bold text-secondary">
                 {language === "ar" ? "قسم البطل (Hero)" : "Hero section"}
               </h3>
@@ -273,6 +272,7 @@ export default function AdminCMS() {
             type="button"
             variant="ghost"
             size="sm"
+            className="shrink-0 self-start sm:self-auto"
             onClick={addSlide}
             disabled={form.hero.slides.length >= 10}
           >
@@ -281,278 +281,270 @@ export default function AdminCMS() {
           </Button>
         </div>
 
-        <div className="p-4 sm:p-6 flex flex-col gap-5">
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <button
-              type="button"
-              onClick={() => scrollTabs(-1)}
-              className="shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-full border border-surface bg-background text-secondary/70 hover:border-primary/40 hover:text-primary transition-colors"
-              aria-label={language === "ar" ? "تمرير الشرائح لليمين" : "Scroll slides left"}
-            >
-              <ChevronLeft size={16} />
-            </button>
+        <div className="grid grid-cols-1 lg:grid-cols-12 lg:items-stretch">
+          {/* Hero editor */}
+          <div className="lg:col-span-8 p-4 sm:p-6 flex flex-col gap-5 min-w-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+              <button
+                type="button"
+                onClick={() => scrollTabs(-1)}
+                className="shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-full border border-surface bg-background text-secondary/70 hover:border-primary/40 hover:text-primary transition-colors"
+                aria-label={language === "ar" ? "تمرير الشرائح" : "Scroll slides"}
+              >
+                <ChevronLeft size={16} />
+              </button>
 
-            <div
-              ref={tabsRef}
-              className="flex-1 min-w-0 flex items-center gap-2 overflow-x-auto scroll-smooth snap-x snap-mandatory py-1 px-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-            >
-              {form.hero.slides.map((s, i) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  data-slide-tab={i}
-                  onClick={() => selectSlide(i)}
-                  className={`snap-start shrink-0 px-3 py-1.5 rounded-full text-xs font-bold border transition-colors whitespace-nowrap ${
-                    i === activeSlide
-                      ? "bg-primary text-background border-primary"
-                      : "bg-background border-surface text-secondary/70 hover:border-primary/40"
-                  }`}
-                >
-                  {language === "ar" ? `شريحة ${i + 1}` : `Slide ${i + 1}`}
-                </button>
-              ))}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => scrollTabs(1)}
-              className="shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-full border border-surface bg-background text-secondary/70 hover:border-primary/40 hover:text-primary transition-colors"
-              aria-label={language === "ar" ? "تمرير الشرائح لليسار" : "Scroll slides right"}
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
-
-          {slide ? (
-            <div
-              key={slide.id}
-              className="grid grid-cols-1 lg:grid-cols-12 gap-5"
-            >
-              <div className="lg:col-span-4 flex flex-col gap-3">
-                <FormField
-                  label={language === "ar" ? "صورة الشريحة" : "Slide image"}
-                  error={errors[`slide-${activeSlide}-image`]}
-                >
-                  <ImageUploadField
-                    value={slide.image}
-                    onChange={(url) => updateSlide(activeSlide, { image: url })}
-                    folder="cms"
-                    error={errors[`slide-${activeSlide}-image`]}
-                  />
-                </FormField>
-                <div className="flex items-center gap-2">
-                  <Button
+              <div
+                ref={tabsRef}
+                className="flex-1 min-w-0 flex items-center gap-2 overflow-x-auto scroll-smooth snap-x snap-mandatory py-1 px-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              >
+                {form.hero.slides.map((s, i) => (
+                  <button
+                    key={s.id}
                     type="button"
-                    variant="ghost"
-                    size="sm"
-                    disabled={activeSlide === 0}
-                    onClick={() => moveSlide(activeSlide, -1)}
+                    data-slide-tab={i}
+                    onClick={() => selectSlide(i)}
+                    className={`snap-start shrink-0 px-3 py-1.5 rounded-full text-xs font-bold border transition-colors whitespace-nowrap ${
+                      i === activeSlide
+                        ? "bg-primary text-background border-primary"
+                        : "bg-background border-surface text-secondary/70 hover:border-primary/40"
+                    }`}
                   >
-                    <ChevronUp size={16} />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    disabled={activeSlide >= form.hero.slides.length - 1}
-                    onClick={() => moveSlide(activeSlide, 1)}
-                  >
-                    <ChevronDown size={16} />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="text-red-500 ms-auto"
-                    disabled={form.hero.slides.length <= 1}
-                    onClick={() => removeSlide(activeSlide)}
-                  >
-                    <Trash2 size={16} />
-                    {language === "ar" ? "حذف" : "Delete"}
-                  </Button>
-                </div>
+                    {language === "ar" ? `شريحة ${i + 1}` : `Slide ${i + 1}`}
+                  </button>
+                ))}
               </div>
 
-              <div className="lg:col-span-8 flex flex-col gap-4">
-                <p className="text-xs text-secondary/50">
-                  {language === "ar"
-                    ? "اكتب بالعربية فقط — الترجمة الإنجليزية تُحفظ تلقائياً عند الحفظ."
-                    : "Arabic only — English is auto-translated and saved on submit."}
-                </p>
-                <FormField
-                  label={language === "ar" ? "العنوان" : "Heading"}
-                  error={errors[`slide-${activeSlide}-heading`]}
-                >
-                  <Input
-                    value={slide.heading.ar}
-                    onChange={(e) => updateSlideLocale(activeSlide, "heading", e.target.value)}
-                  />
-                </FormField>
-                <FormField label={language === "ar" ? "العنوان الفرعي" : "Subtitle"}>
-                  <Input
-                    value={slide.subtitle.ar}
-                    onChange={(e) => updateSlideLocale(activeSlide, "subtitle", e.target.value)}
-                  />
-                </FormField>
-                <FormField label={language === "ar" ? "الوصف" : "Description"}>
-                  <Textarea
-                    rows={3}
-                    value={slide.description.ar}
-                    onChange={(e) => updateSlideLocale(activeSlide, "description", e.target.value)}
-                  />
-                </FormField>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <FormField label={language === "ar" ? "نص الزر" : "Button text"}>
-                    <Input
-                      value={slide.cta.ar}
-                      onChange={(e) => updateSlideLocale(activeSlide, "cta", e.target.value)}
-                    />
-                  </FormField>
-                  <FormField label={language === "ar" ? "إجراء الزر" : "Button action"}>
-                    <Select
-                      className="h-12"
-                      value={slide.action.type}
-                      onChange={(e) =>
-                        updateSlide(activeSlide, {
-                          action: {
-                            type: e.target.value as HeroCtaActionType,
-                            href: slide.action.href,
-                          },
-                        })
-                      }
-                    >
-                      {HERO_ACTION_OPTIONS.map((opt) => (
-                        <option key={opt.type} value={opt.type}>
-                          {opt.label[language]}
-                        </option>
-                      ))}
-                    </Select>
-                  </FormField>
-                </div>
-                {slide.action.type === "custom" ? (
+              <button
+                type="button"
+                onClick={() => scrollTabs(1)}
+                className="shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-full border border-surface bg-background text-secondary/70 hover:border-primary/40 hover:text-primary transition-colors"
+                aria-label={language === "ar" ? "تمرير الشرائح" : "Scroll slides"}
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+
+            {slide ? (
+              <div key={slide.id} className="grid grid-cols-1 md:grid-cols-12 gap-5 min-w-0">
+                <div className="md:col-span-4 flex flex-col gap-3 min-w-0">
                   <FormField
-                    label={language === "ar" ? "الرابط المخصص" : "Custom link"}
-                    error={errors[`slide-${activeSlide}-href`]}
+                    label={language === "ar" ? "صورة الشريحة" : "Slide image"}
+                    error={errors[`slide-${activeSlide}-image`]}
                   >
-                    <Input
-                      className="dir-ltr text-start"
-                      placeholder="/shop or https://..."
-                      value={slide.action.href || ""}
-                      onChange={(e) =>
-                        updateSlide(activeSlide, {
-                          action: { type: "custom", href: e.target.value },
-                        })
-                      }
+                    <ImageUploadField
+                      value={slide.image}
+                      onChange={(url) => updateSlide(activeSlide, { image: url })}
+                      folder="cms"
+                      error={errors[`slide-${activeSlide}-image`]}
                     />
                   </FormField>
-                ) : (
-                  <p className="text-xs text-secondary/45">
-                    {
-                      HERO_ACTION_OPTIONS.find((o) => o.type === slide.action.type)?.description[
-                        language
-                      ]
-                    }
-                  </p>
-                )}
-                {slide.heading.en ? (
-                  <p className="text-xs text-gray-400 dir-ltr text-start">EN: {slide.heading.en}</p>
-                ) : null}
-              </div>
-            </div>
-          ) : null}
-        </div>
-      </section>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={activeSlide === 0}
+                      onClick={() => moveSlide(activeSlide, -1)}
+                    >
+                      <ChevronUp size={16} />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={activeSlide >= form.hero.slides.length - 1}
+                      onClick={() => moveSlide(activeSlide, 1)}
+                    >
+                      <ChevronDown size={16} />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-500 ms-auto"
+                      disabled={form.hero.slides.length <= 1}
+                      onClick={() => removeSlide(activeSlide)}
+                    >
+                      <Trash2 size={16} />
+                      {language === "ar" ? "حذف" : "Delete"}
+                    </Button>
+                  </div>
+                </div>
 
-      <section className="xl:col-span-5 rounded-3xl border border-surface bg-white/70 overflow-hidden xl:sticky xl:top-24">
-        <div className="px-6 py-4 border-b border-surface/70 flex items-center justify-between gap-3 bg-background/60">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-accent/15 text-accent">
-              <Megaphone size={18} />
-            </span>
-            <div>
-              <h3 className="font-bold text-secondary">
-                {language === "ar" ? "الشريط الإعلاني" : "Announcement bar"}
-              </h3>
-              <p className="text-xs text-gray-400">
-                {language === "ar"
-                  ? "عربي فقط — ترجمة وتحويل العملة تلقائياً للزائر"
-                  : "Arabic only — auto-translated and currency-converted for visitors"}
-              </p>
-            </div>
+                <div className="md:col-span-8 flex flex-col gap-4 min-w-0">
+                  <p className="text-xs text-secondary/50">
+                    {language === "ar"
+                      ? "اكتب بالعربية فقط — الترجمة الإنجليزية تُحفظ تلقائياً عند الحفظ."
+                      : "Arabic only — English is auto-translated and saved on submit."}
+                  </p>
+                  <FormField
+                    label={language === "ar" ? "العنوان" : "Heading"}
+                    error={errors[`slide-${activeSlide}-heading`]}
+                  >
+                    <Input
+                      value={slide.heading.ar}
+                      onChange={(e) => updateSlideLocale(activeSlide, "heading", e.target.value)}
+                    />
+                  </FormField>
+                  <FormField label={language === "ar" ? "العنوان الفرعي" : "Subtitle"}>
+                    <Input
+                      value={slide.subtitle.ar}
+                      onChange={(e) => updateSlideLocale(activeSlide, "subtitle", e.target.value)}
+                    />
+                  </FormField>
+                  <FormField label={language === "ar" ? "الوصف" : "Description"}>
+                    <Textarea
+                      rows={3}
+                      value={slide.description.ar}
+                      onChange={(e) => updateSlideLocale(activeSlide, "description", e.target.value)}
+                    />
+                  </FormField>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <FormField label={language === "ar" ? "نص الزر" : "Button text"}>
+                      <Input
+                        value={slide.cta.ar}
+                        onChange={(e) => updateSlideLocale(activeSlide, "cta", e.target.value)}
+                      />
+                    </FormField>
+                    <FormField label={language === "ar" ? "إجراء الزر" : "Button action"}>
+                      <Select
+                        className="h-12"
+                        value={slide.action.type}
+                        onChange={(e) =>
+                          updateSlide(activeSlide, {
+                            action: {
+                              type: e.target.value as HeroCtaActionType,
+                              href: slide.action.href,
+                            },
+                          })
+                        }
+                      >
+                        {HERO_ACTION_OPTIONS.map((opt) => (
+                          <option key={opt.type} value={opt.type}>
+                            {opt.label[language]}
+                          </option>
+                        ))}
+                      </Select>
+                    </FormField>
+                  </div>
+                  {slide.action.type === "custom" ? (
+                    <FormField
+                      label={language === "ar" ? "الرابط المخصص" : "Custom link"}
+                      error={errors[`slide-${activeSlide}-href`]}
+                    >
+                      <Input
+                        className="dir-ltr text-start"
+                        placeholder="/shop or https://..."
+                        value={slide.action.href || ""}
+                        onChange={(e) =>
+                          updateSlide(activeSlide, {
+                            action: { type: "custom", href: e.target.value },
+                          })
+                        }
+                      />
+                    </FormField>
+                  ) : (
+                    <p className="text-xs text-secondary/45">
+                      {
+                        HERO_ACTION_OPTIONS.find((o) => o.type === slide.action.type)?.description[
+                          language
+                        ]
+                      }
+                    </p>
+                  )}
+                  {slide.heading.en ? (
+                    <p className="text-xs text-gray-400 dir-ltr text-start">EN: {slide.heading.en}</p>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
           </div>
 
-          <label className="relative inline-flex items-center cursor-pointer shrink-0">
-            <input
-              type="checkbox"
-              className="sr-only peer"
-              checked={form.announcement.enabled}
-              onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  announcement: { ...f.announcement, enabled: e.target.checked },
-                }))
-              }
-            />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] rtl:after:right-[2px] rtl:after:left-auto after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
-            <span className="ms-3 text-sm font-bold text-gray-600">
-              {form.announcement.enabled
-                ? language === "ar"
-                  ? "مفعّل"
-                  : "On"
-                : language === "ar"
-                  ? "متوقف"
-                  : "Off"}
-            </span>
-          </label>
-        </div>
+          {/* Announcement beside Hero — same card, no orphan empty column */}
+          <aside className="lg:col-span-4 min-w-0 border-t lg:border-t-0 lg:border-s border-surface bg-background/50 flex flex-col">
+            <div className="px-4 sm:px-5 py-4 border-b border-surface/70 flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3 min-w-0">
+                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent/15 text-accent">
+                  <Megaphone size={18} />
+                </span>
+                <div className="min-w-0">
+                  <h3 className="font-bold text-secondary text-sm sm:text-base">
+                    {language === "ar" ? "الشريط الإعلاني" : "Announcement"}
+                  </h3>
+                  <p className="text-[11px] text-gray-400 leading-snug mt-0.5">
+                    {language === "ar"
+                      ? "عربي فقط — ترجمة وتحويل العملة تلقائياً"
+                      : "Arabic only — auto translate & currency"}
+                  </p>
+                </div>
+              </div>
 
-        <div className="p-6 flex flex-col gap-4">
-          <FormField
-            label={language === "ar" ? "نص الإعلان (عربي فقط)" : "Announcement (Arabic only)"}
-            error={errors.announcementAr}
-          >
-            <Input
-              disabled={!form.announcement.enabled}
-              value={form.announcement.text.ar}
-              onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  announcement: {
-                    ...f.announcement,
-                    text: { ar: e.target.value, en: "" },
-                  },
-                }))
-              }
-              placeholder={
-                language === "ar"
-                  ? "مثال: شحن مجاني للطلبات فوق 500 ج.م"
-                  : "Example: شحن مجاني للطلبات فوق 500 ج.م"
-              }
-            />
-          </FormField>
-
-          <p className="text-xs text-secondary/50 leading-relaxed">
-            {language === "ar"
-              ? "يُترجم النص تلقائياً للإنجليزية عند الحفظ. اكتب المبالغ بالجنيه (مثل 500 ج.م) ليتم تحويلها حسب عملة دولة الزائر."
-              : "Text is auto-translated to English on save. Write amounts in EGP (e.g. 500 ج.م) so visitors see them converted to their currency."}
-          </p>
-
-          {form.announcement.enabled && form.announcement.text.ar ? (
-            <div className="rounded-xl bg-secondary text-background text-center text-sm py-3 px-4">
-              {form.announcement.text.ar}
+              <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={form.announcement.enabled}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      announcement: { ...f.announcement, enabled: e.target.checked },
+                    }))
+                  }
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] rtl:after:right-[2px] rtl:after:left-auto after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
+              </label>
             </div>
-          ) : null}
 
-          {form.announcement.text.en ? (
-            <p className="text-xs text-gray-400 dir-ltr text-start">
-              EN: {form.announcement.text.en}
-            </p>
-          ) : null}
+            <div className="p-4 sm:p-5 flex flex-col gap-4 flex-1">
+              <FormField
+                label={language === "ar" ? "نص الإعلان (عربي فقط)" : "Announcement (Arabic only)"}
+                error={errors.announcementAr}
+              >
+                <Textarea
+                  rows={4}
+                  disabled={!form.announcement.enabled}
+                  value={form.announcement.text.ar}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      announcement: {
+                        ...f.announcement,
+                        text: { ar: e.target.value, en: "" },
+                      },
+                    }))
+                  }
+                  placeholder={
+                    language === "ar"
+                      ? "مثال: شحن مجاني للطلبات فوق 500 ج.م"
+                      : "Example: شحن مجاني للطلبات فوق 500 ج.م"
+                  }
+                />
+              </FormField>
+
+              <p className="text-xs text-secondary/50 leading-relaxed">
+                {language === "ar"
+                  ? "يُترجم تلقائياً عند الحفظ. اكتب المبالغ بالجنيه (مثل 500 ج.م)."
+                  : "Auto-translated on save. Write amounts in EGP (e.g. 500 ج.م)."}
+              </p>
+
+              {form.announcement.enabled && form.announcement.text.ar ? (
+                <div className="mt-auto rounded-xl bg-secondary text-background text-center text-sm py-3 px-3 break-words">
+                  {form.announcement.text.ar}
+                </div>
+              ) : null}
+
+              {form.announcement.text.en ? (
+                <p className="text-xs text-gray-400 dir-ltr text-start break-words">
+                  EN: {form.announcement.text.en}
+                </p>
+              ) : null}
+            </div>
+          </aside>
         </div>
       </section>
-      </div>
 
-      <Card variant="panel" padding="md" className="text-sm text-gray-500 leading-relaxed">
+      <Card variant="panel" padding="md" className="text-sm text-gray-500 leading-relaxed w-full">
         {language === "ar"
           ? "احفظ التغييرات ثم افتح الصفحة الرئيسية للتأكد من ظهور الشرائح والشريط الإعلاني."
           : "Save changes, then open the homepage to verify hero slides and the announcement bar."}
