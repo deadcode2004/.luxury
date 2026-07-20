@@ -423,6 +423,7 @@ export default function AdminInventory() {
       <Modal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
+        size="2xl"
         title={
           editing
             ? language === "ar"
@@ -432,69 +433,110 @@ export default function AdminInventory() {
               ? "إضافة منتج"
               : "Add Product"
         }
-        className="max-w-3xl"
+        footer={
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full sm:w-auto"
+              onClick={() => setModalOpen(false)}
+            >
+              {language === "ar" ? "إلغاء" : "Cancel"}
+            </Button>
+            <Button
+              type="submit"
+              form="product-form"
+              variant="secondary"
+              className="w-full sm:w-auto"
+              loading={saving}
+            >
+              {language === "ar" ? "حفظ المنتج" : "Save product"}
+            </Button>
+          </div>
+        }
       >
-        <form onSubmit={(e) => void saveProduct(e)} className="flex flex-col gap-5 max-h-[75vh] overflow-y-auto pe-1">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField label={language === "ar" ? "اسم المنتج (عربي)" : "Product name (Arabic)"} error={errors.nameAr}>
-              <Input
-                value={form.nameAr}
-                onChange={(e) => setForm((f) => ({ ...f, nameAr: e.target.value }))}
-              />
-            </FormField>
-            <FormField label={language === "ar" ? "العلامة التجارية (عربي)" : "Brand (Arabic)"} error={errors.brandAr}>
-              <Input
-                value={form.brandAr}
-                onChange={(e) => setForm((f) => ({ ...f, brandAr: e.target.value }))}
-              />
-            </FormField>
+        <form
+          id="product-form"
+          onSubmit={(e) => void saveProduct(e)}
+          className="flex flex-col gap-5 sm:gap-6"
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6">
+            <div className="lg:col-span-4">
+              <FormField
+                label={language === "ar" ? "صورة المنتج" : "Product image"}
+                error={errors.image}
+              >
+                <ImageUploadField
+                  value={form.image}
+                  onChange={(url) => setForm((f) => ({ ...f, image: url }))}
+                  folder="products"
+                  error={errors.image}
+                />
+              </FormField>
+            </div>
+
+            <div className="lg:col-span-8 flex flex-col gap-4 sm:gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <FormField
+                  label={language === "ar" ? "اسم المنتج (عربي)" : "Product name (Arabic)"}
+                  error={errors.nameAr}
+                >
+                  <Input
+                    value={form.nameAr}
+                    onChange={(e) => setForm((f) => ({ ...f, nameAr: e.target.value }))}
+                  />
+                </FormField>
+                <FormField
+                  label={language === "ar" ? "العلامة التجارية (عربي)" : "Brand (Arabic)"}
+                  error={errors.brandAr}
+                >
+                  <Input
+                    value={form.brandAr}
+                    onChange={(e) => setForm((f) => ({ ...f, brandAr: e.target.value }))}
+                  />
+                </FormField>
+              </div>
+
+              <FormField label={language === "ar" ? "القسم" : "Category"} error={errors.category}>
+                <CategoryCombobox
+                  categories={categories}
+                  valueText={form.categoryText}
+                  selectedId={form.categoryId}
+                  onChangeText={(text) => setForm((f) => ({ ...f, categoryText: text }))}
+                  onSelect={(cat) =>
+                    setForm((f) => ({
+                      ...f,
+                      categoryId: cat?.id ?? null,
+                      categoryText: cat?.name?.ar ?? f.categoryText,
+                    }))
+                  }
+                  onEdit={(cat) => {
+                    setEditCat(cat);
+                    setEditCatName(cat.name?.ar || "");
+                  }}
+                  onDelete={(cat) => setDeleteCat(cat)}
+                />
+                <p className="mt-1.5 text-[11px] leading-relaxed text-gray-400">
+                  {language === "ar"
+                    ? "أدخل الاسم بالعربية — يُترجم للإنجليزية مرة واحدة ويُحفظ في قاعدة البيانات"
+                    : "Enter Arabic name — translated to English once and stored in the database"}
+                </p>
+              </FormField>
+
+              <FormField label={language === "ar" ? "وصف المنتج" : "Description"}>
+                <Textarea
+                  rows={3}
+                  value={form.descriptionAr}
+                  onChange={(e) => setForm((f) => ({ ...f, descriptionAr: e.target.value }))}
+                  placeholder={
+                    language === "ar" ? "اكتب الوصف بالعربية..." : "Write description in Arabic..."
+                  }
+                />
+              </FormField>
+            </div>
           </div>
 
-          <FormField label={language === "ar" ? "القسم" : "Category"} error={errors.category}>
-            <CategoryCombobox
-              categories={categories}
-              valueText={form.categoryText}
-              selectedId={form.categoryId}
-              onChangeText={(text) => setForm((f) => ({ ...f, categoryText: text }))}
-              onSelect={(cat) =>
-                setForm((f) => ({
-                  ...f,
-                  categoryId: cat?.id ?? null,
-                  categoryText: cat?.name?.ar ?? f.categoryText,
-                }))
-              }
-              onEdit={(cat) => {
-                setEditCat(cat);
-                setEditCatName(cat.name?.ar || "");
-              }}
-              onDelete={(cat) => setDeleteCat(cat)}
-            />
-            <p className="mt-1 text-[11px] text-gray-400">
-              {language === "ar"
-                ? "أدخل الاسم بالعربية — يُترجم للإنجليزية مرة واحدة ويُحفظ في قاعدة البيانات"
-                : "Enter Arabic name — translated to English once and stored in the database"}
-            </p>
-          </FormField>
-
-          <FormField label={language === "ar" ? "صورة المنتج" : "Product image"} error={errors.image}>
-            <ImageUploadField
-              value={form.image}
-              onChange={(url) => setForm((f) => ({ ...f, image: url }))}
-              folder="products"
-              error={errors.image}
-            />
-          </FormField>
-
-          <FormField label={language === "ar" ? "وصف المنتج" : "Description"}>
-            <Textarea
-              rows={3}
-              value={form.descriptionAr}
-              onChange={(e) => setForm((f) => ({ ...f, descriptionAr: e.target.value }))}
-              placeholder={language === "ar" ? "اكتب الوصف بالعربية..." : "Write description in Arabic..."}
-            />
-          </FormField>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <FormField
               label={language === "ar" ? "المكونات (سطر لكل مكوّن)" : "Ingredients (one per line)"}
             >
@@ -513,76 +555,90 @@ export default function AdminInventory() {
             </FormField>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <FormField label={language === "ar" ? "السعر الأساسي" : "Base price"} error={errors.basePrice}>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.basePrice}
-                onChange={(e) => setForm((f) => ({ ...f, basePrice: e.target.value }))}
-              />
-            </FormField>
-            <FormField label={language === "ar" ? "نوع الخصم" : "Discount type"}>
-              <Select
-                value={form.discountType}
-                onChange={(e) =>
-                  setForm((f) => ({
-                    ...f,
-                    discountType: e.target.value as FormState["discountType"],
-                  }))
+          <div className="rounded-2xl border border-surface/80 bg-background/70 p-3 sm:p-4">
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-secondary/45 mb-3">
+              {language === "ar" ? "التسعير والمخزون" : "Pricing & stock"}
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <FormField
+                label={language === "ar" ? "السعر الأساسي" : "Base price"}
+                error={errors.basePrice}
+              >
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.basePrice}
+                  onChange={(e) => setForm((f) => ({ ...f, basePrice: e.target.value }))}
+                />
+              </FormField>
+              <FormField label={language === "ar" ? "نوع الخصم" : "Discount type"}>
+                <Select
+                  value={form.discountType}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      discountType: e.target.value as FormState["discountType"],
+                    }))
+                  }
+                  className="h-12"
+                >
+                  <option value="none">{language === "ar" ? "بدون خصم" : "No discount"}</option>
+                  <option value="fixed">{language === "ar" ? "مبلغ ثابت" : "Fixed amount"}</option>
+                  <option value="percent">
+                    {language === "ar" ? "نسبة مئوية %" : "Percentage %"}
+                  </option>
+                </Select>
+              </FormField>
+              <FormField
+                label={
+                  form.discountType === "percent"
+                    ? language === "ar"
+                      ? "قيمة الخصم %"
+                      : "Discount %"
+                    : language === "ar"
+                      ? "قيمة الخصم"
+                      : "Discount value"
                 }
               >
-                <option value="none">{language === "ar" ? "بدون خصم" : "No discount"}</option>
-                <option value="fixed">{language === "ar" ? "مبلغ ثابت" : "Fixed amount"}</option>
-                <option value="percent">{language === "ar" ? "نسبة مئوية %" : "Percentage %"}</option>
-              </Select>
-            </FormField>
-            <FormField
-              label={
-                form.discountType === "percent"
-                  ? language === "ar"
-                    ? "قيمة الخصم %"
-                    : "Discount %"
-                  : language === "ar"
-                    ? "قيمة الخصم"
-                    : "Discount value"
-              }
-            >
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                disabled={form.discountType === "none"}
-                value={form.discountValue}
-                onChange={(e) => setForm((f) => ({ ...f, discountValue: e.target.value }))}
-              />
-            </FormField>
-          </div>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  disabled={form.discountType === "none"}
+                  value={form.discountValue}
+                  onChange={(e) => setForm((f) => ({ ...f, discountValue: e.target.value }))}
+                />
+              </FormField>
+              <FormField label={language === "ar" ? "المخزون" : "Stock"} error={errors.stock}>
+                <Input
+                  type="number"
+                  min="0"
+                  value={form.stock}
+                  onChange={(e) => setForm((f) => ({ ...f, stock: e.target.value }))}
+                />
+              </FormField>
+            </div>
 
-          <div className="rounded-xl bg-surface/40 border border-surface px-4 py-3 text-sm text-secondary/70 flex flex-wrap gap-4">
-            <span>
-              {language === "ar" ? "سعر البيع:" : "Selling price:"}{" "}
-              <strong className="text-secondary">{previewPrice.price.toLocaleString()} SAR</strong>
-            </span>
-            {previewPrice.old_price ? (
+            <div className="mt-3 rounded-xl bg-white/80 border border-gray-100 px-3 py-2.5 text-sm text-secondary/70 flex flex-wrap items-center gap-x-4 gap-y-1">
               <span>
-                {language === "ar" ? "قبل الخصم:" : "Before:"}{" "}
-                <span className="line-through">{previewPrice.old_price.toLocaleString()} SAR</span>
+                {language === "ar" ? "سعر البيع:" : "Selling price:"}{" "}
+                <strong className="text-secondary">
+                  {previewPrice.price.toLocaleString()} SAR
+                </strong>
               </span>
-            ) : null}
+              {previewPrice.old_price ? (
+                <span>
+                  {language === "ar" ? "قبل الخصم:" : "Before:"}{" "}
+                  <span className="line-through">
+                    {previewPrice.old_price.toLocaleString()} SAR
+                  </span>
+                </span>
+              ) : null}
+            </div>
           </div>
 
-          <FormField label={language === "ar" ? "المخزون" : "Stock"} error={errors.stock}>
-            <Input
-              type="number"
-              min="0"
-              value={form.stock}
-              onChange={(e) => setForm((f) => ({ ...f, stock: e.target.value }))}
-            />
-          </FormField>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
             {(
               [
                 ["isNew", language === "ar" ? "جديد" : "New"],
@@ -593,26 +649,17 @@ export default function AdminInventory() {
             ).map(([key, label]) => (
               <label
                 key={key}
-                className="flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2.5 text-sm font-medium cursor-pointer hover:border-primary/40"
+                className="flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2.5 text-sm font-medium cursor-pointer hover:border-primary/40 min-h-11"
               >
                 <input
                   type="checkbox"
                   checked={form[key]}
                   onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.checked }))}
-                  className="accent-primary"
+                  className="accent-primary shrink-0"
                 />
-                {label}
+                <span className="leading-tight">{label}</span>
               </label>
             ))}
-          </div>
-
-          <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
-            <Button type="button" variant="ghost" onClick={() => setModalOpen(false)}>
-              {language === "ar" ? "إلغاء" : "Cancel"}
-            </Button>
-            <Button type="submit" variant="secondary" loading={saving}>
-              {language === "ar" ? "حفظ" : "Save"}
-            </Button>
           </div>
         </form>
       </Modal>

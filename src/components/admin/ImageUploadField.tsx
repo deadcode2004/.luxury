@@ -62,21 +62,21 @@ export default function ImageUploadField({
       />
 
       {value ? (
-        <div className="relative group rounded-2xl overflow-hidden border border-gray-200 bg-gray-50 h-44">
-          <Image src={value} alt="" fill className="object-cover" sizes="400px" unoptimized />
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/35 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+        <div className="relative group rounded-2xl overflow-hidden border border-gray-200 bg-gray-50 aspect-[4/3] sm:aspect-square w-full max-h-64 sm:max-h-none">
+          <Image src={value} alt="" fill className="object-cover" sizes="(max-width:640px) 100vw, 320px" unoptimized />
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/35 transition-colors flex items-center justify-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
             <button
               type="button"
               disabled={uploading}
               onClick={() => inputRef.current?.click()}
-              className="px-3 py-2 rounded-xl bg-white text-sm font-bold text-secondary"
+              className="px-3 py-2 rounded-xl bg-white text-sm font-bold text-secondary shadow-sm"
             >
               {language === "ar" ? "تغيير" : "Change"}
             </button>
             <button
               type="button"
               onClick={() => onChange("")}
-              className="p-2 rounded-xl bg-white text-red-500"
+              className="p-2 rounded-xl bg-white text-red-500 shadow-sm"
               aria-label="Remove"
             >
               <X size={16} />
@@ -89,14 +89,14 @@ export default function ImageUploadField({
           disabled={uploading || !token}
           onClick={() => inputRef.current?.click()}
           className={cn(
-            "w-full h-44 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all",
+            "w-full aspect-[4/3] sm:aspect-square max-h-64 sm:max-h-none rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all px-3",
             error
               ? "border-red-300 text-red-400"
               : "border-gray-200 text-gray-400 hover:border-primary hover:text-primary"
           )}
         >
           {uploading ? <Loader2 size={28} className="animate-spin" /> : <ImageIcon size={28} />}
-          <span className="text-sm font-medium">
+          <span className="text-sm font-medium text-center">
             {uploading
               ? language === "ar"
                 ? "جاري الرفع..."
