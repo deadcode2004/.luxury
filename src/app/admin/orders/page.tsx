@@ -23,11 +23,11 @@ type Order = {
 };
 
 const INITIAL: Order[] = [
-  { id: "#ORD-9025", customer: "Sarah Ahmed", date: "2026-10-15", total: "1,250 SAR", status: "pending", items: 3 },
-  { id: "#ORD-9024", customer: "Mohammed K.", date: "2026-10-14", total: "450 SAR", status: "processing", items: 1 },
-  { id: "#ORD-9023", customer: "Lina Mahmoud", date: "2026-10-12", total: "3,200 SAR", status: "delivered", items: 5 },
-  { id: "#ORD-9022", customer: "Omar Sami", date: "2026-10-10", total: "890 SAR", status: "delivered", items: 2 },
-  { id: "#ORD-9021", customer: "Fatima Ali", date: "2026-10-09", total: "150 SAR", status: "cancelled", items: 1 },
+  { id: "#ORD-9025", customer: "Sarah Ahmed", date: "2026-10-15", total: "1,250 EGP", status: "pending", items: 3 },
+  { id: "#ORD-9024", customer: "Mohammed K.", date: "2026-10-14", total: "450 EGP", status: "processing", items: 1 },
+  { id: "#ORD-9023", customer: "Lina Mahmoud", date: "2026-10-12", total: "3,200 EGP", status: "delivered", items: 5 },
+  { id: "#ORD-9022", customer: "Omar Sami", date: "2026-10-10", total: "890 EGP", status: "delivered", items: 2 },
+  { id: "#ORD-9021", customer: "Fatima Ali", date: "2026-10-09", total: "150 EGP", status: "cancelled", items: 1 },
 ];
 
 const STATUSES = ["pending", "processing", "delivered", "cancelled"] as const;

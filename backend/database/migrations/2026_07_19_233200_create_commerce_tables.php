@@ -63,7 +63,7 @@ return new class extends Migration
             $table->decimal('cod_fee', 12, 2)->default(0);
             $table->decimal('discount', 12, 2)->default(0);
             $table->decimal('total', 12, 2);
-            $table->string('currency', 3)->default('SAR');
+            $table->string('currency', 3)->default('EGP');
             $table->foreignId('coupon_id')->nullable()->constrained()->nullOnDelete();
             $table->json('shipping_address');
             $table->json('billing_snapshot')->nullable();

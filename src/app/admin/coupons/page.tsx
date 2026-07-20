@@ -217,7 +217,7 @@ export default function AdminCoupons() {
                 </span>
               </TableCell>
               <TableCell className="font-bold text-secondary">
-                {coupon.type === "percentage" ? `${coupon.value}%` : `${coupon.value} SAR`}
+                {coupon.type === "percentage" ? `${coupon.value}%` : `${coupon.value} EGP`}
               </TableCell>
               <TableCell className="text-gray-500">
                 {coupon.type === "percentage"

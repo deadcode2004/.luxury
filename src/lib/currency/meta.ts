@@ -30,5 +30,5 @@ export const CURRENCY_OPTIONS: CurrencyMeta[] = [
 ];
 
 export function getCurrencyMeta(code: CurrencyCode): CurrencyMeta {
-  return CURRENCY_OPTIONS.find((c) => c.code === code) ?? CURRENCY_OPTIONS[1];
+  return CURRENCY_OPTIONS.find((c) => c.code === code) ?? CURRENCY_OPTIONS[0];
 }

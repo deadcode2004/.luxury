@@ -38,8 +38,8 @@ class CmsService
             'announcement' => [
                 'enabled' => true,
                 'text' => [
-                    'ar' => 'شحن مجاني للطلبات فوق 500 ريال',
-                    'en' => 'Free shipping on orders over 500 SAR',
+                    'ar' => 'شحن مجاني للطلبات فوق 500 ج.م',
+                    'en' => 'Free shipping on orders over 500 EGP',
                 ],
             ],
         ];

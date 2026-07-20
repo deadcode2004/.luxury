@@ -19,7 +19,7 @@ export default function FavoritesPage() {
   const { language } = useLanguage();
   const { items, count, remove } = useWishlist();
   const { addItem } = useCart();
-  const { currency, convertFromSar } = useCurrency();
+  const { currency, convertFromEgp } = useCurrency();
   const [movingId, setMovingId] = useState<string | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [removing, setRemoving] = useState(false);
@@ -70,7 +70,7 @@ export default function FavoritesPage() {
                     {product.name[language]}
                   </Link>
                   <p className="mt-2 font-bold text-secondary">
-                    {formatMoney(product.price, language, { currency, convertFromSar })}
+                    {formatMoney(product.price, language, { currency, convertFromEgp })}
                   </p>
                   <div className="mt-4 flex flex-wrap gap-3">
                     <Button

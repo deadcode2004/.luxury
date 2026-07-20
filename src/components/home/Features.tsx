@@ -16,7 +16,7 @@ export default function Features() {
     {
       icon: <Truck size={22} />,
       title: { ar: "توصيل سريع ومجاني", en: "Fast & Free Delivery" },
-      description: { ar: "توصيل مجاني للطلبات التي تزيد عن 500 ريال داخل المملكة.", en: "Free delivery for orders over 500 SAR within the kingdom." }
+      description: { ar: "توصيل مجاني للطلبات التي تزيد عن 500 ج.م.", en: "Free delivery for orders over 500 EGP." }
     },
     {
       icon: <PackageOpen size={22} />,

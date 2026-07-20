@@ -387,7 +387,7 @@ export default function AdminInventory() {
               </TableCell>
               <TableCell>{product.stock}</TableCell>
               <TableCell>
-                {product.price.toLocaleString()} SAR
+                {product.price.toLocaleString()} EGP
                 {product.old_price ? (
                   <span className="ms-2 text-xs text-gray-400 line-through">
                     {product.old_price.toLocaleString()}
@@ -556,12 +556,17 @@ export default function AdminInventory() {
           </div>
 
           <div className="rounded-2xl border border-surface/80 bg-background/70 p-3 sm:p-4">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-secondary/45 mb-3">
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-secondary/45 mb-1">
               {language === "ar" ? "التسعير والمخزون" : "Pricing & stock"}
+            </p>
+            <p className="text-xs text-secondary/50 mb-3">
+              {language === "ar"
+                ? "يُحفظ السعر بالجنيه المصري (EGP) فقط. التحويل لـ SAR/USD يتم تلقائياً عند العرض للزائر."
+                : "Prices are stored in EGP only. Conversion to SAR/USD happens at display time for visitors."}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               <FormField
-                label={language === "ar" ? "السعر الأساسي" : "Base price"}
+                label={language === "ar" ? "السعر (ج.م)" : "Price (EGP)"}
                 error={errors.basePrice}
               >
                 <Input
@@ -570,6 +575,7 @@ export default function AdminInventory() {
                   step="0.01"
                   value={form.basePrice}
                   onChange={(e) => setForm((f) => ({ ...f, basePrice: e.target.value }))}
+                  placeholder="100"
                 />
               </FormField>
               <FormField label={language === "ar" ? "نوع الخصم" : "Discount type"}>
@@ -597,8 +603,8 @@ export default function AdminInventory() {
                       ? "قيمة الخصم %"
                       : "Discount %"
                     : language === "ar"
-                      ? "قيمة الخصم"
-                      : "Discount value"
+                      ? "قيمة الخصم (ج.م)"
+                      : "Discount value (EGP)"
                 }
               >
                 <Input
@@ -624,14 +630,14 @@ export default function AdminInventory() {
               <span>
                 {language === "ar" ? "سعر البيع:" : "Selling price:"}{" "}
                 <strong className="text-secondary">
-                  {previewPrice.price.toLocaleString()} SAR
+                  {previewPrice.price.toLocaleString()} EGP
                 </strong>
               </span>
               {previewPrice.old_price ? (
                 <span>
                   {language === "ar" ? "قبل الخصم:" : "Before:"}{" "}
                   <span className="line-through">
-                    {previewPrice.old_price.toLocaleString()} SAR
+                    {previewPrice.old_price.toLocaleString()} EGP
                   </span>
                 </span>
               ) : null}

@@ -28,8 +28,8 @@ type Address = {
 };
 
 const INITIAL_ORDERS = [
-  { id: "#ORD-9021", date: "12 Oct 2026", status: "delivered", total: "1,250.00" },
-  { id: "#ORD-9022", date: "05 Nov 2026", status: "processing", total: "840.00" },
+  { id: "#ORD-9021", date: "12 Oct 2026", status: "delivered", total: "1,250.00", currency: "EGP" },
+  { id: "#ORD-9022", date: "05 Nov 2026", status: "processing", total: "840.00", currency: "EGP" },
 ];
 
 const INITIAL_ADDRESSES: Address[] = [
@@ -250,7 +250,7 @@ export default function AccountPage() {
                         <StatusBadge status={order.status} />
                       </TableCell>
                       <TableCell className="font-bold text-secondary">
-                        {order.total} SAR
+                        {order.total} {order.currency || "EGP"}
                       </TableCell>
                       <TableCell align="end">
                         <button
@@ -534,7 +534,9 @@ export default function AccountPage() {
             </div>
             <div className="flex justify-between border-t border-gray-100 pt-3">
               <span className="text-gray-500">{language === "ar" ? "الإجمالي" : "Total"}</span>
-              <span className="font-bold text-secondary">{selectedOrder.total} SAR</span>
+              <span className="font-bold text-secondary">
+                {selectedOrder.total} {selectedOrder.currency || "EGP"}
+              </span>
             </div>
             <Button
               variant="outline"

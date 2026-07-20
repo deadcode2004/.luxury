@@ -58,7 +58,7 @@ export default function AdminOverview() {
   const cards = [
     {
       title: { ar: "إجمالي المبيعات", en: "Total Sales" },
-      value: stats ? `${stats.total_sales.toLocaleString()} SAR` : "—",
+      value: stats ? `${stats.total_sales.toLocaleString()} EGP` : "—",
       icon: <DollarSign size={24} className="text-green-600" />,
       bg: "bg-green-100",
     },
@@ -182,7 +182,7 @@ export default function AdminOverview() {
                         {order.customer?.name || order.customer?.email || "—"}
                       </td>
                       <td className="py-3 font-bold">
-                        {order.total.toLocaleString()} {order.currency || "SAR"}
+                        {order.total.toLocaleString()} {order.currency || "EGP"}
                       </td>
                       <td className="py-3">
                         <StatusBadge status={order.status} />

@@ -14,18 +14,18 @@ export function formatMoney(
     decimals?: number;
     showCode?: boolean;
     currency?: CurrencyCode;
-    /** When true, `amount` is already in the target currency. Default assumes SAR catalog prices. */
+    /** When true, `amount` is already in the target currency. Default assumes EGP catalog prices. */
     converted?: boolean;
-    convertFromSar?: (sar: number) => number;
+    convertFromEgp?: (egp: number) => number;
   }
 ): string {
   const decimals = options?.decimals ?? 0;
   const showCode = options?.showCode ?? true;
-  const currency = options?.currency ?? "SAR";
+  const currency = options?.currency ?? "EGP";
   const numeric = typeof amount === "string" ? Number(amount.replace(/,/g, "")) : amount;
   let value = Number.isFinite(numeric) ? numeric : 0;
-  if (!options?.converted && options?.convertFromSar) {
-    value = options.convertFromSar(value);
+  if (!options?.converted && options?.convertFromEgp) {
+    value = options.convertFromEgp(value);
   }
 
   const formatted = value.toLocaleString(language === "ar" ? "ar-EG" : "en-US", {
@@ -43,12 +43,12 @@ export function formatMoneyFixed(
   decimals = 2,
   options?: {
     currency?: CurrencyCode;
-    convertFromSar?: (sar: number) => number;
+    convertFromEgp?: (egp: number) => number;
   }
 ): string {
   return formatMoney(amount, language, {
     decimals,
     currency: options?.currency,
-    convertFromSar: options?.convertFromSar,
+    convertFromEgp: options?.convertFromEgp,
   });
 }

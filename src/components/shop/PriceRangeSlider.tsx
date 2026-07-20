@@ -26,7 +26,7 @@ export default function PriceRangeSlider({
   className,
 }: PriceRangeSliderProps) {
   const { language } = useLanguage();
-  const { currency, convertFromSar } = useCurrency();
+  const { currency, convertFromEgp } = useCurrency();
   const trackRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState<"min" | "max" | null>(null);
   const labelId = useId();
@@ -65,8 +65,8 @@ export default function PriceRangeSlider({
 
   const format = useMemo(
     () => (amount: number) =>
-      formatMoney(amount, language, { currency, convertFromSar, decimals: 0 }),
-    [language, currency, convertFromSar]
+      formatMoney(amount, language, { currency, convertFromEgp, decimals: 0 }),
+    [language, currency, convertFromEgp]
   );
 
   return (

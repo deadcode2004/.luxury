@@ -23,7 +23,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
   const { language } = useLanguage();
   const { addItem } = useCart();
   const { has, toggle } = useWishlist();
-  const { currency, convertFromSar } = useCurrency();
+  const { currency, convertFromEgp } = useCurrency();
   const [cartLoading, setCartLoading] = useState(false);
   const [wishLoading, setWishLoading] = useState(false);
   const wished = has(product.id);
@@ -125,11 +125,11 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
         <div className="flex items-center gap-3 mt-auto pt-3 border-t border-gray-50 w-full mb-3">
           <span className="text-secondary font-bold text-lg tracking-tight">
-            {formatMoney(product.price, language, { currency, convertFromSar })}
+            {formatMoney(product.price, language, { currency, convertFromEgp })}
           </span>
           {product.oldPrice && (
             <span className="text-gray-400 line-through text-xs font-medium">
-              {formatMoney(product.oldPrice, language, { currency, convertFromSar })}
+              {formatMoney(product.oldPrice, language, { currency, convertFromEgp })}
             </span>
           )}
         </div>

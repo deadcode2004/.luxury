@@ -23,7 +23,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { lines, totals, clear } = useCart();
-  const { currency, convertFromSar } = useCurrency();
+  const { currency, convertFromEgp } = useCurrency();
   const [paymentMethod, setPaymentMethod] = useState<"card" | "cod">("card");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -219,7 +219,10 @@ export default function CheckoutPage() {
                   {
                     id: "cod" as const,
                     title: language === "ar" ? "الدفع عند الاستلام" : "Cash on Delivery",
-                    desc: language === "ar" ? "رسوم إضافية 15 ر.س" : "Additional fee 15 SAR",
+                    desc:
+                      language === "ar"
+                        ? `رسوم إضافية ${formatMoneyFixed(15, language, 0, { currency, convertFromEgp })}`
+                        : `Additional fee ${formatMoneyFixed(15, language, 0, { currency, convertFromEgp })}`,
                     icon: Banknote,
                   },
                 ]).map((method) => (
@@ -314,7 +317,7 @@ export default function CheckoutPage() {
                       </span>
                     </div>
                     <span className="font-bold text-secondary">
-                      {formatMoneyFixed(item.price * item.quantity, language, 0, { currency, convertFromSar })}
+                      {formatMoneyFixed(item.price * item.quantity, language, 0, { currency, convertFromEgp })}
                     </span>
                   </div>
                 ))}
@@ -324,20 +327,20 @@ export default function CheckoutPage() {
                 <div className="flex justify-between text-gray-500">
                   <span>{language === "ar" ? "المجموع الفرعي" : "Subtotal"}</span>
                   <span className="font-bold text-secondary">
-                    {formatMoneyFixed(totals.subtotal, language, 2, { currency, convertFromSar })}
+                    {formatMoneyFixed(totals.subtotal, language, 2, { currency, convertFromEgp })}
                   </span>
                 </div>
                 <div className="flex justify-between text-gray-500">
                   <span>{language === "ar" ? "الضريبة (15%)" : "Tax (15%)"}</span>
                   <span className="font-bold text-secondary">
-                    {formatMoneyFixed(totals.tax, language, 2, { currency, convertFromSar })}
+                    {formatMoneyFixed(totals.tax, language, 2, { currency, convertFromEgp })}
                   </span>
                 </div>
                 {paymentMethod === "cod" && (
                   <div className="flex justify-between text-gray-500">
                     <span>{language === "ar" ? "رسوم الدفع عند الاستلام" : "COD Fee"}</span>
                     <span className="font-bold text-secondary">
-                      {formatMoneyFixed(15, language, 2, { currency, convertFromSar })}
+                      {formatMoneyFixed(15, language, 2, { currency, convertFromEgp })}
                     </span>
                   </div>
                 )}
@@ -348,7 +351,7 @@ export default function CheckoutPage() {
                   {language === "ar" ? "الإجمالي" : "Total"}
                 </span>
                 <span className="text-3xl font-bold text-primary">
-                  {formatMoneyFixed(grandTotal, language, 2, { currency, convertFromSar })}
+                  {formatMoneyFixed(grandTotal, language, 2, { currency, convertFromEgp })}
                 </span>
               </div>
 

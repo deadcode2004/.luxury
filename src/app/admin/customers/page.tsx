@@ -20,9 +20,9 @@ type Customer = {
 };
 
 const INITIAL: Customer[] = [
-  { id: "CUST-101", name: "Ahmed Abdullah", email: "ahmed@example.com", joined: "2026-01-15", orders: 12, spent: "4,500 SAR", status: "active" },
-  { id: "CUST-102", name: "Sarah Khaled", email: "sarah@example.com", joined: "2026-05-22", orders: 3, spent: "1,200 SAR", status: "active" },
-  { id: "CUST-103", name: "Mohammed Z.", email: "mohammed@example.com", joined: "2026-08-10", orders: 0, spent: "0 SAR", status: "inactive" },
+  { id: "CUST-101", name: "Ahmed Abdullah", email: "ahmed@example.com", joined: "2026-01-15", orders: 12, spent: "4,500 EGP", status: "active" },
+  { id: "CUST-102", name: "Sarah Khaled", email: "sarah@example.com", joined: "2026-05-22", orders: 3, spent: "1,200 EGP", status: "active" },
+  { id: "CUST-103", name: "Mohammed Z.", email: "mohammed@example.com", joined: "2026-08-10", orders: 0, spent: "0 EGP", status: "inactive" },
 ];
 
 export default function AdminCustomers() {

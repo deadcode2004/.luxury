@@ -82,7 +82,7 @@ class OrderService
                 'cod_fee' => $totals['cod_fee'],
                 'discount' => $totals['discount'],
                 'total' => $totals['total'],
-                'currency' => 'SAR',
+                'currency' => 'EGP',
                 'shipping_address' => $payload['shipping_address'],
                 'billing_snapshot' => [
                     'first_name' => $payload['first_name'] ?? $user->first_name,

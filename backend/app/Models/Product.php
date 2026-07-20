@@ -9,7 +9,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
 {
-    protected $fillable = [
+    /**
+     * Catalog prices (`price`, `old_price`) are always stored in EGP.
+     * Storefront conversion to SAR/USD is display-time only.
+     */    protected $fillable = [
         'code',
         'category_id',
         'name',

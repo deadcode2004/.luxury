@@ -21,7 +21,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
   const router = useRouter();
   const { addItem } = useCart();
   const { has, toggle } = useWishlist();
-  const { currency, convertFromSar } = useCurrency();
+  const { currency, convertFromEgp } = useCurrency();
   const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
   const [cartLoading, setCartLoading] = useState(false);
@@ -99,11 +99,11 @@ export default function ProductInfo({ product }: ProductInfoProps) {
 
       <div className="flex items-end gap-4 mb-8">
         <span className="text-3xl font-bold text-secondary">
-          {formatMoney(product.price, language, { currency, convertFromSar })}
+          {formatMoney(product.price, language, { currency, convertFromEgp })}
         </span>
         {product.oldPrice && (
           <span className="text-xl text-gray-400 line-through mb-1">
-            {formatMoney(product.oldPrice, language, { currency, convertFromSar })}
+            {formatMoney(product.oldPrice, language, { currency, convertFromEgp })}
           </span>
         )}
       </div>

@@ -106,4 +106,4 @@ php artisan test --filter=Api
 
 ## Frontend compatibility
 
-The Next.js UI currently still renders from local mock data and remains untouched by this backend work. The API shapes mirror those mocks (bilingual `name`/`brand`, product `code` like `p1`, VAT 15%, COD fee 15 SAR) so the frontend can be wired later without redesigning contracts.
+The Next.js UI currently still renders from local mock data and remains untouched by this backend work. The API shapes mirror those mocks (bilingual `name`/`brand`, product `code` like `p1`, VAT 15%, COD fee 15 EGP). Catalog prices are stored in EGP only; storefront conversion to SAR/USD is display-time.

@@ -44,7 +44,7 @@ export default function HeaderSearchPanel({
   dir,
 }: HeaderSearchPanelProps) {
   const { language } = useLanguage();
-  const { currency, convertFromSar } = useCurrency();
+  const { currency, convertFromEgp } = useCurrency();
   const router = useRouter();
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -193,7 +193,7 @@ export default function HeaderSearchPanel({
                       <p className="text-sm font-semibold text-secondary mt-1">
                         {formatMoney(product.price, language, {
                           currency,
-                          convertFromSar,
+                          convertFromEgp,
                         })}
                       </p>
                     </div>

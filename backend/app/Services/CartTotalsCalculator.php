@@ -8,6 +8,7 @@ class CartTotalsCalculator
 {
     public const VAT_RATE = 0.15;
 
+    /** Cash-on-delivery fee in EGP (catalog base currency). */
     public const COD_FEE = 15.0;
 
     /**
