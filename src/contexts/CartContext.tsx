@@ -39,6 +39,28 @@ type CartContextValue = {
 const CART_KEY = "paradise_cart";
 const CartContext = createContext<CartContextValue | null>(null);
 
+/** Cache backend product code → numeric id so add-to-cart does not refetch the catalog. */
+let productCodeMapPromise: Promise<Map<string, number>> | null = null;
+
+function getProductCodeMap(token: string): Promise<Map<string, number>> {
+  if (!productCodeMapPromise) {
+    productCodeMapPromise = apiRequest<Array<{ id: number; code: string }>>("/products?per_page=50", {
+      token,
+      cache: "force-cache",
+    })
+      .then((list) => {
+        const map = new Map<string, number>();
+        for (const p of list) map.set(p.code, p.id);
+        return map;
+      })
+      .catch((err) => {
+        productCodeMapPromise = null;
+        throw err;
+      });
+  }
+  return productCodeMapPromise;
+}
+
 function resolveProduct(productId: string): Product | undefined {
   return catalog.find((p) => p.id === productId);
 }
@@ -68,18 +90,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const syncAddToApi = useCallback(
     async (productId: string, quantity: number) => {
       if (!token || !authReady) return;
-      // Backend uses numeric product ids; map by code via products list endpoint when available.
-      // For now, skip hard failure if mapping unknown — local cart remains source of instant UX.
       try {
-        const list = await apiRequest<Array<{ id: number; code: string }>>("/products?per_page=50", {
-          token,
-        });
-        const match = list.find((p) => p.code === productId);
-        if (!match) return;
+        const map = await getProductCodeMap(token);
+        const matchId = map.get(productId);
+        if (!matchId) return;
         await apiRequest("/cart/items", {
           method: "POST",
           token,
-          body: { product_id: match.id, quantity },
+          body: { product_id: matchId, quantity },
+          cache: "no-store",
         });
       } catch {
         // Keep local optimistic cart; toast already handled by caller on stock errors.

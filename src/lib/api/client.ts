@@ -32,6 +32,8 @@ type RequestOptions = {
   body?: unknown;
   token?: string | null;
   signal?: AbortSignal;
+  /** Defaults to no-store for mutations; GET may opt into force-cache. */
+  cache?: RequestCache;
 };
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
@@ -44,16 +46,17 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     headers.Authorization = `Bearer ${options.token}`;
   }
 
+  const method = options.method || "GET";
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   let response: Response;
 
   try {
     response = await fetch(`${API_BASE}${normalizedPath}`, {
-      method: options.method || "GET",
+      method,
       headers,
       body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
       signal: options.signal,
-      cache: "no-store",
+      cache: options.cache ?? (method === "GET" ? "default" : "no-store"),
     });
   } catch {
     throw new ApiRequestError({

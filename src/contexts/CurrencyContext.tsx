@@ -113,10 +113,21 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/api/geo", { cache: "no-store" });
-        const data = (await res.json().catch(() => ({}))) as { country?: string };
+        const cachedCountry =
+          typeof sessionStorage !== "undefined"
+            ? sessionStorage.getItem("paradise_geo_country")
+            : null;
+        let country = cachedCountry;
+        if (!country) {
+          const res = await fetch("/api/geo", { cache: "force-cache" });
+          const data = (await res.json().catch(() => ({}))) as { country?: string };
+          country = data.country || null;
+          if (country && typeof sessionStorage !== "undefined") {
+            sessionStorage.setItem("paradise_geo_country", country);
+          }
+        }
         if (!cancelled) {
-          const detected = currencyFromCountry(data.country);
+          const detected = currencyFromCountry(country);
           setCurrencyState(detected);
           writeStorage(STORAGE_KEY, detected);
         }

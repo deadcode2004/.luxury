@@ -55,7 +55,7 @@ export default function Button({
       disabled={isDisabled}
       aria-busy={loading || undefined}
       className={cn(
-        "inline-flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed",
+        "inline-flex flex-row items-center justify-center gap-2 whitespace-nowrap transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed [&_svg]:inline-block [&_svg]:shrink-0 [&_svg]:align-middle",
         variantClasses[variant],
         sizeClasses[size],
         fullWidth && "w-full",
@@ -64,7 +64,7 @@ export default function Button({
       {...props}
     >
       {loading && <Spinner size={size === "sm" ? 14 : 18} />}
-      <span className={cn(loading && "opacity-90")}>{children}</span>
+      {children}
     </button>
   );
 }

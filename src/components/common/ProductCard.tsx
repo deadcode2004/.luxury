@@ -144,15 +144,13 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           onClick={onAdd}
         >
           <ShoppingBag size={18} />
-          <span>
-            {outOfStock
-              ? language === "ar"
-                ? "غير متوفر"
-                : "Out of Stock"
-              : language === "ar"
-                ? "أضف للسلة"
-                : "Add to Cart"}
-          </span>
+          {outOfStock
+            ? language === "ar"
+              ? "غير متوفر"
+              : "Out of Stock"
+            : language === "ar"
+              ? "أضف للسلة"
+              : "Add to Cart"}
         </Button>
       </div>
     </Card>

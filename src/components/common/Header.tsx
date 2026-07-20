@@ -1,16 +1,29 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, ShoppingBag, Heart, User, Menu, X, Globe, LayoutDashboard, ChevronDown, LogOut, LogIn } from "lucide-react";
+import {
+  Search,
+  ShoppingBag,
+  Heart,
+  User,
+  Menu,
+  X,
+  Globe,
+  LayoutDashboard,
+  ChevronDown,
+  LogOut,
+  LogIn,
+} from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCurrency, type CurrencyCode } from "@/contexts/CurrencyContext";
-import { useToast } from "@/components/ui/Toast";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import CurrencySwitcher from "@/components/common/CurrencySwitcher";
+
+const HeaderSearchPanel = lazy(() => import("@/components/common/HeaderSearchPanel"));
 
 function CountBadge({
   count,
@@ -31,13 +44,37 @@ function CountBadge({
   );
 }
 
+function HeaderSearchTrigger({ inverted = false }: { inverted?: boolean }) {
+  const { language, dir } = useLanguage();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        aria-label={language === "ar" ? "بحث" : "Search"}
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className={`transition-colors p-2 inline-flex items-center justify-center active:scale-95 rounded-lg ${
+          inverted ? "hover:text-gray-300" : "hover:text-primary"
+        } ${open ? (inverted ? "bg-white/15" : "bg-surface/70 text-primary") : ""}`}
+      >
+        <Search size={18} />
+      </button>
+      {open ? (
+        <Suspense fallback={null}>
+          <HeaderSearchPanel open={open} onOpenChange={setOpen} dir={dir} />
+        </Suspense>
+      ) : null}
+    </div>
+  );
+}
+
 export default function Header() {
   const { language, toggleLanguage, dir } = useLanguage();
   const { count: cartCount } = useCart();
   const { count: wishCount } = useWishlist();
   const { user, logout, loading: authLoading, isOwner } = useAuth();
-  const { currency, setCurrency } = useCurrency();
-  const { toast } = useToast();
   const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -73,6 +110,16 @@ export default function Header() {
     };
   }, [isMobileMenuOpen]);
 
+  useEffect(() => {
+    ["/shop", "/collections", "/about", "/contact", "/cart", "/favorites"].forEach((href) => {
+      try {
+        router.prefetch(href);
+      } catch {
+        /* ignore */
+      }
+    });
+  }, [router]);
+
   const navLinks = [
     { name: { ar: "الرئيسية", en: "Home" }, href: "/" },
     { name: { ar: "تسوق", en: "Shop" }, href: "/shop" },
@@ -92,25 +139,29 @@ export default function Header() {
       >
         <div className="container mx-auto px-4 md:px-8 flex justify-between items-center">
           <button
-            className={`lg:hidden transition-colors p-2 -ml-2 active:scale-95 ${textColorClass} ${hoverColorClass}`}
+            type="button"
+            className={`lg:hidden transition-colors p-2 -ms-2 active:scale-95 ${textColorClass} ${hoverColorClass}`}
             onClick={() => setIsMobileMenuOpen(true)}
+            aria-label={language === "ar" ? "فتح القائمة" : "Open menu"}
           >
             <Menu size={24} />
           </button>
 
           <Link
             href="/"
+            prefetch
             className={`text-xl md:text-2xl font-bold tracking-widest uppercase transition-colors ${textColorClass}`}
           >
             PARADISE<span className={logoDotColorClass}>.</span>
           </Link>
 
           <nav className="hidden lg:flex items-center gap-6 xl:gap-8 absolute left-1/2 transform -translate-x-1/2">
-            {navLinks.map((link, index) => (
+            {navLinks.map((link) => (
               <Link
-                key={index}
+                key={link.href}
                 href={link.href}
-                className={`text-sm font-medium transition-colors relative group py-2 flex items-center ${textColorClass} ${hoverColorClass}`}
+                prefetch
+                className={`text-sm font-medium transition-colors relative group py-2 inline-flex items-center ${textColorClass} ${hoverColorClass}`}
               >
                 {link.name[language]}
                 <span
@@ -122,57 +173,44 @@ export default function Header() {
             ))}
           </nav>
 
-          <div className={`flex items-center gap-2 sm:gap-4 ${textColorClass}`}>
-            <select
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
-              className={`hidden md:block bg-transparent text-xs font-bold border border-current/20 rounded-lg px-2 py-1.5 transition-colors ${hoverColorClass}`}
-              aria-label="Currency"
-            >
-              <option value="SAR">SAR</option>
-              <option value="EGP">EGP</option>
-              <option value="USD">USD</option>
-            </select>
-            <button
-              onClick={toggleLanguage}
-              className={`hidden lg:flex items-center text-xs font-medium transition-colors active:scale-95 ${hoverColorClass}`}
-              title="تغيير اللغة"
-            >
-              <Globe size={16} className="me-1.5" />
-              <span className="mt-0.5">{language === "ar" ? "EN" : "AR"}</span>
-            </button>
+          <div className={`flex items-center gap-1.5 sm:gap-3 ${textColorClass}`}>
+            <div className="hidden md:block">
+              <CurrencySwitcher inverted={isTransparent} />
+            </div>
 
             <button
               type="button"
-              className={`transition-colors p-2 flex items-center justify-center active:scale-95 ${hoverColorClass}`}
-              aria-label="Search"
-              onClick={() => {
-                router.push("/shop");
-                toast(
-                  language === "ar" ? "✔ انتقل إلى التسوق للبحث" : "✔ Opened shop to search",
-                  "info"
-                );
-              }}
+              onClick={toggleLanguage}
+              className={`hidden lg:inline-flex items-center gap-1.5 text-xs font-medium transition-colors active:scale-95 rounded-lg px-2 py-2 ${hoverColorClass}`}
+              title={language === "ar" ? "Switch to English" : "التبديل للعربية"}
             >
-              <Search size={18} />
+              <Globe size={16} className="shrink-0" />
+              <span>{language === "ar" ? "EN" : "AR"}</span>
             </button>
+
+            <HeaderSearchTrigger inverted={isTransparent} />
+
             <Link
               href="/favorites"
-              className={`transition-colors relative hidden lg:flex items-center justify-center p-2 active:scale-95 ${hoverColorClass}`}
+              prefetch
+              className={`transition-colors relative hidden lg:inline-flex items-center justify-center p-2 active:scale-95 ${hoverColorClass}`}
             >
               <Heart size={18} />
               <CountBadge count={wishCount} isTransparent={isTransparent} />
             </Link>
             <Link
               href="/cart"
-              className={`transition-colors relative flex items-center justify-center p-2 active:scale-95 ${hoverColorClass}`}
+              prefetch
+              className={`transition-colors relative inline-flex items-center justify-center p-2 active:scale-95 ${hoverColorClass}`}
             >
               <ShoppingBag size={18} />
               <CountBadge count={cartCount} isTransparent={isTransparent} />
             </Link>
             <div className="relative group hidden lg:flex h-full items-center">
               <button
-                className={`transition-colors flex items-center justify-center p-2 active:scale-95 ${hoverColorClass}`}
+                type="button"
+                className={`transition-colors inline-flex items-center justify-center p-2 active:scale-95 ${hoverColorClass}`}
+                aria-label={language === "ar" ? "الحساب" : "Account"}
               >
                 <User size={18} />
               </button>
@@ -186,22 +224,24 @@ export default function Header() {
                   <div className="p-2">
                     {user ? (
                       <>
-                        <div className="px-4 py-2 text-xs text-gray-400">
+                        <div className="px-4 py-2 text-xs text-gray-400 truncate">
                           {user.name || user.email}
                         </div>
                         <Link
                           href="/account"
+                          prefetch
                           className="flex items-center gap-3 px-4 py-3 text-sm text-secondary/80 hover:bg-surface/50 hover:text-primary transition-all rounded-xl font-medium"
                         >
-                          <User size={16} />
+                          <User size={16} className="shrink-0" />
                           {language === "ar" ? "حسابي الشخصي" : "My Account"}
                         </Link>
                         {isOwner && (
                           <Link
                             href="/admin"
+                            prefetch
                             className="flex items-center gap-3 px-4 py-3 text-sm text-secondary/80 hover:bg-surface/50 hover:text-primary transition-all rounded-xl font-bold"
                           >
-                            <LayoutDashboard size={16} />
+                            <LayoutDashboard size={16} className="shrink-0" />
                             {language === "ar" ? "لوحة الإدارة" : "Admin Dashboard"}
                           </Link>
                         )}
@@ -211,7 +251,7 @@ export default function Header() {
                           onClick={() => setConfirmLogout(true)}
                           className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50 transition-all rounded-xl font-bold disabled:opacity-50"
                         >
-                          <LogOut size={16} />
+                          <LogOut size={16} className="shrink-0" />
                           {language === "ar" ? "تسجيل الخروج" : "Sign Out"}
                         </button>
                       </>
@@ -219,16 +259,18 @@ export default function Header() {
                       <>
                         <Link
                           href="/login"
+                          prefetch
                           className="w-full flex items-center gap-3 px-4 py-3 text-sm text-secondary/80 hover:bg-surface/50 hover:text-primary transition-all rounded-xl font-bold"
                         >
-                          <LogIn size={16} />
+                          <LogIn size={16} className="shrink-0" />
                           {language === "ar" ? "تسجيل الدخول" : "Sign In"}
                         </Link>
                         <Link
                           href="/register"
+                          prefetch
                           className="flex items-center gap-3 px-4 py-3 text-sm text-secondary/80 hover:bg-surface/50 hover:text-primary transition-all rounded-xl font-medium"
                         >
-                          <User size={16} />
+                          <User size={16} className="shrink-0" />
                           {language === "ar" ? "إنشاء حساب" : "Create Account"}
                         </Link>
                       </>
@@ -260,12 +302,19 @@ export default function Header() {
         }`}
       >
         <div className="p-5 flex justify-between items-center border-b border-surface">
-          <Link href="/" className="text-xl font-bold uppercase text-secondary">
+          <Link
+            href="/"
+            prefetch
+            className="text-xl font-bold uppercase text-secondary"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
             PARADISE<span className="text-primary">.</span>
           </Link>
           <button
+            type="button"
             onClick={() => setIsMobileMenuOpen(false)}
             className="text-secondary/70 hover:text-primary transition-colors bg-surface/50 p-2 rounded-full active:scale-95"
+            aria-label={language === "ar" ? "إغلاق" : "Close"}
           >
             <X size={20} />
           </button>
@@ -274,10 +323,11 @@ export default function Header() {
         <div className="flex-1 overflow-y-auto py-6 px-5 flex flex-col gap-6">
           <nav className="flex flex-col">
             {navLinks.map((link, index) => (
-              <React.Fragment key={index}>
+              <React.Fragment key={link.href}>
                 <Link
                   href={link.href}
-                  className="text-base font-medium py-3.5 px-2 rounded-lg text-secondary hover:bg-surface/50 hover:text-primary transition-all flex items-center"
+                  prefetch
+                  className="text-base font-medium py-3.5 px-2 rounded-lg text-secondary hover:bg-surface/50 hover:text-primary transition-all inline-flex items-center"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {link.name[language]}
@@ -291,9 +341,19 @@ export default function Header() {
 
           <div className="h-px w-full bg-surface" />
 
+          <div className="flex flex-col gap-2">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-secondary/45 px-1 mb-1">
+              {language === "ar" ? "العملة" : "Currency"}
+            </p>
+            <CurrencySwitcher variant="drawer" />
+          </div>
+
+          <div className="h-px w-full bg-surface" />
+
           <div className="flex flex-col space-y-2">
             <div className="flex flex-col">
               <button
+                type="button"
                 onClick={() => setIsAccountMenuOpen(!isAccountMenuOpen)}
                 className="flex items-center justify-between p-3 rounded-xl text-secondary/80 hover:bg-surface/50 hover:text-primary transition-all text-sm font-medium w-full text-start"
               >
@@ -321,6 +381,7 @@ export default function Header() {
                     <>
                       <Link
                         href="/account"
+                        prefetch
                         className="text-sm text-secondary/70 hover:text-primary py-2 transition-colors"
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
@@ -329,10 +390,11 @@ export default function Header() {
                       {isOwner && (
                         <Link
                           href="/admin"
-                          className="text-sm font-bold text-secondary/70 hover:text-primary py-2 transition-colors flex items-center gap-2"
+                          prefetch
+                          className="text-sm font-bold text-secondary/70 hover:text-primary py-2 transition-colors inline-flex items-center gap-2"
                           onClick={() => setIsMobileMenuOpen(false)}
                         >
-                          <LayoutDashboard size={14} />
+                          <LayoutDashboard size={14} className="shrink-0" />
                           {language === "ar" ? "لوحة الإدارة" : "Admin Dashboard"}
                         </Link>
                       )}
@@ -350,6 +412,7 @@ export default function Header() {
                   ) : (
                     <Link
                       href="/login"
+                      prefetch
                       className="text-sm text-primary py-2 text-start font-bold"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
@@ -362,6 +425,7 @@ export default function Header() {
 
             <Link
               href="/favorites"
+              prefetch
               className="flex items-center gap-4 p-3 rounded-xl text-secondary/80 hover:bg-surface/50 hover:text-primary transition-all text-sm font-medium"
               onClick={() => setIsMobileMenuOpen(false)}
             >
@@ -374,6 +438,7 @@ export default function Header() {
 
             <Link
               href="/cart"
+              prefetch
               className="flex items-center gap-4 p-3 rounded-xl text-secondary/80 hover:bg-surface/50 hover:text-primary transition-all text-sm font-medium"
               onClick={() => setIsMobileMenuOpen(false)}
             >
@@ -386,15 +451,16 @@ export default function Header() {
           </div>
         </div>
 
-        <div className="p-5 border-t border-surface bg-surface/50/50 mt-auto">
+        <div className="p-5 border-t border-surface bg-surface/30 mt-auto">
           <button
+            type="button"
             onClick={() => {
               toggleLanguage();
               setIsMobileMenuOpen(false);
             }}
-            className="flex items-center justify-center w-full gap-2 p-3 bg-background border border-surface rounded-xl text-sm font-bold text-secondary hover:border-primary hover:text-primary transition-all shadow-sm active:scale-[0.98]"
+            className="inline-flex items-center justify-center w-full gap-2 p-3 bg-background border border-surface rounded-xl text-sm font-bold text-secondary hover:border-primary hover:text-primary transition-all shadow-sm active:scale-[0.98]"
           >
-            <Globe size={18} />
+            <Globe size={18} className="shrink-0" />
             {language === "ar" ? "Switch to English" : "التبديل للعربية"}
           </button>
         </div>

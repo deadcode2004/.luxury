@@ -128,10 +128,11 @@ export default function DashboardShell({
 
           <div className="flex items-center gap-4 sm:gap-6">
             <button
+              type="button"
               onClick={toggleLanguage}
-              className="flex items-center text-sm font-medium text-gray-500 hover:text-primary transition-colors"
+              className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-primary transition-colors"
             >
-              <Globe size={20} className="me-2" />
+              <Globe size={20} className="shrink-0" />
               <span>{language === "ar" ? "EN" : "AR"}</span>
             </button>
 

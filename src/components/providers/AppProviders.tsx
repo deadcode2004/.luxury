@@ -8,10 +8,17 @@ import { CartProvider } from "@/contexts/CartContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import DocumentMeta from "@/components/seo/DocumentMeta";
+import type { AppLanguage } from "@/lib/i18n/language";
 
-export default function AppProviders({ children }: { children: React.ReactNode }) {
+export default function AppProviders({
+  children,
+  initialLanguage = "ar",
+}: {
+  children: React.ReactNode;
+  initialLanguage?: AppLanguage;
+}) {
   return (
-    <LanguageProvider>
+    <LanguageProvider initialLanguage={initialLanguage}>
       <ToastProvider>
         <CurrencyProvider>
           <AuthProvider>

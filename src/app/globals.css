@@ -39,6 +39,15 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Keep icon+label controls horizontal (preflight sets svg { display:block }). */
+button > svg,
+a > svg,
+[role="button"] > svg {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
 /* تأثيرات الزجاج (Glassmorphism) */
 .glass {
   background: rgba(255, 255, 255, 0.7);

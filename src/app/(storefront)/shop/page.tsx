@@ -1,127 +1,115 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useMemo, useState, useEffect, useDeferredValue } from "react";
+import { useSearchParams } from "next/navigation";
 import ProductCard from "@/components/common/ProductCard";
-import { products, categories } from "@/data/mock";
+import { products } from "@/data/mock";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SlidersHorizontal, ChevronDown } from "lucide-react";
-import { filterAndSortProducts, type SortOption } from "@/lib/products/query";
-import Card from "@/components/ui/Card";
+import {
+  filterAndSortProducts,
+  getProductPriceBounds,
+} from "@/lib/products/query";
+import ShopFiltersSidebar, {
+  type ShopFilterState,
+} from "@/components/shop/ShopFiltersSidebar";
 import Button from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
 import PageHeader from "@/components/layout/PageHeader";
 
-export default function ShopPage() {
+function ShopContent() {
   const { language } = useLanguage();
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<SortOption>("featured");
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get("q") ?? "";
+  const deferredSearch = useDeferredValue(searchQuery);
+
+  const bounds = useMemo(() => getProductPriceBounds(products), []);
+  const [filtersOpen, setFiltersOpen] = useState(true);
+  const [filters, setFilters] = useState<ShopFilterState>({
+    featured: false,
+    newest: false,
+    priceRange: [bounds.min, bounds.max],
+  });
+
+  // Keep sidebar open on large screens; collapse by default on small.
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const sync = () => setFiltersOpen(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   const filteredProducts = useMemo(
     () =>
       filterAndSortProducts(products, {
-        categoryId: selectedCategory,
-        sortBy,
-        ids: ["p1", "p2"],
+        featuredOnly: filters.featured,
+        newestOnly: filters.newest,
+        priceMin: filters.priceRange[0],
+        priceMax: filters.priceRange[1],
+        search: deferredSearch || null,
+        sortBy: filters.newest ? "newest" : "featured",
       }),
-    [selectedCategory, sortBy]
+    [filters, deferredSearch]
   );
 
+  const clearAll = () =>
+    setFilters({
+      featured: false,
+      newest: false,
+      priceRange: [bounds.min, bounds.max],
+    });
+
   return (
-    <main className="flex-grow pt-32 pb-24 bg-background min-h-screen">
-      <div className="container mx-auto px-4 md:px-8 mb-12">
+    <main className="flex-grow pt-28 md:pt-32 pb-20 md:pb-24 bg-background min-h-screen">
+      <div className="container mx-auto px-4 md:px-8 mb-8 md:mb-10">
         <PageHeader
           title={language === "ar" ? "التشكيلة الكاملة" : "Full Collection"}
+          description={
+            deferredSearch
+              ? language === "ar"
+                ? `نتائج البحث عن “${deferredSearch}”`
+                : `Search results for “${deferredSearch}”`
+              : language === "ar"
+                ? "صفِّ التشكيلة حسب المميز والأحدث والسعر"
+                : "Refine by featured, newest, and price"
+          }
           centered
           showAccent
-          className="mb-8"
+          className="mb-2"
         />
       </div>
 
       <div className="container mx-auto px-4 md:px-8">
-        <div className="flex flex-col lg:flex-row gap-12">
-          <aside className="lg:w-1/4 shrink-0">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-10">
+          <div className="lg:w-[280px] xl:w-[300px] shrink-0">
             <button
-              onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className="w-full flex items-center justify-between lg:hidden bg-surface p-4 rounded-xl border border-gray-100 font-bold text-secondary mb-4"
+              type="button"
+              onClick={() => setFiltersOpen((v) => !v)}
+              className="w-full inline-flex items-center justify-between lg:hidden bg-background border border-surface p-4 rounded-2xl font-bold text-secondary mb-3 shadow-soft"
             >
-              <div className="flex items-center gap-2">
-                <SlidersHorizontal size={20} className="text-primary" />
-                {language === "ar" ? "الفلاتر والترتيب" : "Filters & Sorting"}
-              </div>
+              <span className="inline-flex items-center gap-2">
+                <SlidersHorizontal size={18} className="text-primary shrink-0" />
+                {language === "ar" ? "الفلاتر" : "Filters"}
+              </span>
               <ChevronDown
-                size={20}
-                className={`transform transition-transform ${isFilterOpen ? "rotate-180" : ""}`}
+                size={18}
+                className={`transition-transform duration-300 ${filtersOpen ? "rotate-180" : ""}`}
               />
             </button>
 
-            <div className={`lg:block ${isFilterOpen ? "block" : "hidden"}`}>
-              <Card variant="glass" padding="lg" className="sticky top-32 border-white/50 shadow-md">
-                <div className="mb-10">
-                  <h3 className="text-xl font-bold text-secondary mb-6 pb-4 border-b border-gray-100">
-                    {language === "ar" ? "الأقسام" : "Categories"}
-                  </h3>
-                  <ul className="flex flex-col gap-4">
-                    <li>
-                      <button
-                        onClick={() => setSelectedCategory(null)}
-                        className={`text-start w-full transition-colors font-medium text-lg ${
-                          selectedCategory === null
-                            ? "text-primary font-bold"
-                            : "text-gray-500 hover:text-secondary"
-                        }`}
-                      >
-                        {language === "ar" ? "الكل" : "All Products"}
-                      </button>
-                    </li>
-                    {categories.map((category) => (
-                      <li key={category.id}>
-                        <button
-                          onClick={() => setSelectedCategory(category.id)}
-                          className={`text-start w-full transition-colors font-medium text-lg ${
-                            selectedCategory === category.id
-                              ? "text-primary font-bold"
-                              : "text-gray-500 hover:text-secondary"
-                          }`}
-                        >
-                          {category.name[language]}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div>
-                  <h3 className="text-xl font-bold text-secondary mb-6 pb-4 border-b border-gray-100">
-                    {language === "ar" ? "الترتيب حسب" : "Sort By"}
-                  </h3>
-                  <div className="flex flex-col gap-4">
-                    {[
-                      { id: "featured", label: { ar: "المميزة", en: "Featured" } },
-                      { id: "newest", label: { ar: "الأحدث", en: "Newest Arrivals" } },
-                      { id: "price-asc", label: { ar: "السعر: من الأقل للأعلى", en: "Price: Low to High" } },
-                      { id: "price-desc", label: { ar: "السعر: من الأعلى للأقل", en: "Price: High to Low" } },
-                    ].map((sort) => (
-                      <button
-                        key={sort.id}
-                        onClick={() => setSortBy(sort.id as SortOption)}
-                        className={`text-start w-full transition-colors font-medium text-lg ${
-                          sortBy === sort.id
-                            ? "text-primary font-bold"
-                            : "text-gray-500 hover:text-secondary"
-                        }`}
-                      >
-                        {sort.label[language]}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </Card>
+            <div className={`${filtersOpen ? "block" : "hidden"} lg:block`}>
+              <ShopFiltersSidebar
+                bounds={bounds}
+                value={filters}
+                onChange={setFilters}
+                resultCount={filteredProducts.length}
+              />
             </div>
-          </aside>
+          </div>
 
-          <div className="lg:w-3/4">
-            <div className="mb-6 flex justify-between items-center text-gray-500">
+          <div className="flex-1 min-w-0">
+            <div className="mb-5 flex items-center justify-between gap-3 text-sm text-secondary/55">
               <span>
                 {language === "ar"
                   ? `عرض ${filteredProducts.length} منتجات`
@@ -130,7 +118,7 @@ export default function ShopPage() {
             </div>
 
             {filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
                 {filteredProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
@@ -143,7 +131,7 @@ export default function ShopPage() {
                     : "No products match this filter."
                 }
                 action={
-                  <Button variant="ghost" className="mt-2" onClick={() => setSelectedCategory(null)}>
+                  <Button variant="ghost" className="mt-2" onClick={clearAll}>
                     {language === "ar" ? "مسح الفلاتر" : "Clear Filters"}
                   </Button>
                 }
@@ -153,5 +141,26 @@ export default function ShopPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function ShopPage() {
+  return (
+    <React.Suspense
+      fallback={
+        <main className="flex-grow pt-32 pb-24 bg-background min-h-screen">
+          <div className="container mx-auto px-4 md:px-8">
+            <div className="h-10 w-64 mx-auto rounded-lg bg-surface/70 animate-pulse mb-12" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-80 rounded-3xl bg-surface/60 animate-pulse" />
+              ))}
+            </div>
+          </div>
+        </main>
+      }
+    >
+      <ShopContent />
+    </React.Suspense>
   );
 }
