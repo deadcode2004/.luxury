@@ -12,8 +12,9 @@ class ProductService
     {
         $perPage = min((int) ($filters['per_page'] ?? 12), 50);
         $page = max((int) ($filters['page'] ?? 1), 1);
+        $version = (string) Cache::get('products:list:version', '0');
 
-        $cacheKey = 'products:list:'.md5(json_encode([$filters, $perPage, $page]));
+        $cacheKey = 'products:list:v'.$version.':'.md5(json_encode([$filters, $perPage, $page]));
 
         return Cache::remember($cacheKey, now()->addMinutes(5), function () use ($filters, $perPage) {
             $query = Product::query()
@@ -92,8 +93,6 @@ class ProductService
 
     public static function flushListCache(): void
     {
-        // Simple versioned flush: bump a generation key consumers can namespace if needed.
         Cache::forever('products:list:version', now()->timestamp);
-        Cache::flush();
     }
 }

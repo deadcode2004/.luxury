@@ -96,8 +96,8 @@ export default function AdminCmsSocialContactCard({
         </h3>
         <p className="text-xs text-gray-400 mt-0.5">
           {language === "ar"
-            ? "فعّل ما تريد إظهاره في التذييل وصفحة التواصل"
-            : "Enable what you want shown in the footer and contact page"}
+                  ? "الأيقونات تظهر في الـ Footer عند التفعيل فقط. بيانات التواصل تظهر في صفحة التواصل."
+                  : "Icons appear in the Footer only when enabled. Contact details appear on the contact page."}
         </p>
       </div>
 

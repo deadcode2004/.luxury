@@ -3,13 +3,14 @@
 import React, { useMemo, useState, useEffect, useDeferredValue, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ProductCard from "@/components/common/ProductCard";
-import { products } from "@/data/mock";
+import type { Product } from "@/data/mock";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SlidersHorizontal, ChevronDown } from "lucide-react";
 import {
   filterAndSortProducts,
   getProductPriceBounds,
 } from "@/lib/products/query";
+import { fetchPublicProducts } from "@/lib/products/catalog";
 import ShopFiltersSidebar, {
   type ShopFilterState,
 } from "@/components/shop/ShopFiltersSidebar";
@@ -40,18 +41,46 @@ function ShopContent() {
   const filterParam = searchParams.get("filter");
   const deferredSearch = useDeferredValue(searchQuery);
 
-  const bounds = useMemo(() => getProductPriceBounds(products), []);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetchPublicProducts({ perPage: 50 })
+      .then((list) => {
+        if (!cancelled) setProducts(list);
+      })
+      .catch(() => {
+        if (!cancelled) setProducts([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const bounds = useMemo(() => getProductPriceBounds(products), [products]);
   const [filtersOpen, setFiltersOpen] = useState(true);
   const [filters, setFilters] = useState<ShopFilterState>(() => ({
     featured: false,
     newest: false,
     offers: false,
     discounts: false,
-    priceRange: [bounds.min, bounds.max],
+    priceRange: [0, 0],
     ...filtersFromParam(filterParam),
   }));
 
-  // Sync hero CTA / deep-link ?filter= into sidebar state.
+  useEffect(() => {
+    if (!products.length) return;
+    setFilters((prev) => ({
+      ...prev,
+      priceRange: [bounds.min, bounds.max],
+    }));
+  }, [products.length, bounds.min, bounds.max]);
+
   useEffect(() => {
     const fromUrl = filtersFromParam(filterParam);
     setFilters((prev) => ({
@@ -63,7 +92,6 @@ function ShopContent() {
     }));
   }, [filterParam]);
 
-  // Keep sidebar open on large screens; collapse by default on small.
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 1024px)");
     const sync = () => setFiltersOpen(mq.matches);
@@ -107,7 +135,7 @@ function ShopContent() {
         search: deferredSearch || null,
         sortBy: filters.newest ? "newest" : "featured",
       }),
-    [filters, deferredSearch]
+    [products, filters, deferredSearch]
   );
 
   const clearAll = () => {
@@ -173,9 +201,13 @@ function ShopContent() {
           <div className="flex-1 min-w-0">
             <div className="mb-5 flex items-center justify-between gap-3 text-sm text-secondary/55">
               <span>
-                {language === "ar"
-                  ? `عرض ${filteredProducts.length} منتجات`
-                  : `Showing ${filteredProducts.length} products`}
+                {loading
+                  ? language === "ar"
+                    ? "جاري التحميل..."
+                    : "Loading..."
+                  : language === "ar"
+                    ? `عرض ${filteredProducts.length} منتجات`
+                    : `Showing ${filteredProducts.length} products`}
               </span>
             </div>
 
@@ -188,14 +220,20 @@ function ShopContent() {
             ) : (
               <EmptyState
                 title={
-                  language === "ar"
-                    ? "لا توجد منتجات تطابق هذا الفلتر."
-                    : "No products match this filter."
+                  loading
+                    ? language === "ar"
+                      ? "جاري تحميل المنتجات..."
+                      : "Loading products..."
+                    : language === "ar"
+                      ? "لا توجد منتجات تطابق هذا الفلتر."
+                      : "No products match this filter."
                 }
                 action={
-                  <Button variant="ghost" className="mt-2" onClick={clearAll}>
-                    {language === "ar" ? "مسح الفلاتر" : "Clear Filters"}
-                  </Button>
+                  !loading ? (
+                    <Button variant="ghost" className="mt-2" onClick={clearAll}>
+                      {language === "ar" ? "مسح الفلاتر" : "Clear Filters"}
+                    </Button>
+                  ) : undefined
                 }
               />
             )}

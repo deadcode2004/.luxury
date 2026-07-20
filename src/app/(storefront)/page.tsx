@@ -1,3 +1,6 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
 import Hero from "@/components/home/Hero";
 import Categories from "@/components/home/Categories";
 import ProductGrid from "@/components/home/ProductGrid";
@@ -5,9 +8,26 @@ import Offers from "@/components/home/Offers";
 import Features from "@/components/home/Features";
 import Reviews from "@/components/home/Reviews";
 import InstagramGallery from "@/components/home/InstagramGallery";
-import { products } from "@/data/mock";
+import type { Product } from "@/data/mock";
+import { fetchPublicProducts } from "@/lib/products/catalog";
 
 export default function Home() {
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchPublicProducts({ perPage: 50 })
+      .then((list) => {
+        if (!cancelled) setProducts(list);
+      })
+      .catch(() => {
+        if (!cancelled) setProducts([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const featuredProducts = products.filter((p) => p.isFeatured);
   const bestSellers = products.filter((p) => p.isBestSeller);
 

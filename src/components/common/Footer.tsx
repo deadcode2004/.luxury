@@ -15,17 +15,9 @@ import {
 } from "react-icons/fa";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { fetchPublicCms, type CmsStorefront } from "@/lib/api/owner";
-import {
-  emptyCmsContact,
-  emptyCmsSocial,
-  socialHref,
-  type SocialPlatform,
-} from "@/lib/cms/footer";
+import { emptyCmsSocial, socialHref, type SocialPlatform } from "@/lib/cms/footer";
 
-const SOCIAL_ICONS: Record<
-  SocialPlatform,
-  { icon: React.ReactNode; label: string }
-> = {
+const SOCIAL_ICONS: Record<SocialPlatform, { icon: React.ReactNode; label: string }> = {
   twitter: { icon: <FaTwitter size={16} />, label: "Twitter" },
   instagram: { icon: <FaInstagram size={16} />, label: "Instagram" },
   facebook: { icon: <FaFacebookF size={16} />, label: "Facebook" },
@@ -46,6 +38,7 @@ const SOCIAL_ORDER: SocialPlatform[] = [
 export default function Footer() {
   const { language } = useLanguage();
   const [cms, setCms] = useState<CmsStorefront | null>(null);
+  const [email, setEmail] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -61,10 +54,6 @@ export default function Footer() {
 
   const social = useMemo(
     () => ({ ...emptyCmsSocial(), ...(cms?.social ?? {}) }),
-    [cms]
-  );
-  const contact = useMemo(
-    () => ({ ...emptyCmsContact(), ...(cms?.contact ?? {}) }),
     [cms]
   );
 
@@ -174,52 +163,34 @@ export default function Footer() {
 
           <div>
             <h4 className="text-lg font-semibold mb-6 font-sans tracking-wide">
-              {language === "ar" ? "تواصل معنا" : "Contact"}
+              {language === "ar" ? "النشرة البريدية" : "Newsletter"}
             </h4>
-            <ul className="space-y-3 text-secondary/70 text-sm">
-              {contact.address.enabled &&
-              (contact.address.text?.[language] || contact.address.text?.ar) ? (
-                <li>{contact.address.text?.[language] || contact.address.text?.ar}</li>
-              ) : null}
-              {contact.phones.enabled
-                ? contact.phones.numbers
-                    .filter(Boolean)
-                    .map((n) => (
-                      <li key={n}>
-                        <a
-                          href={`tel:${n.replace(/\s+/g, "")}`}
-                          className="hover:text-primary transition-colors dir-ltr inline-block"
-                        >
-                          {n}
-                        </a>
-                      </li>
-                    ))
-                : null}
-              {contact.email.enabled && contact.email.value ? (
-                <li>
-                  <a
-                    href={`mailto:${contact.email.value}`}
-                    className="hover:text-primary transition-colors dir-ltr inline-block break-all"
-                  >
-                    {contact.email.value}
-                  </a>
-                </li>
-              ) : null}
-              {contact.hours.enabled &&
-              (contact.hours.text?.[language] || contact.hours.text?.ar) ? (
-                <li>{contact.hours.text?.[language] || contact.hours.text?.ar}</li>
-              ) : null}
-              {!contact.address.enabled &&
-              !contact.phones.enabled &&
-              !contact.email.enabled &&
-              !contact.hours.enabled ? (
-                <li className="text-secondary/45">
-                  <Link href="/contact" className="hover:text-primary transition-colors">
-                    {language === "ar" ? "صفحة التواصل" : "Contact page"}
-                  </Link>
-                </li>
-              ) : null}
-            </ul>
+            <p className="text-secondary/70 text-sm leading-relaxed mb-5">
+              {language === "ar"
+                ? "اشترك الآن لتصلك أحدث العروض الحصرية والمنتجات الجديدة."
+                : "Subscribe now to receive exclusive offers and new arrivals."}
+            </p>
+            <form
+              className="flex flex-col space-y-3"
+              onSubmit={(e) => {
+                e.preventDefault();
+                setEmail("");
+              }}
+            >
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={language === "ar" ? "البريد الإلكتروني" : "Email Address"}
+                className="bg-transparent border border-surface rounded-md px-4 py-3 text-sm focus:outline-none focus:border-primary transition-colors w-full text-secondary placeholder-secondary/50"
+              />
+              <button
+                type="submit"
+                className="bg-primary hover:bg-primary-hover text-background font-bold tracking-wide rounded-md px-4 py-3 text-sm transition-colors w-full"
+              >
+                {language === "ar" ? "اشتراك" : "Subscribe"}
+              </button>
+            </form>
           </div>
         </div>
 

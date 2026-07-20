@@ -12,7 +12,8 @@ import React, {
 import { readStorage, writeStorage } from "@/lib/storage";
 import { useToast } from "@/components/ui/Toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { products as catalog, type Product } from "@/data/mock";
+import type { Product } from "@/data/mock";
+import { fetchPublicProducts, getCachedCatalog } from "@/lib/products/catalog";
 
 type WishlistContextValue = {
   ids: string[];
@@ -38,6 +39,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setIds(readStorage<string[]>(WISHLIST_KEY, []));
     setReady(true);
+    void fetchPublicProducts({ perPage: 50 }).catch(() => undefined);
   }, []);
 
   useEffect(() => {
@@ -85,7 +87,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   );
 
   const items = useMemo(
-    () => catalog.filter((p) => ids.includes(p.id)),
+    () => getCachedCatalog().filter((p) => ids.includes(p.id)),
     [ids]
   );
 

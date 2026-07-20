@@ -9,13 +9,14 @@ import React, {
   useState,
   useTransition,
 } from "react";
-import { products as catalog, type Product } from "@/data/mock";
+import { products as catalogFallback, type Product } from "@/data/mock";
 import { readStorage, writeStorage } from "@/lib/storage";
 import { calcOrderTotals } from "@/lib/cart/totals";
 import { useToast } from "@/components/ui/Toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { apiRequest } from "@/lib/api/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { fetchPublicProducts, getCachedCatalog } from "@/lib/products/catalog";
 
 export type CartLine = {
   productId: string;
@@ -39,18 +40,21 @@ type CartContextValue = {
 const CART_KEY = "paradise_cart";
 const CartContext = createContext<CartContextValue | null>(null);
 
-/** Cache backend product code → numeric id so add-to-cart does not refetch the catalog. */
+/** Cache backend product code/id → numeric id so add-to-cart does not refetch the catalog. */
 let productCodeMapPromise: Promise<Map<string, number>> | null = null;
 
 function getProductCodeMap(token: string): Promise<Map<string, number>> {
   if (!productCodeMapPromise) {
     productCodeMapPromise = apiRequest<Array<{ id: number; code: string }>>("/products?per_page=50", {
       token,
-      cache: "force-cache",
+      cache: "no-store",
     })
       .then((list) => {
         const map = new Map<string, number>();
-        for (const p of list) map.set(p.code, p.id);
+        for (const p of list) {
+          map.set(p.code, p.id);
+          map.set(String(p.id), p.id);
+        }
         return map;
       })
       .catch((err) => {
@@ -62,7 +66,10 @@ function getProductCodeMap(token: string): Promise<Map<string, number>> {
 }
 
 function resolveProduct(productId: string): Product | undefined {
-  return catalog.find((p) => p.id === productId);
+  return (
+    getCachedCatalog().find((p) => p.id === productId) ||
+    catalogFallback.find((p) => p.id === productId)
+  );
 }
 
 function stockOf(productId: string): number {
@@ -80,6 +87,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setItems(readStorage<CartLine[]>(CART_KEY, []));
     setReady(true);
+    // Warm catalog cache for stock/line resolution (no-store so edits show up).
+    void fetchPublicProducts({ perPage: 50 }).catch(() => undefined);
   }, []);
 
   useEffect(() => {
@@ -92,7 +101,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (!token || !authReady) return;
       try {
         const map = await getProductCodeMap(token);
-        const matchId = map.get(productId);
+        const matchId =
+          map.get(productId) ??
+          (/^\d+$/.test(productId) ? Number(productId) : undefined);
         if (!matchId) return;
         await apiRequest("/cart/items", {
           method: "POST",

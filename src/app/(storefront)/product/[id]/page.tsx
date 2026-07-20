@@ -1,29 +1,64 @@
 "use client";
 
 import React, { use } from "react";
+import { useEffect, useState } from "react";
 import ProductGallery from "@/components/product/ProductGallery";
 import ProductInfo from "@/components/product/ProductInfo";
 import ProductTabs from "@/components/product/ProductTabs";
 import ProductGrid from "@/components/home/ProductGrid";
-import { products } from "@/data/mock";
+import type { Product } from "@/data/mock";
+import { fetchPublicProduct } from "@/lib/products/catalog";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
+  const { language } = useLanguage();
+  const [product, setProduct] = useState<Product | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const product = products.find((p) => p.id === resolvedParams.id);
-  const relatedProducts = products
-    .filter((p) => p.category === product?.category && p.id !== product?.id)
-    .slice(0, 4);
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetchPublicProduct(resolvedParams.id)
+      .then((res) => {
+        if (cancelled) return;
+        setProduct(res?.product ?? null);
+        setRelatedProducts(res?.related ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setProduct(null);
+          setRelatedProducts([]);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [resolvedParams.id]);
 
-  if (!product) {
+  if (loading) {
     return (
-      <main className="flex-grow pt-32 pb-24 text-center">
-        <h1 className="text-3xl font-bold">Product not found</h1>
+      <main className="flex-grow pt-32 pb-24 text-center text-secondary/50">
+        {language === "ar" ? "جاري التحميل..." : "Loading..."}
       </main>
     );
   }
 
-  const images = [product.image, ...(product.gallery || [])];
+  if (!product) {
+    return (
+      <main className="flex-grow pt-32 pb-24 text-center">
+        <h1 className="text-3xl font-bold">
+          {language === "ar" ? "المنتج غير موجود" : "Product not found"}
+        </h1>
+      </main>
+    );
+  }
+
+  const images = [product.image, ...(product.gallery || [])].filter(Boolean);
 
   return (
     <main className="flex-grow pt-32 pb-24 bg-background">

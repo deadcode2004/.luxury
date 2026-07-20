@@ -5,11 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Search, X } from "lucide-react";
-import { products, type Product } from "@/data/mock";
+import { type Product } from "@/data/mock";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatMoney } from "@/lib/format/currency";
 import { cn } from "@/lib/cn";
+import { fetchPublicProducts, getCachedCatalog } from "@/lib/products/catalog";
 
 type HeaderSearchPanelProps = {
   open: boolean;
@@ -25,10 +26,14 @@ function normalize(text: string) {
     .trim();
 }
 
-function searchProducts(query: string, language: "ar" | "en"): Product[] {
+function searchProducts(
+  catalog: Product[],
+  query: string,
+  language: "ar" | "en"
+): Product[] {
   const q = normalize(query);
   if (!q) return [];
-  return products
+  return catalog
     .filter((p) => {
       const hay = normalize(
         `${p.name.ar} ${p.name.en} ${p.brand.ar} ${p.brand.en} ${p.description?.ar ?? ""} ${p.description?.en ?? ""}`
@@ -47,11 +52,27 @@ export default function HeaderSearchPanel({
   const { currency, convertFromEgp } = useCurrency();
   const router = useRouter();
   const [query, setQuery] = useState("");
+  const [catalog, setCatalog] = useState<Product[]>(() => getCachedCatalog());
   const inputRef = useRef<HTMLInputElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const panelId = useId();
 
-  const results = useMemo(() => searchProducts(query, language), [query, language]);
+  const results = useMemo(
+    () => searchProducts(catalog, query, language),
+    [catalog, query, language]
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchPublicProducts({ perPage: 50 })
+      .then((list) => {
+        if (!cancelled) setCatalog(list);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!open) return;
