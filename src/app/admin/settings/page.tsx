@@ -327,6 +327,11 @@ export default function AdminSettings() {
               </div>
 
               <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <p className="md:col-span-2 text-xs text-secondary/50 leading-relaxed">
+                  {language === "ar"
+                    ? "البريد ورقم الهاتف يظهران تلقائياً في تذييل الموقع وصفحة التواصل بعد الحفظ."
+                    : "Email and phone appear automatically in the storefront footer and contact page after saving."}
+                </p>
                 <FormField
                   label={language === "ar" ? "الاسم الأول" : "First Name"}
                   error={errors.first_name}

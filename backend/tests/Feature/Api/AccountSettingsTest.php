@@ -41,6 +41,12 @@ class AccountSettingsTest extends TestCase
             'phone' => '201000000001',
         ]);
 
+        $cms = $this->getJson('/api/v1/cms')->assertOk();
+        $this->assertSame('owner@paradise.test', $cms->json('data.contact.email.value'));
+        $this->assertTrue($cms->json('data.contact.email.enabled'));
+        $this->assertContains('201000000001', $cms->json('data.contact.phones.numbers'));
+        $this->assertTrue($cms->json('data.contact.phones.enabled'));
+
         $this->putJson('/api/v1/account/password', [
             'current_password' => 'password',
             'password' => 'new-password-123',

@@ -8,6 +8,7 @@ use App\Http\Requests\Account\UpdateNotificationPreferencesRequest;
 use App\Http\Requests\Account\UpdateProfileRequest;
 use App\Http\Resources\AddressResource;
 use App\Http\Resources\UserResource;
+use App\Services\CmsService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,6 +17,10 @@ use Illuminate\Validation\ValidationException;
 
 class ProfileController extends Controller
 {
+    public function __construct(
+        private readonly CmsService $cms,
+    ) {}
+
     public function show(Request $request): JsonResponse
     {
         return ApiResponse::success(UserResource::make($request->user()));
@@ -41,7 +46,12 @@ class ProfileController extends Controller
             'name' => trim($data['first_name'].' '.$data['last_name']),
         ]);
 
-        return ApiResponse::success(UserResource::make($user->fresh()), 'Profile updated');
+        $fresh = $user->fresh();
+        if ($fresh?->isOwner()) {
+            $this->cms->syncOwnerContact($fresh);
+        }
+
+        return ApiResponse::success(UserResource::make($fresh), 'Profile updated');
     }
 
     public function updatePassword(ChangePasswordRequest $request): JsonResponse

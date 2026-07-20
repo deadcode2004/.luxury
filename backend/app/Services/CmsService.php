@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use App\Exceptions\DomainException;
+use App\Enums\UserRole;
 use App\Models\CmsSetting;
+use App\Models\User;
 use App\Services\Translation\ProductTranslationService;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Log;
@@ -115,23 +117,109 @@ class CmsService
     public function getStorefront(): array
     {
         if (! $this->tableReady()) {
-            return $this->defaults();
+            return $this->applyOwnerContactFallback($this->defaults());
         }
 
         try {
             $row = CmsSetting::query()->where('key', self::STOREFRONT_KEY)->first();
             if (! $row) {
-                return $this->defaults();
+                return $this->applyOwnerContactFallback($this->defaults());
             }
 
             $merged = array_replace_recursive($this->defaults(), $row->value ?? []);
 
-            return $this->normalizeStorefront($merged);
+            return $this->applyOwnerContactFallback($this->normalizeStorefront($merged));
         } catch (QueryException $e) {
             Log::warning('CMS read failed; returning defaults', ['error' => $e->getMessage()]);
 
-            return $this->defaults();
+            return $this->applyOwnerContactFallback($this->defaults());
         }
+    }
+
+    /**
+     * Keep storefront Footer/Contact in sync with the owner's profile email & phone.
+     */
+    public function syncOwnerContact(User $owner): void
+    {
+        if (! $owner->isOwner() || ! $this->tableReady()) {
+            return;
+        }
+
+        $current = $this->getStorefront();
+        $contact = $current['contact'] ?? $this->defaults()['contact'];
+
+        $email = trim((string) $owner->email);
+        $phone = trim((string) ($owner->phone ?? ''));
+
+        if ($email !== '') {
+            $contact['email'] = [
+                'enabled' => true,
+                'value' => $email,
+            ];
+        }
+
+        if ($phone !== '') {
+            $existing = array_values(array_filter(
+                array_map(fn ($n) => trim((string) $n), $contact['phones']['numbers'] ?? []),
+                fn ($n) => $n !== '' && $n !== $phone
+            ));
+            $contact['phones'] = [
+                'enabled' => true,
+                'numbers' => array_values(array_unique([$phone, ...$existing])),
+            ];
+        }
+
+        $merged = $current;
+        $merged['contact'] = $contact;
+        $merged = $this->normalizeStorefront($merged);
+
+        CmsSetting::query()->updateOrCreate(
+            ['key' => self::STOREFRONT_KEY],
+            ['value' => $merged]
+        );
+    }
+
+    /**
+     * If CMS contact email/phone were never set, expose the owner profile values on the storefront.
+     */
+    private function applyOwnerContactFallback(array $data): array
+    {
+        try {
+            $owner = User::query()
+                ->where('role', UserRole::Owner)
+                ->where('is_active', true)
+                ->orderBy('id')
+                ->first();
+        } catch (QueryException) {
+            return $data;
+        }
+
+        if (! $owner) {
+            return $data;
+        }
+
+        $email = trim((string) data_get($data, 'contact.email.value', ''));
+        $ownerEmail = trim((string) $owner->email);
+        if ($email === '' && $ownerEmail !== '') {
+            data_set($data, 'contact.email', [
+                'enabled' => true,
+                'value' => $ownerEmail,
+            ]);
+        }
+
+        $phones = data_get($data, 'contact.phones.numbers', []);
+        $hasPhone = is_array($phones) && collect($phones)->contains(
+            fn ($n) => trim((string) $n) !== ''
+        );
+        $ownerPhone = trim((string) ($owner->phone ?? ''));
+        if (! $hasPhone && $ownerPhone !== '') {
+            data_set($data, 'contact.phones', [
+                'enabled' => true,
+                'numbers' => [$ownerPhone],
+            ]);
+        }
+
+        return $data;
     }
 
     public function updateStorefront(array $payload): array
