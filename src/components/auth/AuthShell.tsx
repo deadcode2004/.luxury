@@ -26,7 +26,7 @@ export default function AuthShell({
         <div className="text-center mb-8 md:mb-10">
           <Link
             href="/"
-            prefetch
+            prefetch={false}
             className="inline-block text-3xl md:text-4xl font-bold tracking-widest uppercase text-secondary"
           >
             PARADISE<span className="text-primary">.</span>

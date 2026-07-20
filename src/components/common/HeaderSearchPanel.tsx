@@ -198,7 +198,7 @@ export default function HeaderSearchPanel({
                 <li key={product.id}>
                   <Link
                     href={`/product/${product.id}`}
-                    prefetch
+                    prefetch={false}
                     onClick={() => onOpenChange(false)}
                     className="flex items-center gap-3 rounded-xl p-2.5 hover:bg-surface/70 transition-colors group"
                   >
