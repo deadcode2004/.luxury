@@ -67,5 +67,13 @@ class AuthAndCatalogTest extends TestCase
             ->assertOk()
             ->assertJsonPath('success', true)
             ->assertJsonPath('data.0.code', 'p1');
+
+        // Non-numeric keys must look up by code only (Postgres bigint-safe).
+        $this->getJson('/api/v1/products/p1')
+            ->assertOk()
+            ->assertJsonPath('data.product.code', 'p1');
+
+        $this->getJson('/api/v1/products/missing-code')
+            ->assertNotFound();
     }
 }

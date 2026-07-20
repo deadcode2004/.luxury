@@ -72,11 +72,18 @@ class ProductService
 
     public function findByIdOrCode(string|int $id): Product
     {
+        $key = trim((string) $id);
+
         return Product::query()
             ->with('category')
             ->active()
-            ->where(function ($q) use ($id) {
-                $q->where('id', $id)->orWhere('code', $id);
+            ->where(function ($q) use ($key) {
+                // Postgres rejects non-numeric values when comparing against bigint `id`.
+                if (ctype_digit($key)) {
+                    $q->where('id', (int) $key)->orWhere('code', $key);
+                } else {
+                    $q->where('code', $key);
+                }
             })
             ->firstOrFail();
     }

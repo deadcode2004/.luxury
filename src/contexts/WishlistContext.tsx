@@ -39,7 +39,16 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setIds(readStorage<string[]>(WISHLIST_KEY, []));
     setReady(true);
-    void fetchPublicProducts({ perPage: 50 }).catch(() => undefined);
+    void fetchPublicProducts({ perPage: 50 })
+      .then((list) => {
+        const valid = new Set(list.map((p) => p.id));
+        setIds((prev) => {
+          // Drop legacy mock ids like "p1" that are not in the live catalog.
+          const next = prev.filter((id) => valid.has(id) || /^\d+$/.test(id));
+          return next.length === prev.length ? prev : next;
+        });
+      })
+      .catch(() => undefined);
   }, []);
 
   useEffect(() => {

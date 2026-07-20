@@ -88,7 +88,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems(readStorage<CartLine[]>(CART_KEY, []));
     setReady(true);
     // Warm catalog cache for stock/line resolution (no-store so edits show up).
-    void fetchPublicProducts({ perPage: 50 }).catch(() => undefined);
+    void fetchPublicProducts({ perPage: 50 })
+      .then((list) => {
+        const valid = new Set(list.map((p) => p.id));
+        setItems((prev) => {
+          const next = prev.filter(
+            (line) => valid.has(line.productId) || /^\d+$/.test(line.productId)
+          );
+          return next.length === prev.length ? prev : next;
+        });
+      })
+      .catch(() => undefined);
   }, []);
 
   useEffect(() => {
