@@ -233,10 +233,10 @@ export default function AdminCMS() {
   const slide = form.hero.slides[activeSlide] ?? form.hero.slides[0];
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-6xl">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-secondary tracking-tight">
+    <div className="flex flex-col gap-4 sm:gap-6 w-full min-w-0">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 w-full min-w-0">
+        <div className="min-w-0">
+          <h2 className="text-xl sm:text-2xl font-bold text-secondary tracking-tight">
             {language === "ar" ? "محتوى المتجر" : "Store Content"}
           </h2>
           <p className="text-sm text-gray-500 mt-1">
@@ -245,20 +245,26 @@ export default function AdminCMS() {
               : "Hero slides and announcement — Arabic only with auto-translation"}
           </p>
         </div>
-        <Button variant="secondary" size="md" loading={saving} onClick={() => void save()}>
+        <Button
+          variant="secondary"
+          size="md"
+          loading={saving}
+          onClick={() => void save()}
+          className="w-full sm:w-auto shrink-0"
+        >
           <Save size={18} />
           {language === "ar" ? "حفظ التغييرات" : "Save changes"}
         </Button>
       </div>
 
-      <section className="w-full rounded-3xl border border-surface bg-white/70 overflow-hidden">
-        <div className="px-4 sm:px-6 py-4 border-b border-surface/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-background/60">
+      <section className="w-full min-w-0 rounded-2xl sm:rounded-3xl border border-surface bg-white/70 overflow-hidden">
+        <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-surface/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-background/60">
           <div className="flex items-center gap-3 min-w-0">
             <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <Layout size={18} />
             </span>
             <div className="min-w-0">
-              <h3 className="font-bold text-secondary">
+              <h3 className="font-bold text-secondary text-sm sm:text-base">
                 {language === "ar" ? "قسم البطل (Hero)" : "Hero section"}
               </h3>
               <p className="text-xs text-gray-400">
@@ -272,7 +278,7 @@ export default function AdminCMS() {
             type="button"
             variant="ghost"
             size="sm"
-            className="shrink-0 self-start sm:self-auto"
+            className="shrink-0 w-full sm:w-auto"
             onClick={addSlide}
             disabled={form.hero.slides.length >= 10}
           >
@@ -281,10 +287,10 @@ export default function AdminCMS() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 lg:items-stretch">
-          {/* Hero editor */}
-          <div className="lg:col-span-8 p-4 sm:p-6 flex flex-col gap-5 min-w-0">
-            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+        <div className="grid grid-cols-1 xl:grid-cols-12 xl:items-stretch w-full min-w-0">
+          {/* Hero editor — full width until xl */}
+          <div className="xl:col-span-8 p-3 sm:p-5 lg:p-6 flex flex-col gap-4 sm:gap-5 min-w-0 w-full">
+            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 w-full">
               <button
                 type="button"
                 onClick={() => scrollTabs(-1)}
@@ -296,7 +302,7 @@ export default function AdminCMS() {
 
               <div
                 ref={tabsRef}
-                className="flex-1 min-w-0 flex items-center gap-2 overflow-x-auto scroll-smooth snap-x snap-mandatory py-1 px-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                className="flex-1 min-w-0 flex items-center gap-2 overflow-x-auto overscroll-x-contain scroll-smooth snap-x snap-mandatory py-1 px-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
               >
                 {form.hero.slides.map((s, i) => (
                   <button
@@ -326,8 +332,11 @@ export default function AdminCMS() {
             </div>
 
             {slide ? (
-              <div key={slide.id} className="grid grid-cols-1 md:grid-cols-12 gap-5 min-w-0">
-                <div className="md:col-span-4 flex flex-col gap-3 min-w-0">
+              <div
+                key={slide.id}
+                className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 min-w-0 w-full"
+              >
+                <div className="lg:col-span-4 flex flex-col gap-3 min-w-0 w-full">
                   <FormField
                     label={language === "ar" ? "صورة الشريحة" : "Slide image"}
                     error={errors[`slide-${activeSlide}-image`]}
@@ -337,6 +346,7 @@ export default function AdminCMS() {
                       onChange={(url) => updateSlide(activeSlide, { image: url })}
                       folder="cms"
                       error={errors[`slide-${activeSlide}-image`]}
+                      className="[&_.upload-frame]:max-h-52 sm:[&_.upload-frame]:max-h-64 lg:[&_.upload-frame]:max-h-72"
                     />
                   </FormField>
                   <div className="flex items-center gap-2 flex-wrap">
@@ -372,7 +382,7 @@ export default function AdminCMS() {
                   </div>
                 </div>
 
-                <div className="md:col-span-8 flex flex-col gap-4 min-w-0">
+                <div className="lg:col-span-8 flex flex-col gap-3 sm:gap-4 min-w-0 w-full">
                   <p className="text-xs text-secondary/50">
                     {language === "ar"
                       ? "اكتب بالعربية فقط — الترجمة الإنجليزية تُحفظ تلقائياً عند الحفظ."
@@ -400,7 +410,7 @@ export default function AdminCMS() {
                       onChange={(e) => updateSlideLocale(activeSlide, "description", e.target.value)}
                     />
                   </FormField>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full min-w-0">
                     <FormField label={language === "ar" ? "نص الزر" : "Button text"}>
                       <Input
                         value={slide.cta.ar}
@@ -454,16 +464,18 @@ export default function AdminCMS() {
                     </p>
                   )}
                   {slide.heading.en ? (
-                    <p className="text-xs text-gray-400 dir-ltr text-start">EN: {slide.heading.en}</p>
+                    <p className="text-xs text-gray-400 dir-ltr text-start break-words">
+                      EN: {slide.heading.en}
+                    </p>
                   ) : null}
                 </div>
               </div>
             ) : null}
           </div>
 
-          {/* Announcement beside Hero — same card, no orphan empty column */}
-          <aside className="lg:col-span-4 min-w-0 border-t lg:border-t-0 lg:border-s border-surface bg-background/50 flex flex-col">
-            <div className="px-4 sm:px-5 py-4 border-b border-surface/70 flex items-start justify-between gap-3">
+          {/* Announcement: stacked under hero on phones/tablets, beside on xl+ */}
+          <aside className="xl:col-span-4 min-w-0 w-full border-t xl:border-t-0 xl:border-s border-surface bg-background/50 flex flex-col">
+            <div className="px-3 sm:px-5 py-3 sm:py-4 border-b border-surface/70 flex items-start justify-between gap-3">
               <div className="flex items-start gap-3 min-w-0">
                 <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent/15 text-accent">
                   <Megaphone size={18} />
@@ -496,7 +508,7 @@ export default function AdminCMS() {
               </label>
             </div>
 
-            <div className="p-4 sm:p-5 flex flex-col gap-4 flex-1">
+            <div className="p-3 sm:p-5 flex flex-col gap-4 flex-1 w-full min-w-0">
               <FormField
                 label={language === "ar" ? "نص الإعلان (عربي فقط)" : "Announcement (Arabic only)"}
                 error={errors.announcementAr}
@@ -529,7 +541,7 @@ export default function AdminCMS() {
               </p>
 
               {form.announcement.enabled && form.announcement.text.ar ? (
-                <div className="mt-auto rounded-xl bg-secondary text-background text-center text-sm py-3 px-3 break-words">
+                <div className="mt-auto rounded-xl bg-secondary text-background text-center text-sm py-3 px-3 break-words w-full">
                   {form.announcement.text.ar}
                 </div>
               ) : null}
@@ -544,7 +556,7 @@ export default function AdminCMS() {
         </div>
       </section>
 
-      <Card variant="panel" padding="md" className="text-sm text-gray-500 leading-relaxed w-full">
+      <Card variant="panel" padding="md" className="text-sm text-gray-500 leading-relaxed w-full min-w-0">
         {language === "ar"
           ? "احفظ التغييرات ثم افتح الصفحة الرئيسية للتأكد من ظهور الشرائح والشريط الإعلاني."
           : "Save changes, then open the homepage to verify hero slides and the announcement bar."}

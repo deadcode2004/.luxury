@@ -62,7 +62,7 @@ export default function ImageUploadField({
       />
 
       {value ? (
-        <div className="relative group rounded-2xl overflow-hidden border border-gray-200 bg-gray-50 aspect-[4/3] sm:aspect-square w-full max-h-64 sm:max-h-none">
+        <div className="upload-frame relative group rounded-2xl overflow-hidden border border-gray-200 bg-gray-50 aspect-[4/3] w-full max-h-56 sm:max-h-64 lg:max-h-72">
           <Image src={value} alt="" fill className="object-cover" sizes="(max-width:640px) 100vw, 320px" unoptimized />
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/35 transition-colors flex items-center justify-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
             <button
@@ -89,7 +89,7 @@ export default function ImageUploadField({
           disabled={uploading || !token}
           onClick={() => inputRef.current?.click()}
           className={cn(
-            "w-full aspect-[4/3] sm:aspect-square max-h-64 sm:max-h-none rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all px-3",
+            "upload-frame w-full aspect-[4/3] max-h-56 sm:max-h-64 lg:max-h-72 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all px-3",
             error
               ? "border-red-300 text-red-400"
               : "border-gray-200 text-gray-400 hover:border-primary hover:text-primary"
