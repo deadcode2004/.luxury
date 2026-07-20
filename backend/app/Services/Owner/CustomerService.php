@@ -30,11 +30,37 @@ class CustomerService
 
     public function dashboardStats(): array
     {
+        $totalCustomers = (int) User::query()->where('role', UserRole::User)->count();
+        $customersWithOrders = (int) User::query()
+            ->where('role', UserRole::User)
+            ->whereHas('orders')
+            ->count();
+
+        $conversion = $totalCustomers > 0
+            ? round(($customersWithOrders / $totalCustomers) * 100, 1)
+            : 0.0;
+
+        $lowStock = (int) DB::table('products')
+            ->where('is_active', true)
+            ->where('stock', '>', 0)
+            ->where('stock', '<=', 15)
+            ->count();
+
+        $outOfStock = (int) DB::table('products')
+            ->where('is_active', true)
+            ->where('stock', '<=', 0)
+            ->count();
+
+        $productCount = (int) DB::table('products')->where('is_active', true)->count();
+
         return [
             'total_sales' => (float) DB::table('orders')->sum('total'),
             'active_orders' => (int) DB::table('orders')->whereIn('status', ['pending', 'processing'])->count(),
-            'total_customers' => (int) User::query()->where('role', UserRole::User)->count(),
-            'conversion_rate' => 3.2,
+            'total_customers' => $totalCustomers,
+            'conversion_rate' => $conversion,
+            'products_count' => $productCount,
+            'low_stock_count' => $lowStock,
+            'out_of_stock_count' => $outOfStock,
         ];
     }
 }

@@ -42,6 +42,10 @@ const nextConfig: NextConfig = {
         source: "/sanctum/:path*",
         destination: `${apiProxyOrigin}/sanctum/:path*`,
       },
+      {
+        source: "/storage/:path*",
+        destination: `${apiProxyOrigin}/storage/:path*`,
+      },
     ];
   },
 };

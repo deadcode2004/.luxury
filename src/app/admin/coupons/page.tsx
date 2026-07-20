@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/Toast";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, RefreshCw } from "lucide-react";
 import Table, { TableToolbar, TableRow, TableCell } from "@/components/ui/Table";
 import SearchInput from "@/components/ui/SearchInput";
 import Button from "@/components/ui/Button";
@@ -13,72 +14,83 @@ import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
 import FormField from "@/components/ui/FormField";
 import Select from "@/components/ui/Select";
-
-type Coupon = {
-  code: string;
-  discount: string;
-  type: string;
-  uses: number;
-  maxUses: number | null;
-  expiry: string;
-  status: string;
-};
-
-const INITIAL: Coupon[] = [
-  { code: "SUMMER20", discount: "20%", type: "Percentage", uses: 45, maxUses: 100, expiry: "2026-12-31", status: "active" },
-  { code: "WELCOME", discount: "50 SAR", type: "Fixed", uses: 120, maxUses: null, expiry: "2026-12-31", status: "active" },
-  { code: "EID50", discount: "50%", type: "Percentage", uses: 500, maxUses: 500, expiry: "2026-06-30", status: "expired" },
-];
+import {
+  ApiRequestError,
+  createCoupon,
+  deleteCoupon,
+  fetchOwnerCoupons,
+  updateCoupon,
+  type ApiCoupon,
+} from "@/lib/api/owner";
 
 export default function AdminCoupons() {
   const { language } = useLanguage();
+  const { token } = useAuth();
   const { toast } = useToast();
-  const [coupons, setCoupons] = useState(INITIAL);
+  const [coupons, setCoupons] = useState<ApiCoupon[]>([]);
+  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
-  const [deleteCode, setDeleteCode] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<Coupon | null>(null);
+  const [editing, setEditing] = useState<ApiCoupon | null>(null);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState({
     code: "",
-    discount: "",
-    type: "Percentage",
+    value: "",
+    type: "percentage" as "percentage" | "fixed",
     maxUses: "",
     expiry: "",
-    status: "active",
+    isActive: true,
   });
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return coupons;
-    return coupons.filter((c) => c.code.toLowerCase().includes(q));
-  }, [coupons, query]);
+  const load = useCallback(async () => {
+    if (!token) return;
+    setLoading(true);
+    try {
+      setCoupons(await fetchOwnerCoupons(token, query));
+    } catch (err) {
+      toast(
+        err instanceof ApiRequestError
+          ? err.message
+          : language === "ar"
+            ? "تعذر تحميل الكوبونات"
+            : "Failed to load coupons",
+        "danger"
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [token, query, language, toast]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const openCreate = () => {
     setEditing(null);
     setForm({
       code: "",
-      discount: "",
-      type: "Percentage",
+      value: "",
+      type: "percentage",
       maxUses: "",
-      expiry: "2026-12-31",
-      status: "active",
+      expiry: "",
+      isActive: true,
     });
     setErrors({});
     setModalOpen(true);
   };
 
-  const openEdit = (coupon: Coupon) => {
+  const openEdit = (coupon: ApiCoupon) => {
     setEditing(coupon);
     setForm({
       code: coupon.code,
-      discount: coupon.discount.replace(/\s*%|\s*SAR/g, ""),
+      value: String(coupon.value),
       type: coupon.type,
-      maxUses: coupon.maxUses != null ? String(coupon.maxUses) : "",
-      expiry: coupon.expiry,
-      status: coupon.status,
+      maxUses: coupon.max_uses != null ? String(coupon.max_uses) : "",
+      expiry: coupon.expires_at || "",
+      isActive: coupon.is_active,
     });
     setErrors({});
     setModalOpen(true);
@@ -86,45 +98,70 @@ export default function AdminCoupons() {
 
   const saveCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!token) return;
     const next: Record<string, string> = {};
-    if (!form.code.trim()) next.code = language === "ar" ? "الرمز مطلوب" : "Code is required";
-    if (!form.discount.trim()) next.discount = language === "ar" ? "الخصم مطلوب" : "Discount is required";
-    if (!form.expiry.trim()) next.expiry = language === "ar" ? "تاريخ الانتهاء مطلوب" : "Expiry is required";
+    if (!form.code.trim()) next.code = language === "ar" ? "الرمز مطلوب" : "Code required";
+    if (!form.value.trim()) next.value = language === "ar" ? "القيمة مطلوبة" : "Value required";
     setErrors(next);
     if (Object.keys(next).length) return;
 
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 350));
-    const discount =
-      form.type === "Percentage" ? `${form.discount.trim()}%` : `${form.discount.trim()} SAR`;
-    const maxUses = form.maxUses ? Number(form.maxUses) : null;
-    const payload: Coupon = {
-      code: form.code.trim().toUpperCase(),
-      discount,
-      type: form.type,
-      uses: editing?.uses ?? 0,
-      maxUses: Number.isNaN(maxUses as number) ? null : maxUses,
-      expiry: form.expiry,
-      status: form.status,
-    };
-
-    if (editing) {
-      setCoupons((prev) => prev.map((c) => (c.code === editing.code ? payload : c)));
-      toast(language === "ar" ? "✔ تم تحديث الكوبون" : "✔ Coupon updated", "success");
-    } else if (coupons.some((c) => c.code === payload.code)) {
-      toast(language === "ar" ? "✖ رمز الكوبون مستخدم مسبقاً" : "✖ Coupon code already exists", "danger");
+    try {
+      const body = {
+        code: form.code.trim().toUpperCase(),
+        type: form.type,
+        value: Number(form.value),
+        max_uses: form.maxUses ? Number(form.maxUses) : null,
+        expires_at: form.expiry || null,
+        is_active: form.isActive,
+      };
+      if (editing) {
+        await updateCoupon(token, editing.id, body);
+        toast(language === "ar" ? "✔ تم تحديث الكوبون" : "✔ Coupon updated", "success");
+      } else {
+        await createCoupon(token, body);
+        toast(language === "ar" ? "✔ تم إنشاء الكوبون" : "✔ Coupon created", "success");
+      }
+      setModalOpen(false);
+      await load();
+    } catch (err) {
+      toast(err instanceof ApiRequestError ? err.message : "Save failed", "danger");
+    } finally {
       setSaving(false);
-      return;
-    } else {
-      setCoupons((prev) => [payload, ...prev]);
-      toast(language === "ar" ? "✔ تم إنشاء الكوبون" : "✔ Coupon created", "success");
     }
-    setSaving(false);
-    setModalOpen(false);
+  };
+
+  const confirmDelete = async () => {
+    if (!token || deleteId == null) return;
+    setDeleting(true);
+    try {
+      await deleteCoupon(token, deleteId);
+      toast(language === "ar" ? "✔ تم حذف الكوبون" : "✔ Coupon deleted", "success");
+      setDeleteId(null);
+      await load();
+    } catch (err) {
+      toast(err instanceof ApiRequestError ? err.message : "Delete failed", "danger");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
     <>
+      <div className="flex items-center justify-between mb-4 gap-3">
+        <div>
+          <h2 className="text-xl font-bold text-secondary">
+            {language === "ar" ? "كوبونات الخصم" : "Discount Coupons"}
+          </h2>
+          <p className="text-sm text-gray-500">
+            {language === "ar" ? "بيانات حقيقية من قاعدة البيانات" : "Live data from the database"}
+          </p>
+        </div>
+        <Button variant="ghost" size="sm" onClick={() => void load()} disabled={loading}>
+          <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+        </Button>
+      </div>
+
       <Table
         toolbar={
           <TableToolbar>
@@ -156,96 +193,128 @@ export default function AdminCoupons() {
           language === "ar" ? "إجراءات" : "Actions",
         ]}
       >
-        {filtered.map((coupon) => (
-          <TableRow key={coupon.code}>
-            <TableCell>
-              <span className="font-mono font-bold text-primary bg-primary/5 rounded-lg inline-block px-3 py-1">
-                {coupon.code}
-              </span>
-            </TableCell>
-            <TableCell className="font-bold text-secondary">{coupon.discount}</TableCell>
-            <TableCell className="text-gray-500">{coupon.type}</TableCell>
-            <TableCell className="text-gray-600">
-              {coupon.uses}
-              {coupon.maxUses ? ` / ${coupon.maxUses}` : ""}
-            </TableCell>
-            <TableCell className="text-gray-500">{coupon.expiry}</TableCell>
-            <TableCell>
-              <StatusBadge status={coupon.status} uppercase />
-            </TableCell>
-            <TableCell align="center">
-              <div className="flex items-center justify-center gap-3">
-                <button
-                  type="button"
-                  className="text-gray-400 hover:text-blue-500 active:scale-95 transition-all"
-                  title={language === "ar" ? "تعديل" : "Edit"}
-                  onClick={() => openEdit(coupon)}
-                >
-                  <Edit size={18} />
-                </button>
-                <button
-                  type="button"
-                  className="text-gray-400 hover:text-red-500 active:scale-95 transition-all"
-                  title={language === "ar" ? "حذف" : "Delete"}
-                  onClick={() => setDeleteCode(coupon.code)}
-                >
-                  <Trash2 size={18} />
-                </button>
-              </div>
+        {loading ? (
+          <TableRow>
+            <TableCell colSpan={7} className="text-center text-gray-400 py-10">
+              {language === "ar" ? "جاري التحميل..." : "Loading..."}
             </TableCell>
           </TableRow>
-        ))}
+        ) : coupons.length === 0 ? (
+          <TableRow>
+            <TableCell colSpan={7} className="text-center text-gray-400 py-10">
+              {language === "ar" ? "لا توجد كوبونات" : "No coupons yet"}
+            </TableCell>
+          </TableRow>
+        ) : (
+          coupons.map((coupon) => (
+            <TableRow key={coupon.id}>
+              <TableCell>
+                <span className="font-mono font-bold text-primary bg-primary/5 rounded-lg inline-block px-3 py-1">
+                  {coupon.code}
+                </span>
+              </TableCell>
+              <TableCell className="font-bold text-secondary">
+                {coupon.type === "percentage" ? `${coupon.value}%` : `${coupon.value} SAR`}
+              </TableCell>
+              <TableCell className="text-gray-500">
+                {coupon.type === "percentage"
+                  ? language === "ar"
+                    ? "نسبة"
+                    : "Percentage"
+                  : language === "ar"
+                    ? "ثابت"
+                    : "Fixed"}
+              </TableCell>
+              <TableCell className="text-gray-600">
+                {coupon.uses}
+                {coupon.max_uses ? ` / ${coupon.max_uses}` : ""}
+              </TableCell>
+              <TableCell className="text-gray-500">{coupon.expires_at || "—"}</TableCell>
+              <TableCell>
+                <StatusBadge status={coupon.status} uppercase />
+              </TableCell>
+              <TableCell align="center">
+                <div className="flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => openEdit(coupon)}
+                    className="p-2 rounded-lg text-gray-500 hover:text-primary hover:bg-primary/5"
+                  >
+                    <Edit size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteId(coupon.id)}
+                    className="p-2 rounded-lg text-gray-500 hover:text-red-500 hover:bg-red-50"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))
+        )}
       </Table>
 
       <Modal
         open={modalOpen}
-        onClose={() => (!saving ? setModalOpen(false) : undefined)}
+        onClose={() => setModalOpen(false)}
         title={
           editing
             ? language === "ar"
-              ? "تعديل الكوبون"
-              : "Edit Coupon"
+              ? "تعديل كوبون"
+              : "Edit coupon"
             : language === "ar"
-              ? "إضافة كوبون"
-              : "Add Coupon"
+              ? "كوبون جديد"
+              : "New coupon"
         }
       >
-        <form onSubmit={saveCoupon} className="flex flex-col gap-4">
+        <form onSubmit={(e) => void saveCoupon(e)} className="flex flex-col gap-4">
           <FormField label={language === "ar" ? "الرمز" : "Code"} error={errors.code}>
             <Input
               value={form.code}
-              onChange={(e) => setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))}
-              disabled={Boolean(editing)}
+              onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))}
+              className="uppercase"
             />
           </FormField>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <FormField label={language === "ar" ? "النوع" : "Type"}>
               <Select
                 value={form.type}
-                onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    type: e.target.value as "percentage" | "fixed",
+                  }))
+                }
               >
-                <option value="Percentage">Percentage</option>
-                <option value="Fixed">Fixed</option>
+                <option value="percentage">
+                  {language === "ar" ? "نسبة مئوية" : "Percentage"}
+                </option>
+                <option value="fixed">{language === "ar" ? "مبلغ ثابت" : "Fixed"}</option>
               </Select>
             </FormField>
-            <FormField label={language === "ar" ? "الخصم" : "Discount"} error={errors.discount}>
+            <FormField label={language === "ar" ? "القيمة" : "Value"} error={errors.value}>
               <Input
-                value={form.discount}
-                onChange={(e) => setForm((f) => ({ ...f, discount: e.target.value }))}
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.value}
+                onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))}
               />
             </FormField>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <FormField label={language === "ar" ? "الحد الأقصى للاستخدام" : "Max Uses"}>
+          <div className="grid grid-cols-2 gap-3">
+            <FormField label={language === "ar" ? "أقصى استخدامات" : "Max uses"}>
               <Input
                 type="number"
-                min={0}
+                min="1"
                 value={form.maxUses}
                 onChange={(e) => setForm((f) => ({ ...f, maxUses: e.target.value }))}
                 placeholder={language === "ar" ? "بدون حد" : "Unlimited"}
               />
             </FormField>
-            <FormField label={language === "ar" ? "تاريخ الانتهاء" : "Expiry"} error={errors.expiry}>
+            <FormField label={language === "ar" ? "تاريخ الانتهاء" : "Expiry"}>
               <Input
                 type="date"
                 value={form.expiry}
@@ -253,26 +322,20 @@ export default function AdminCoupons() {
               />
             </FormField>
           </div>
-          <FormField label={language === "ar" ? "الحالة" : "Status"}>
-            <Select
-              value={form.status}
-              onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-            >
-              <option value="active">Active</option>
-              <option value="expired">Expired</option>
-            </Select>
-          </FormField>
-          <div className="flex justify-end gap-3 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={saving}
-              onClick={() => setModalOpen(false)}
-            >
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <input
+              type="checkbox"
+              checked={form.isActive}
+              onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))}
+              className="accent-primary"
+            />
+            {language === "ar" ? "نشط" : "Active"}
+          </label>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="ghost" onClick={() => setModalOpen(false)}>
               {language === "ar" ? "إلغاء" : "Cancel"}
             </Button>
-            <Button type="submit" variant="secondary" size="sm" loading={saving}>
+            <Button type="submit" variant="secondary" loading={saving}>
               {language === "ar" ? "حفظ" : "Save"}
             </Button>
           </div>
@@ -280,24 +343,17 @@ export default function AdminCoupons() {
       </Modal>
 
       <ConfirmDialog
-        open={deleteCode != null}
-        onClose={() => setDeleteCode(null)}
+        open={deleteId != null}
+        onClose={() => setDeleteId(null)}
         loading={deleting}
         title={language === "ar" ? "حذف الكوبون؟" : "Delete coupon?"}
         description={
           language === "ar"
-            ? "لن يتمكن العملاء من استخدام هذا الكوبون بعد الحذف."
-            : "Customers will no longer be able to use this coupon."
+            ? "سيتم حذف الكوبون نهائياً من قاعدة البيانات."
+            : "This coupon will be permanently deleted."
         }
         confirmLabel={language === "ar" ? "حذف" : "Delete"}
-        onConfirm={async () => {
-          setDeleting(true);
-          await new Promise((r) => setTimeout(r, 300));
-          setCoupons((prev) => prev.filter((c) => c.code !== deleteCode));
-          setDeleting(false);
-          setDeleteCode(null);
-          toast(language === "ar" ? "✔ تم حذف الكوبون" : "✔ Coupon deleted", "success");
-        }}
+        onConfirm={() => void confirmDelete()}
       />
     </>
   );

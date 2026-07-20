@@ -99,13 +99,16 @@ export function TableCell({
   children,
   className,
   align = "start",
+  colSpan,
 }: {
   children?: React.ReactNode;
   className?: string;
   align?: "start" | "center" | "end";
+  colSpan?: number;
 }) {
   return (
     <td
+      colSpan={colSpan}
       className={cn(
         "py-4 px-6",
         align === "center" && "text-center",

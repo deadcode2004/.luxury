@@ -22,6 +22,7 @@ import { useWishlist } from "@/contexts/WishlistContext";
 import { useAuth } from "@/contexts/AuthContext";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import CurrencySwitcher from "@/components/common/CurrencySwitcher";
+import AnnouncementBar from "@/components/common/AnnouncementBar";
 
 const HeaderSearchPanel = lazy(() => import("@/components/common/HeaderSearchPanel"));
 
@@ -130,13 +131,15 @@ export default function Header() {
 
   return (
     <>
-      <header
-        className={`fixed top-0 w-full z-40 transition-all duration-300 ${
-          isTransparent
-            ? "bg-transparent py-5"
-            : "bg-background/95 backdrop-blur-md shadow-soft py-3 border-b border-surface"
-        }`}
-      >
+      <div className="fixed top-0 w-full z-40">
+        <AnnouncementBar />
+        <header
+          className={`w-full transition-all duration-300 ${
+            isTransparent
+              ? "bg-transparent py-5"
+              : "bg-background/95 backdrop-blur-md shadow-soft py-3 border-b border-surface"
+          }`}
+        >
         <div className="container mx-auto px-4 md:px-8 flex justify-between items-center">
           <button
             type="button"
@@ -282,6 +285,7 @@ export default function Header() {
           </div>
         </div>
       </header>
+      </div>
 
       <div
         className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300 lg:hidden ${

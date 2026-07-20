@@ -4,14 +4,18 @@ use App\Http\Controllers\Api\V1\Account\ProfileController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Cart\CartController;
 use App\Http\Controllers\Api\V1\Catalog\CategoryController;
+use App\Http\Controllers\Api\V1\Catalog\CmsController as PublicCmsController;
 use App\Http\Controllers\Api\V1\Catalog\ProductController;
 use App\Http\Controllers\Api\V1\Checkout\CheckoutController;
 use App\Http\Controllers\Api\V1\Orders\OrderController;
+use App\Http\Controllers\Api\V1\Owner\CategoryController as OwnerCategoryController;
+use App\Http\Controllers\Api\V1\Owner\CmsController as OwnerCmsController;
 use App\Http\Controllers\Api\V1\Owner\CouponController;
 use App\Http\Controllers\Api\V1\Owner\CustomerController;
 use App\Http\Controllers\Api\V1\Owner\DashboardController;
 use App\Http\Controllers\Api\V1\Owner\InventoryController;
 use App\Http\Controllers\Api\V1\Owner\OrderController as OwnerOrderController;
+use App\Http\Controllers\Api\V1\Owner\UploadController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -29,6 +33,7 @@ Route::prefix('v1')->group(function () {
     Route::get('products', [ProductController::class, 'index']);
     Route::get('products/{product}', [ProductController::class, 'show']);
     Route::get('reviews', [ProductController::class, 'reviews']);
+    Route::get('cms', [PublicCmsController::class, 'show']);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('cart', [CartController::class, 'show']);
@@ -48,17 +53,33 @@ Route::prefix('v1')->group(function () {
 
         Route::prefix('owner')->middleware('owner')->group(function () {
             Route::get('dashboard', DashboardController::class);
+
             Route::get('inventory', [InventoryController::class, 'index']);
             Route::post('inventory', [InventoryController::class, 'store']);
             Route::put('inventory/{product}', [InventoryController::class, 'update']);
             Route::delete('inventory/{product}', [InventoryController::class, 'destroy']);
+
+            Route::get('categories', [OwnerCategoryController::class, 'index']);
+            Route::post('categories', [OwnerCategoryController::class, 'store']);
+            Route::post('categories/resolve', [OwnerCategoryController::class, 'resolve']);
+            Route::put('categories/{category}', [OwnerCategoryController::class, 'update']);
+            Route::delete('categories/{category}', [OwnerCategoryController::class, 'destroy']);
+
             Route::get('orders', [OwnerOrderController::class, 'index']);
             Route::get('orders/{order}', [OwnerOrderController::class, 'show']);
             Route::patch('orders/{order}/status', [OwnerOrderController::class, 'updateStatus']);
+
             Route::get('customers', [CustomerController::class, 'index']);
+
             Route::get('coupons', [CouponController::class, 'index']);
             Route::post('coupons', [CouponController::class, 'store']);
+            Route::put('coupons/{coupon}', [CouponController::class, 'update']);
             Route::delete('coupons/{coupon}', [CouponController::class, 'destroy']);
+
+            Route::get('cms', [OwnerCmsController::class, 'show']);
+            Route::put('cms', [OwnerCmsController::class, 'update']);
+
+            Route::post('uploads', [UploadController::class, 'store']);
         });
     });
 });

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Owner;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Owner\StoreCouponRequest;
+use App\Http\Requests\Owner\UpdateCouponRequest;
 use App\Http\Resources\CouponResource;
 use App\Models\Coupon;
 use App\Services\Owner\CouponService;
@@ -29,6 +30,13 @@ class CouponController extends Controller
         $coupon = $this->coupons->create($request->validated());
 
         return ApiResponse::created(CouponResource::make($coupon));
+    }
+
+    public function update(UpdateCouponRequest $request, Coupon $coupon): JsonResponse
+    {
+        $coupon = $this->coupons->update($coupon, $request->validated());
+
+        return ApiResponse::success(CouponResource::make($coupon), 'Coupon updated');
     }
 
     public function destroy(Request $request, Coupon $coupon): JsonResponse
