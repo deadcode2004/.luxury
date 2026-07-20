@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\Cart\CartController;
 use App\Http\Controllers\Api\V1\Catalog\CategoryController;
 use App\Http\Controllers\Api\V1\Catalog\CmsController as PublicCmsController;
 use App\Http\Controllers\Api\V1\Catalog\ProductController;
+use App\Http\Controllers\Api\V1\Catalog\ReviewController;
 use App\Http\Controllers\Api\V1\Checkout\CheckoutController;
 use App\Http\Controllers\Api\V1\Orders\OrderController;
 use App\Http\Controllers\Api\V1\Owner\CategoryController as OwnerCategoryController;
@@ -39,10 +40,13 @@ Route::prefix('v1')->group(function () {
     Route::get('categories', [CategoryController::class, 'index']);
     Route::get('products', [ProductController::class, 'index']);
     Route::get('products/{product}', [ProductController::class, 'show']);
-    Route::get('reviews', [ProductController::class, 'reviews']);
+    Route::get('products/{product}/reviews', [ReviewController::class, 'forProduct']);
+    Route::get('reviews', [ReviewController::class, 'index']);
     Route::get('cms', [PublicCmsController::class, 'show']);
 
     Route::middleware('auth:sanctum')->group(function () {
+        Route::post('reviews', [ReviewController::class, 'store'])->middleware('throttle:20,1');
+
         Route::get('cart', [CartController::class, 'show']);
         Route::post('cart/items', [CartController::class, 'store']);
         Route::patch('cart/items/{productId}', [CartController::class, 'update']);

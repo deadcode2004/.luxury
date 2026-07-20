@@ -39,8 +39,8 @@ export const products: Product[] = [
     brand: { ar: "بارادايس إيسنس", en: "Paradise Essence" },
     price: 1250,
     image: "/images/products/paradisecare-home02.jpg",
-    rating: 4.9,
-    reviews: 128,
+    rating: 0,
+    reviews: 0,
     stock: 45,
     isNew: true,
     isFeatured: true,
@@ -67,8 +67,8 @@ export const products: Product[] = [
     price: 850,
     oldPrice: 1000,
     image: "/images/products/paradisecare-home03.jpg",
-    rating: 4.8,
-    reviews: 95,
+    rating: 0,
+    reviews: 0,
     stock: 12,
     isBestSeller: true, isFeatured: true, isOffer: true, category: "c2",
     description: {
@@ -90,8 +90,8 @@ export const products: Product[] = [
     brand: { ar: "أورا رويال", en: "Aura Royale" },
     price: 450,
     image: "/images/products/paradisecare-shop-hyaluronic-with-gold-and-silver-01-300x300.jpg",
-    rating: 4.7,
-    reviews: 210,
+    rating: 0,
+    reviews: 0,
     stock: 0,
     isFeatured: true,
     category: "c2",
@@ -114,8 +114,8 @@ export const products: Product[] = [
     brand: { ar: "جلو آند كو", en: "Glow & Co" },
     price: 320,
     image: "/images/products/paradisecare-shop-biomagneti-01-300x300.jpeg",
-    rating: 4.9,
-    reviews: 340,
+    rating: 0,
+    reviews: 0,
     stock: 80,
     isFeatured: true, category: "c3",
     description: {
@@ -133,23 +133,10 @@ export const products: Product[] = [
   }
 ];
 
-export const reviews = [
-  {
-    id: "r1",
-    author: { ar: "سارة محمد", en: "Sarah M." },
-    rating: 5,
-    comment: { ar: "منتجات رائعة جداً وتغليف فاخر يليق بالمستوى. سرعة في التوصيل وتجربة ممتازة عموماً.", en: "Amazing products and luxury packaging. Fast delivery and overall excellent experience." }
-  },
-  {
-    id: "r2",
-    author: { ar: "نورة العبدالله", en: "Noura A." },
-    rating: 5,
-    comment: { ar: "السيروم غير بشرتي بالكامل! أنصح به بشدة لكل من تبحث عن النضارة الحقيقية.", en: "The serum completely transformed my skin! Highly recommend it to anyone looking for real glow." }
-  },
-  {
-    id: "r3",
-    author: { ar: "ريم الخالد", en: "Reem K." },
-    rating: 4,
-    comment: { ar: "العطور ثباتها عالي وريحتها مميزة جداً، لا تشبه أي عطر آخر في السوق.", en: "Perfumes have high longevity and very unique scents, unlike anything else in the market." }
-  }
-];
+/** @deprecated Site reviews are loaded from the API; kept empty for legacy imports. */
+export const reviews: Array<{
+  id: string;
+  author: { ar: string; en: string };
+  rating: number;
+  comment: { ar: string; en: string };
+}> = [];

@@ -60,8 +60,8 @@ class CatalogSeeder extends Seeder
                 'old_price' => null,
                 'image' => '/images/products/paradisecare-home02.jpg',
                 'stock' => 45,
-                'rating' => 4.9,
-                'reviews_count' => 128,
+                'rating' => 0,
+                'reviews_count' => 0,
                 'is_new' => true,
                 'is_featured' => true,
                 'is_best_seller' => true,
@@ -88,8 +88,8 @@ class CatalogSeeder extends Seeder
                 'old_price' => 1000,
                 'image' => '/images/products/paradisecare-home03.jpg',
                 'stock' => 12,
-                'rating' => 4.8,
-                'reviews_count' => 95,
+                'rating' => 0,
+                'reviews_count' => 0,
                 'is_new' => false,
                 'is_featured' => true,
                 'is_best_seller' => true,
@@ -116,8 +116,8 @@ class CatalogSeeder extends Seeder
                 'old_price' => null,
                 'image' => '/images/products/paradisecare-shop-hyaluronic-with-gold-and-silver-01-300x300.jpg',
                 'stock' => 0,
-                'rating' => 4.7,
-                'reviews_count' => 210,
+                'rating' => 0,
+                'reviews_count' => 0,
                 'is_new' => false,
                 'is_featured' => true,
                 'is_best_seller' => false,
@@ -143,8 +143,8 @@ class CatalogSeeder extends Seeder
                 'old_price' => null,
                 'image' => '/images/products/paradisecare-shop-biomagneti-01-300x300.jpeg',
                 'stock' => 80,
-                'rating' => 4.9,
-                'reviews_count' => 340,
+                'rating' => 0,
+                'reviews_count' => 0,
                 'is_new' => false,
                 'is_featured' => true,
                 'is_best_seller' => false,
@@ -177,41 +177,7 @@ class CatalogSeeder extends Seeder
             );
         }
 
-        $reviews = [
-            [
-                'code' => 'r1',
-                'author' => ['ar' => 'سارة محمد', 'en' => 'Sarah M.'],
-                'rating' => 5,
-                'comment' => [
-                    'ar' => 'منتجات رائعة جداً وتغليف فاخر يليق بالمستوى. سرعة في التوصيل وتجربة ممتازة عموماً.',
-                    'en' => 'Amazing products and luxury packaging. Fast delivery and overall excellent experience.',
-                ],
-            ],
-            [
-                'code' => 'r2',
-                'author' => ['ar' => 'نورة العبدالله', 'en' => 'Noura A.'],
-                'rating' => 5,
-                'comment' => [
-                    'ar' => 'السيروم غير بشرتي بالكامل! أنصح به بشدة لكل من تبحث عن النضارة الحقيقية.',
-                    'en' => 'The serum completely transformed my skin! Highly recommend it to anyone looking for real glow.',
-                ],
-            ],
-            [
-                'code' => 'r3',
-                'author' => ['ar' => 'ريم الخالد', 'en' => 'Reem K.'],
-                'rating' => 4,
-                'comment' => [
-                    'ar' => 'العطور ثباتها عالي وريحتها مميزة جداً، لا تشبه أي عطر آخر في السوق.',
-                    'en' => 'Perfumes have high longevity and very unique scents, unlike anything else in the market.',
-                ],
-            ],
-        ];
-
-        foreach ($reviews as $review) {
-            Review::query()->updateOrCreate(
-                ['code' => $review['code']],
-                $review + ['is_published' => true]
-            );
-        }
+        // Product reviews start empty — visitors submit real reviews from the storefront.
+        Review::query()->whereIn('code', ['r1', 'r2', 'r3'])->delete();
     }
 }

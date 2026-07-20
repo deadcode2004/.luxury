@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import ProductGallery from "@/components/product/ProductGallery";
 import ProductInfo from "@/components/product/ProductInfo";
 import ProductTabs from "@/components/product/ProductTabs";
+import ProductReviews from "@/components/product/ProductReviews";
 import ProductGrid from "@/components/home/ProductGrid";
 import type { Product } from "@/data/mock";
 import { fetchPublicProduct } from "@/lib/products/catalog";
@@ -17,6 +18,14 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const reloadProduct = () =>
+    fetchPublicProduct(resolvedParams.id)
+      .then((res) => {
+        setProduct(res?.product ?? null);
+        setRelatedProducts(res?.related ?? []);
+      })
+      .catch(() => undefined);
 
   useEffect(() => {
     let cancelled = false;
@@ -42,12 +51,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   }, [resolvedParams.id]);
 
   useRealtimeDomains(["products"], () => {
-    void fetchPublicProduct(resolvedParams.id)
-      .then((res) => {
-        setProduct(res?.product ?? null);
-        setRelatedProducts(res?.related ?? []);
-      })
-      .catch(() => undefined);
+    void reloadProduct();
   });
 
   if (loading) {
@@ -84,6 +88,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
         <div className="mb-24">
           <ProductTabs product={product} />
+        </div>
+
+        <div className="mb-24">
+          <ProductReviews productId={product.id} onStatsChange={() => void reloadProduct()} />
         </div>
 
         {relatedProducts.length > 0 && (
