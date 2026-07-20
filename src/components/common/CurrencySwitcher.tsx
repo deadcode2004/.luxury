@@ -72,23 +72,30 @@ export default function CurrencySwitcher({
         )}
       >
         <span className="inline-flex items-center gap-2 min-w-0">
-          <span
-            className={cn(
-              "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold",
-              isDrawer || !inverted
-                ? "bg-primary/10 text-primary"
-                : "bg-background/20 text-background"
-            )}
-          >
-            {current.symbol}
-          </span>
+          {isDrawer ? (
+            <span
+              className={cn(
+                "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold",
+                !inverted ? "bg-primary/10 text-primary" : "bg-background/20 text-background"
+              )}
+            >
+              {current.symbol}
+            </span>
+          ) : (
+            <span
+              className="inline-flex h-6 w-6 shrink-0 items-center justify-center text-lg leading-none select-none"
+              aria-hidden
+            >
+              {current.flag}
+            </span>
+          )}
           <span className="flex flex-col items-start leading-tight min-w-0">
             <span className="text-xs font-bold tracking-wide">{current.code}</span>
-            {!isDrawer ? null : (
+            {isDrawer ? (
               <span className="text-[11px] text-secondary/55 truncate max-w-[10rem]">
                 {current.name[language]}
               </span>
-            )}
+            ) : null}
           </span>
         </span>
         <ChevronDown
@@ -133,11 +140,12 @@ export default function CurrencySwitcher({
                 >
                   <span
                     className={cn(
-                      "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold",
-                      active ? "bg-primary text-background" : "bg-surface text-secondary/70"
+                      "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-base leading-none",
+                      active ? "bg-primary/10 ring-1 ring-primary/20" : "bg-surface"
                     )}
+                    aria-hidden
                   >
-                    {option.symbol}
+                    {option.flag}
                   </span>
                   <span className="flex-1 min-w-0">
                     <span className="block text-sm font-bold">{option.code}</span>
