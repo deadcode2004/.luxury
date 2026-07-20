@@ -1,7 +1,15 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { Alexandria } from "next/font/google";
 import "./globals.css";
-import { LanguageProvider } from "@/contexts/LanguageContext";
+import AppProviders from "@/components/providers/AppProviders";
+import { buildMetadata, PAGE_SEO } from "@/lib/seo/meta";
+import {
+  LANGUAGE_COOKIE,
+  languageDir,
+  readLanguageCookie,
+  type AppLanguage,
+} from "@/lib/i18n/language";
 
 const alexandria = Alexandria({
   variable: "--font-alexandria",
@@ -11,24 +19,29 @@ const alexandria = Alexandria({
 });
 
 export const metadata: Metadata = {
+  ...buildMetadata(PAGE_SEO.home, "ar"),
   title: {
     template: "%s | PARADISE",
-    default: "PARADISE",
+    default: PAGE_SEO.home.title.ar,
   },
-  description: "أرقى المنتجات لأصحاب الذوق الرفيع",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || "https://luxury-khaki-eight.vercel.app"
+  ),
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const language: AppLanguage = readLanguageCookie(cookieStore.get(LANGUAGE_COOKIE)?.value) ?? "ar";
+  const dir = languageDir(language);
+
   return (
-    <html lang="ar" dir="rtl" className={`${alexandria.variable} antialiased h-full`}>
+    <html lang={language} dir={dir} className={`${alexandria.variable} antialiased h-full`}>
       <body className="min-h-full flex flex-col bg-background text-foreground" suppressHydrationWarning>
-        <LanguageProvider>
-          {children}
-        </LanguageProvider>
+        <AppProviders initialLanguage={language}>{children}</AppProviders>
       </body>
     </html>
   );

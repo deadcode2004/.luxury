@@ -48,6 +48,9 @@ export default function ProductGallery({ images }: ProductGalleryProps) {
                 src={img}
                 alt={`Thumbnail ${index + 1}`}
                 fill
+                sizes="96px"
+                quality={75}
+                loading="lazy"
                 className="object-cover"
               />
             </button>
@@ -68,6 +71,8 @@ export default function ProductGallery({ images }: ProductGalleryProps) {
           alt="Product Main Image"
           width={1000}
           height={1000}
+          sizes="(max-width: 768px) 100vw, 50vw"
+          quality={85}
           className="w-full h-auto object-contain"
           priority
         />

@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PARADISE — Luxury E-Commerce
 
-## Getting Started
+Next.js storefront + Laravel 12 API.
 
-First, run the development server:
+## Environment parity (Local = Vercel)
+
+Both environments must use the **same bundler** and the **same API path**:
+
+| Concern | Value |
+|---------|-------|
+| Bundler | Webpack (`next dev --webpack` / `next build --webpack`) |
+| Browser API base | `/api/v1` (same-origin) |
+| Laravel proxy | `API_PROXY_ORIGIN` (Next rewrite) |
+
+See full audit: [`docs/ENVIRONMENT_PARITY_REPORT.md`](./docs/ENVIRONMENT_PARITY_REPORT.md)
+
+### Frontend setup
 
 ```bash
+cp .env.example .env.local
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Backend setup
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+cd backend
+cp .env.example .env
+composer install
+php artisan key:generate
+php artisan migrate --seed
+php artisan storage:link
+php artisan serve --host=127.0.0.1 --port=8000
+```
 
-## Learn More
+Seeded accounts:
 
-To learn more about Next.js, take a look at the following resources:
+| Role  | Email               | Password |
+|-------|---------------------|----------|
+| Owner | owner@paradise.test | password |
+| User  | ahmed@example.com   | password |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Production checklist (Vercel)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Set env vars:
+   - `NEXT_PUBLIC_API_URL=/api/v1`
+   - `API_PROXY_ORIGIN=https://YOUR-LARAVEL-HOST`
+2. Ensure Production deploys the intended Git branch (not a stale `main`).
+3. On Laravel host set `FRONTEND_URL`, `CORS_ALLOWED_ORIGINS`, `SANCTUM_STATEFUL_DOMAINS`.
+4. Verify with: `npm run build && npm run start` locally — must match Vercel visuals.
 
-## Deploy on Vercel
+### Scripts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run dev     # webpack dev server
+npm run build   # webpack production build (same as Vercel)
+npm run start   # serve production build
+npm run lint
+```
