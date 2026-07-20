@@ -12,6 +12,7 @@ export interface Product {
   isNew?: boolean;
   isFeatured?: boolean;
   isBestSeller?: boolean;
+  isOffer?: boolean;
   category: string;
   description?: { ar: string; en: string };
   ingredients?: { ar: string[]; en: string[] };
@@ -44,6 +45,7 @@ export const products: Product[] = [
     isNew: true,
     isFeatured: true,
     isBestSeller: true,
+    isOffer: true,
     category: "c1",
     description: {
       ar: "عطر شرقي فاخر يجمع بين الأصالة والعصرية. مزيج ساحر من العود والزعفران مع نفحات رقيقة من الورد الدمشقي، مصمم خصيصاً لأصحاب الذوق الرفيع ليترك بصمة لا تُنسى في كل مكان.",
@@ -68,7 +70,7 @@ export const products: Product[] = [
     rating: 4.8,
     reviews: 95,
     stock: 12,
-    isBestSeller: true, isFeatured: true, category: "c2",
+    isBestSeller: true, isFeatured: true, isOffer: true, category: "c2",
     description: {
       ar: "سيروم مغذي غني برقائق الذهب عيار 24 قيراط وحمض الهيالورونيك. يعمل على تجديد خلايا البشرة، تقليل الخطوط الدقيقة، وإعطاء إشراقة شبابية فورية.",
       en: "A nourishing serum enriched with 24K gold flakes and Hyaluronic Acid. It works to renew skin cells, reduce fine lines, and provide an instant youthful glow."

@@ -65,6 +65,7 @@ class CatalogSeeder extends Seeder
                 'is_new' => true,
                 'is_featured' => true,
                 'is_best_seller' => true,
+                'is_offer' => true,
                 'description' => [
                     'ar' => 'عطر شرقي فاخر يجمع بين الأصالة والعصرية. مزيج ساحر من العود والزعفران مع نفحات رقيقة من الورد الدمشقي، مصمم خصيصاً لأصحاب الذوق الرفيع ليترك بصمة لا تُنسى في كل مكان.',
                     'en' => 'A luxurious oriental perfume that combines authenticity and modernity. An enchanting blend of oud and saffron with delicate notes of Damask rose, designed specially for those with refined taste to leave an unforgettable impression everywhere.',
@@ -92,6 +93,7 @@ class CatalogSeeder extends Seeder
                 'is_new' => false,
                 'is_featured' => true,
                 'is_best_seller' => true,
+                'is_offer' => true,
                 'description' => [
                     'ar' => 'سيروم مغذي غني برقائق الذهب عيار 24 قيراط وحمض الهيالورونيك. يعمل على تجديد خلايا البشرة، تقليل الخطوط الدقيقة، وإعطاء إشراقة شبابية فورية.',
                     'en' => 'A nourishing serum enriched with 24K gold flakes and Hyaluronic Acid. It works to renew skin cells, reduce fine lines, and provide an instant youthful glow.',

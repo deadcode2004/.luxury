@@ -45,6 +45,18 @@ class ProductService
                 $query->where('is_best_seller', true);
             }
 
+            if (! empty($filters['new']) || ! empty($filters['is_new'])) {
+                $query->where('is_new', true);
+            }
+
+            if (! empty($filters['offers']) || ! empty($filters['is_offer'])) {
+                $query->where('is_offer', true);
+            }
+
+            if (! empty($filters['discounts']) || ! empty($filters['on_sale'])) {
+                $query->whereNotNull('old_price')->whereColumn('old_price', '>', 'price');
+            }
+
             $sort = $filters['sort'] ?? 'featured';
             match ($sort) {
                 'price-asc' => $query->orderBy('price'),

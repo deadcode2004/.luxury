@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Sparkles, Sparkle, RotateCcw } from "lucide-react";
+import { Sparkles, Sparkle, RotateCcw, Tag, Percent } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import PriceRangeSlider from "@/components/shop/PriceRangeSlider";
 import { cn } from "@/lib/cn";
@@ -9,6 +9,8 @@ import { cn } from "@/lib/cn";
 export type ShopFilterState = {
   featured: boolean;
   newest: boolean;
+  offers: boolean;
+  discounts: boolean;
   priceRange: [number, number];
 };
 
@@ -82,12 +84,16 @@ export default function ShopFiltersSidebar({
     onChange({
       featured: false,
       newest: false,
+      offers: false,
+      discounts: false,
       priceRange: [bounds.min, bounds.max],
     });
 
   const isDirty =
     value.featured ||
     value.newest ||
+    value.offers ||
+    value.discounts ||
     value.priceRange[0] !== bounds.min ||
     value.priceRange[1] !== bounds.max;
 
@@ -154,7 +160,39 @@ export default function ShopFiltersSidebar({
 
         <section>
           <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-secondary/45 mb-3">
-            3 · {language === "ar" ? "السعر" : "Price"}
+            3 · {language === "ar" ? "العروض" : "Offers"}
+          </h3>
+          <FilterToggle
+            active={value.offers}
+            title={language === "ar" ? "قسم العروض" : "Offers collection"}
+            description={
+              language === "ar"
+                ? "المنتجات المضافة ضمن العروض"
+                : "Products marked as part of offers"
+            }
+            icon={<Tag size={16} />}
+            onClick={() => onChange({ ...value, offers: !value.offers })}
+          />
+        </section>
+
+        <section>
+          <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-secondary/45 mb-3">
+            4 · {language === "ar" ? "الخصومات" : "Discounts"}
+          </h3>
+          <FilterToggle
+            active={value.discounts}
+            title={language === "ar" ? "منتجات مخفّضة" : "Discounted products"}
+            description={
+              language === "ar" ? "المنتجات التي عليها خصم فقط" : "Only products with a discount"
+            }
+            icon={<Percent size={16} />}
+            onClick={() => onChange({ ...value, discounts: !value.discounts })}
+          />
+        </section>
+
+        <section>
+          <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-secondary/45 mb-3">
+            5 · {language === "ar" ? "السعر" : "Price"}
           </h3>
           <div className="rounded-2xl border border-surface bg-background/60 px-4 py-4">
             <PriceRangeSlider

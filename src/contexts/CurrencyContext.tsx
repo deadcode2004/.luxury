@@ -9,8 +9,13 @@ import React, {
   useState,
 } from "react";
 import { readStorage, writeStorage } from "@/lib/storage";
-
-export type CurrencyCode = "EGP" | "SAR" | "USD";
+import {
+  CURRENCY_MANUAL_KEY,
+  CURRENCY_STORAGE_KEY,
+  isCurrencyCode,
+  writeCurrencyCookie,
+  type CurrencyCode,
+} from "@/lib/currency/cookie";
 
 type CurrencyContextValue = {
   currency: CurrencyCode;
@@ -23,15 +28,9 @@ type CurrencyContextValue = {
   rates: Record<CurrencyCode, number>;
 };
 
-const STORAGE_KEY = "paradise_currency";
-const MANUAL_KEY = "paradise_currency_manual";
-
 /**
  * Product catalog prices are stored in EGP (single source of truth).
  * Rates are multipliers: display = amountEgp * RATES[currency].
- *
- * Derived from prior SAR-based ratios (1 SAR ≈ 13.3 EGP, 1 SAR ≈ 0.2667 USD)
- * so relative SAR/USD values stay consistent after the base switch.
  */
 export const EGP_RATES: Record<CurrencyCode, number> = {
   EGP: 1,
@@ -107,15 +106,41 @@ function currencyFromCountry(country?: string | null): CurrencyCode {
 
 const CurrencyContext = createContext<CurrencyContextValue | null>(null);
 
-export function CurrencyProvider({ children }: { children: React.ReactNode }) {
-  const [currency, setCurrencyState] = useState<CurrencyCode>("EGP");
-  const [ready, setReady] = useState(false);
+export function CurrencyProvider({
+  children,
+  initialCurrency = null,
+}: {
+  children: React.ReactNode;
+  /** From SSR cookie — avoids EGP→geo flash on return visits. */
+  initialCurrency?: CurrencyCode | null;
+}) {
+  const [currency, setCurrencyState] = useState<CurrencyCode>(initialCurrency ?? "EGP");
+  // Ready immediately when SSR already knows the currency.
+  const [ready, setReady] = useState(() => initialCurrency != null);
 
   useEffect(() => {
-    const manual = readStorage<boolean>(MANUAL_KEY, false);
-    const saved = readStorage<CurrencyCode | null>(STORAGE_KEY, null);
-    if (manual && saved && (saved === "EGP" || saved === "SAR" || saved === "USD")) {
+    const manual = readStorage<boolean>(CURRENCY_MANUAL_KEY, false);
+    const saved = readStorage<CurrencyCode | null>(CURRENCY_STORAGE_KEY, null);
+
+    if (manual && isCurrencyCode(saved)) {
       setCurrencyState(saved);
+      writeCurrencyCookie(saved);
+      setReady(true);
+      return;
+    }
+
+    // Prefer SSR cookie / already-saved geo currency for instant correct paint.
+    if (isCurrencyCode(initialCurrency)) {
+      writeStorage(CURRENCY_STORAGE_KEY, initialCurrency);
+      writeCurrencyCookie(initialCurrency);
+      setReady(true);
+      // Still refresh geo in background only if not manually chosen — skip to avoid flicker.
+      return;
+    }
+
+    if (isCurrencyCode(saved)) {
+      setCurrencyState(saved);
+      writeCurrencyCookie(saved);
       setReady(true);
       return;
     }
@@ -139,13 +164,14 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
         if (!cancelled) {
           const detected = currencyFromCountry(country);
           setCurrencyState(detected);
-          writeStorage(STORAGE_KEY, detected);
+          writeStorage(CURRENCY_STORAGE_KEY, detected);
+          writeCurrencyCookie(detected);
         }
       } catch {
         if (!cancelled) {
-          setCurrencyState(
-            saved && ["EGP", "SAR", "USD"].includes(saved) ? (saved as CurrencyCode) : "EGP"
-          );
+          const fallback = isCurrencyCode(saved) ? saved : "EGP";
+          setCurrencyState(fallback);
+          writeCurrencyCookie(fallback);
         }
       } finally {
         if (!cancelled) setReady(true);
@@ -155,12 +181,14 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialCurrency]);
 
   const setCurrency = useCallback((code: CurrencyCode) => {
     setCurrencyState(code);
-    writeStorage(STORAGE_KEY, code);
-    writeStorage(MANUAL_KEY, true);
+    writeStorage(CURRENCY_STORAGE_KEY, code);
+    writeStorage(CURRENCY_MANUAL_KEY, true);
+    writeCurrencyCookie(code);
+    setReady(true);
   }, []);
 
   const convertFromEgp = useCallback(
@@ -188,3 +216,5 @@ export function useCurrency() {
   if (!ctx) throw new Error("useCurrency must be used within CurrencyProvider");
   return ctx;
 }
+
+export type { CurrencyCode };

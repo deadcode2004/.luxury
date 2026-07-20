@@ -31,6 +31,7 @@ class ProductResource extends JsonResource
             'is_new' => $this->is_new,
             'is_featured' => $this->is_featured,
             'is_best_seller' => $this->is_best_seller,
+            'is_offer' => (bool) ($this->is_offer ?? false),
             'is_active' => $this->is_active,
         ];
     }

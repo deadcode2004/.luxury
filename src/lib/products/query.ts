@@ -9,6 +9,10 @@ export type ProductQueryOptions = {
   featuredOnly?: boolean;
   /** Only new arrivals when true. */
   newestOnly?: boolean;
+  /** Only products marked as offers. */
+  offersOnly?: boolean;
+  /** Only products with a discount (oldPrice > price). */
+  discountsOnly?: boolean;
   priceMin?: number | null;
   priceMax?: number | null;
   /** Free-text search across AR/EN name, brand, description. */
@@ -45,6 +49,8 @@ export function filterAndSortProducts(
     sortBy = "featured",
     featuredOnly = false,
     newestOnly = false,
+    offersOnly = false,
+    discountsOnly = false,
     priceMin = null,
     priceMax = null,
     search = null,
@@ -67,6 +73,16 @@ export function filterAndSortProducts(
 
   if (newestOnly) {
     result = result.filter((p) => Boolean(p.isNew));
+  }
+
+  if (offersOnly) {
+    result = result.filter((p) => Boolean(p.isOffer));
+  }
+
+  if (discountsOnly) {
+    result = result.filter(
+      (p) => p.oldPrice != null && Number(p.oldPrice) > Number(p.price)
+    );
   }
 
   if (priceMin != null) {

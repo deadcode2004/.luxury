@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, lazy, Suspense } from "react";
+import React, { useState, useEffect, useLayoutEffect, lazy, Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -89,6 +89,11 @@ export default function Header() {
   const hoverColorClass = isTransparent ? "hover:text-gray-300" : "hover:text-primary";
   const logoDotColorClass = isTransparent ? "text-background" : "text-primary";
 
+  // Sync scroll before paint so mid-page reloads don't flash a transparent header.
+  useLayoutEffect(() => {
+    setIsScrolled(window.scrollY > 20);
+  }, []);
+
   useEffect(() => {
     let ticking = false;
     const handleScroll = () => {
@@ -134,11 +139,12 @@ export default function Header() {
       <div className="fixed top-0 w-full z-40">
         <AnnouncementBar />
         <header
-          className={`w-full transition-all duration-300 ${
+          className={`w-full ${
             isTransparent
               ? "bg-transparent py-5"
               : "bg-background/95 backdrop-blur-md shadow-soft py-3 border-b border-surface"
           }`}
+          style={{ transition: "background-color 200ms ease, padding 200ms ease, box-shadow 200ms ease" }}
         >
         <div className="container mx-auto px-4 md:px-8 flex justify-between items-center">
           <button

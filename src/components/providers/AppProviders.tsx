@@ -9,18 +9,21 @@ import { WishlistProvider } from "@/contexts/WishlistContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import DocumentMeta from "@/components/seo/DocumentMeta";
 import type { AppLanguage } from "@/lib/i18n/language";
+import type { CurrencyCode } from "@/lib/currency/cookie";
 
 export default function AppProviders({
   children,
   initialLanguage = "ar",
+  initialCurrency = null,
 }: {
   children: React.ReactNode;
   initialLanguage?: AppLanguage;
+  initialCurrency?: CurrencyCode | null;
 }) {
   return (
     <LanguageProvider initialLanguage={initialLanguage}>
       <ToastProvider>
-        <CurrencyProvider>
+        <CurrencyProvider initialCurrency={initialCurrency}>
           <AuthProvider>
             <CartProvider>
               <WishlistProvider>

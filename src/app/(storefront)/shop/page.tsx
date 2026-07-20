@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useMemo, useState, useEffect, useDeferredValue } from "react";
-import { useSearchParams } from "next/navigation";
+import React, { useMemo, useState, useEffect, useDeferredValue, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import ProductCard from "@/components/common/ProductCard";
 import { products } from "@/data/mock";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -17,19 +17,51 @@ import Button from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
 import PageHeader from "@/components/layout/PageHeader";
 
+function filtersFromParam(filter: string | null): Partial<ShopFilterState> {
+  switch (filter) {
+    case "new":
+      return { newest: true };
+    case "offers":
+      return { offers: true };
+    case "discounts":
+      return { discounts: true };
+    case "featured":
+      return { featured: true };
+    default:
+      return {};
+  }
+}
+
 function ShopContent() {
   const { language } = useLanguage();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("q") ?? "";
+  const filterParam = searchParams.get("filter");
   const deferredSearch = useDeferredValue(searchQuery);
 
   const bounds = useMemo(() => getProductPriceBounds(products), []);
   const [filtersOpen, setFiltersOpen] = useState(true);
-  const [filters, setFilters] = useState<ShopFilterState>({
+  const [filters, setFilters] = useState<ShopFilterState>(() => ({
     featured: false,
     newest: false,
+    offers: false,
+    discounts: false,
     priceRange: [bounds.min, bounds.max],
-  });
+    ...filtersFromParam(filterParam),
+  }));
+
+  // Sync hero CTA / deep-link ?filter= into sidebar state.
+  useEffect(() => {
+    const fromUrl = filtersFromParam(filterParam);
+    setFilters((prev) => ({
+      ...prev,
+      featured: Boolean(fromUrl.featured),
+      newest: Boolean(fromUrl.newest),
+      offers: Boolean(fromUrl.offers),
+      discounts: Boolean(fromUrl.discounts),
+    }));
+  }, [filterParam]);
 
   // Keep sidebar open on large screens; collapse by default on small.
   useEffect(() => {
@@ -40,11 +72,36 @@ function ShopContent() {
     return () => mq.removeEventListener("change", sync);
   }, []);
 
+  const pushFilterUrl = useCallback(
+    (next: ShopFilterState) => {
+      const params = new URLSearchParams(searchParams.toString());
+      let filter: string | null = null;
+      if (next.offers) filter = "offers";
+      else if (next.discounts) filter = "discounts";
+      else if (next.newest) filter = "new";
+      else if (next.featured) filter = "featured";
+
+      if (filter) params.set("filter", filter);
+      else params.delete("filter");
+
+      const qs = params.toString();
+      router.replace(qs ? `/shop?${qs}` : "/shop", { scroll: false });
+    },
+    [router, searchParams]
+  );
+
+  const onFiltersChange = (next: ShopFilterState) => {
+    setFilters(next);
+    pushFilterUrl(next);
+  };
+
   const filteredProducts = useMemo(
     () =>
       filterAndSortProducts(products, {
         featuredOnly: filters.featured,
         newestOnly: filters.newest,
+        offersOnly: filters.offers,
+        discountsOnly: filters.discounts,
         priceMin: filters.priceRange[0],
         priceMax: filters.priceRange[1],
         search: deferredSearch || null,
@@ -53,12 +110,17 @@ function ShopContent() {
     [filters, deferredSearch]
   );
 
-  const clearAll = () =>
-    setFilters({
+  const clearAll = () => {
+    const next: ShopFilterState = {
       featured: false,
       newest: false,
+      offers: false,
+      discounts: false,
       priceRange: [bounds.min, bounds.max],
-    });
+    };
+    setFilters(next);
+    pushFilterUrl(next);
+  };
 
   return (
     <main className="flex-grow pt-28 md:pt-32 pb-20 md:pb-24 bg-background min-h-screen">
@@ -71,8 +133,8 @@ function ShopContent() {
                 ? `نتائج البحث عن “${deferredSearch}”`
                 : `Search results for “${deferredSearch}”`
               : language === "ar"
-                ? "صفِّ التشكيلة حسب المميز والأحدث والسعر"
-                : "Refine by featured, newest, and price"
+                ? "صفِّ التشكيلة حسب المميز والأحدث والعروض والخصومات"
+                : "Refine by featured, newest, offers, and discounts"
           }
           centered
           showAccent
@@ -102,7 +164,7 @@ function ShopContent() {
               <ShopFiltersSidebar
                 bounds={bounds}
                 value={filters}
-                onChange={setFilters}
+                onChange={onFiltersChange}
                 resultCount={filteredProducts.length}
               />
             </div>

@@ -49,6 +49,7 @@ type FormState = {
   isNew: boolean;
   isFeatured: boolean;
   isBestSeller: boolean;
+  isOffer: boolean;
   isActive: boolean;
 };
 
@@ -68,6 +69,7 @@ const emptyForm = (): FormState => ({
   isNew: true,
   isFeatured: false,
   isBestSeller: false,
+  isOffer: false,
   isActive: true,
 });
 
@@ -167,6 +169,7 @@ export default function AdminInventory() {
       isNew: product.is_new,
       isFeatured: product.is_featured,
       isBestSeller: product.is_best_seller,
+      isOffer: Boolean(product.is_offer),
       isActive: product.is_active,
     });
     setErrors({});
@@ -233,6 +236,7 @@ export default function AdminInventory() {
         is_new: form.isNew,
         is_featured: form.isFeatured,
         is_best_seller: form.isBestSeller,
+        is_offer: form.isOffer,
         is_active: form.isActive,
       };
 
@@ -644,12 +648,13 @@ export default function AdminInventory() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-3">
             {(
               [
                 ["isNew", language === "ar" ? "جديد" : "New"],
                 ["isFeatured", language === "ar" ? "مميز" : "Featured"],
                 ["isBestSeller", language === "ar" ? "الأكثر مبيعاً" : "Best seller"],
+                ["isOffer", language === "ar" ? "عرض" : "Offer"],
                 ["isActive", language === "ar" ? "نشط" : "Active"],
               ] as const
             ).map(([key, label]) => (

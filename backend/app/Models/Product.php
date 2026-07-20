@@ -12,7 +12,8 @@ class Product extends Model
     /**
      * Catalog prices (`price`, `old_price`) are always stored in EGP.
      * Storefront conversion to SAR/USD is display-time only.
-     */    protected $fillable = [
+     */
+    protected $fillable = [
         'code',
         'category_id',
         'name',
@@ -30,6 +31,7 @@ class Product extends Model
         'is_new',
         'is_featured',
         'is_best_seller',
+        'is_offer',
         'is_active',
     ];
 
@@ -50,6 +52,7 @@ class Product extends Model
             'is_new' => 'boolean',
             'is_featured' => 'boolean',
             'is_best_seller' => 'boolean',
+            'is_offer' => 'boolean',
             'is_active' => 'boolean',
         ];
     }

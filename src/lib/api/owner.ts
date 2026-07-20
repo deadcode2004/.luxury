@@ -1,4 +1,5 @@
 import { apiRequest, ApiRequestError } from "@/lib/api/client";
+import type { HeroSlide } from "@/lib/cms/hero";
 
 export type LocaleText = { ar: string; en: string };
 export type LocaleList = { ar: string[]; en: string[] };
@@ -32,6 +33,7 @@ export type ApiProduct = {
   is_new: boolean;
   is_featured: boolean;
   is_best_seller: boolean;
+  is_offer?: boolean;
   is_active: boolean;
 };
 
@@ -74,12 +76,7 @@ export type DashboardData = {
 
 export type CmsStorefront = {
   hero: {
-    heading: LocaleText;
-    subtitle: LocaleText;
-    description: LocaleText;
-    cta: LocaleText;
-    link: string;
-    image: string;
+    slides: HeroSlide[];
   };
   announcement: {
     enabled: boolean;

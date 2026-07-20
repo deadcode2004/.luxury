@@ -4,11 +4,12 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/Toast";
-import { Image as ImageIcon, Megaphone, Save, Layout } from "lucide-react";
+import { Megaphone, Save, Layout, Plus, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
+import Select from "@/components/ui/Select";
 import FormField from "@/components/ui/FormField";
 import ImageUploadField from "@/components/admin/ImageUploadField";
 import {
@@ -17,15 +18,16 @@ import {
   updateOwnerCms,
   type CmsStorefront,
 } from "@/lib/api/owner";
+import {
+  emptyHeroSlide,
+  HERO_ACTION_OPTIONS,
+  type HeroCtaActionType,
+  type HeroSlide,
+} from "@/lib/cms/hero";
 
 const emptyCms = (): CmsStorefront => ({
   hero: {
-    heading: { ar: "", en: "" },
-    subtitle: { ar: "", en: "" },
-    description: { ar: "", en: "" },
-    cta: { ar: "", en: "" },
-    link: "/shop",
-    image: "",
+    slides: [emptyHeroSlide({ action: { type: "shop_all" } })],
   },
   announcement: {
     enabled: true,
@@ -33,22 +35,37 @@ const emptyCms = (): CmsStorefront => ({
   },
 });
 
+function clearSlideEn(slide: HeroSlide): HeroSlide {
+  return {
+    ...slide,
+    heading: { ...slide.heading, en: "" },
+    subtitle: { ...slide.subtitle, en: "" },
+    description: { ...slide.description, en: "" },
+    cta: { ...slide.cta, en: "" },
+  };
+}
+
 export default function AdminCMS() {
   const { language } = useLanguage();
   const { token } = useAuth();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
-  // Start false so SSR HTML matches the first client paint.
   const [loading, setLoading] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState<CmsStorefront>(emptyCms);
+  const [activeSlide, setActiveSlide] = useState(0);
 
   const load = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     try {
-      setForm(await fetchOwnerCms(token));
+      const data = await fetchOwnerCms(token);
+      const slides = data.hero?.slides?.length
+        ? data.hero.slides
+        : emptyCms().hero.slides;
+      setForm({ ...data, hero: { slides } });
+      setActiveSlide(0);
     } catch (err) {
       toast(
         err instanceof ApiRequestError
@@ -68,12 +85,84 @@ export default function AdminCMS() {
     void load();
   }, [load]);
 
+  const updateSlide = (index: number, patch: Partial<HeroSlide>, clearEn = false) => {
+    setForm((f) => {
+      const slides = f.hero.slides.map((s, i) => {
+        if (i !== index) return s;
+        const next = { ...s, ...patch };
+        return clearEn ? clearSlideEn(next) : next;
+      });
+      return { ...f, hero: { slides } };
+    });
+  };
+
+  const updateSlideLocale = (
+    index: number,
+    field: "heading" | "subtitle" | "description" | "cta",
+    ar: string
+  ) => {
+    setForm((f) => {
+      const slides = f.hero.slides.map((s, i) => {
+        if (i !== index) return s;
+        return { ...s, [field]: { ar, en: "" } };
+      });
+      return { ...f, hero: { slides } };
+    });
+  };
+
+  const addSlide = () => {
+    setForm((f) => {
+      if (f.hero.slides.length >= 10) return f;
+      return {
+        ...f,
+        hero: { slides: [...f.hero.slides, emptyHeroSlide({ action: { type: "shop_all" } })] },
+      };
+    });
+    setActiveSlide((i) => {
+      const next = form.hero.slides.length;
+      return next >= 10 ? i : next;
+    });
+  };
+
+  const removeSlide = (index: number) => {
+    setForm((f) => {
+      if (f.hero.slides.length <= 1) return f;
+      const slides = f.hero.slides.filter((_, i) => i !== index);
+      return { ...f, hero: { slides } };
+    });
+    setActiveSlide((i) => Math.max(0, Math.min(i, form.hero.slides.length - 2)));
+  };
+
+  const moveSlide = (index: number, dir: -1 | 1) => {
+    setForm((f) => {
+      const target = index + dir;
+      if (target < 0 || target >= f.hero.slides.length) return f;
+      const slides = [...f.hero.slides];
+      const tmp = slides[index];
+      slides[index] = slides[target];
+      slides[target] = tmp;
+      return { ...f, hero: { slides } };
+    });
+    setActiveSlide((i) => i + dir);
+  };
+
   const save = async () => {
     if (!token) return;
     const next: Record<string, string> = {};
-    if (!form.hero.heading.ar.trim()) {
-      next.headingAr = language === "ar" ? "مطلوب" : "Required";
-    }
+    form.hero.slides.forEach((slide, i) => {
+      if (!slide.heading.ar.trim()) {
+        next[`slide-${i}-heading`] =
+          language === "ar" ? `عنوان الشريحة ${i + 1} مطلوب` : `Slide ${i + 1} heading required`;
+      }
+      if (!slide.image.trim()) {
+        next[`slide-${i}-image`] =
+          language === "ar" ? `صورة الشريحة ${i + 1} مطلوبة` : `Slide ${i + 1} image required`;
+      }
+      if (slide.action.type === "custom" && !slide.action.href?.trim()) {
+        next[`slide-${i}-href`] =
+          language === "ar" ? `رابط الشريحة ${i + 1} مطلوب` : `Slide ${i + 1} link required`;
+      }
+    });
     if (form.announcement.enabled && !form.announcement.text.ar.trim()) {
       next.announcementAr = language === "ar" ? "نص الإعلان مطلوب" : "Announcement required";
     }
@@ -88,8 +177,21 @@ export default function AdminCMS() {
 
     setSaving(true);
     try {
-      const saved = await updateOwnerCms(token, form);
-      setForm(saved);
+      const payload: CmsStorefront = {
+        ...form,
+        hero: {
+          slides: form.hero.slides.map((s) => clearSlideEn(s)),
+        },
+        announcement: {
+          ...form.announcement,
+          text: { ar: form.announcement.text.ar, en: "" },
+        },
+      };
+      const saved = await updateOwnerCms(token, payload);
+      setForm({
+        ...saved,
+        hero: { slides: saved.hero?.slides?.length ? saved.hero.slides : form.hero.slides },
+      });
       toast(language === "ar" ? "✔ تم حفظ محتوى المتجر" : "✔ Store content saved", "success");
     } catch (err) {
       toast(err instanceof ApiRequestError ? err.message : "Save failed", "danger");
@@ -106,6 +208,8 @@ export default function AdminCMS() {
     );
   }
 
+  const slide = form.hero.slides[activeSlide] ?? form.hero.slides[0];
+
   return (
     <div className="flex flex-col gap-8 max-w-5xl">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -115,8 +219,8 @@ export default function AdminCMS() {
           </h2>
           <p className="text-sm text-gray-500 mt-1">
             {language === "ar"
-              ? "البطل والشريط الإعلاني يظهران مباشرة في واجهة المتجر"
-              : "Hero and announcement bar appear live on the storefront"}
+              ? "شرائح البطل والشريط الإعلاني — عربي فقط مع ترجمة تلقائية"
+              : "Hero slides and announcement — Arabic only with auto-translation"}
           </p>
         </div>
         <Button variant="secondary" size="md" loading={saving} onClick={() => void save()}>
@@ -126,113 +230,186 @@ export default function AdminCMS() {
       </div>
 
       <section className="rounded-3xl border border-surface bg-white/70 overflow-hidden">
-        <div className="px-6 py-4 border-b border-surface/70 flex items-center gap-3 bg-background/60">
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Layout size={18} />
-          </span>
-          <div>
-            <h3 className="font-bold text-secondary">
-              {language === "ar" ? "قسم البطل (Hero)" : "Hero section"}
-            </h3>
-            <p className="text-xs text-gray-400">
-              {language === "ar" ? "العنوان والصورة والزر الرئيسي" : "Headline, image, and primary CTA"}
-            </p>
-          </div>
-        </div>
-
-        <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="flex flex-col gap-4">
-            <FormField
-              label={language === "ar" ? "العنوان (عربي)" : "Heading (Arabic)"}
-              error={errors.headingAr}
-            >
-              <Input
-                value={form.hero.heading.ar}
-                onChange={(e) =>
-                  setForm((f) => ({
-                    ...f,
-                    hero: { ...f.hero, heading: { ...f.hero.heading, ar: e.target.value } },
-                  }))
-                }
-              />
-            </FormField>
-            <FormField label={language === "ar" ? "العنوان (إنجليزي)" : "Heading (English)"}>
-              <Input
-                className="dir-ltr text-start"
-                value={form.hero.heading.en}
-                onChange={(e) =>
-                  setForm((f) => ({
-                    ...f,
-                    hero: { ...f.hero, heading: { ...f.hero.heading, en: e.target.value } },
-                  }))
-                }
-              />
-            </FormField>
-            <FormField label={language === "ar" ? "العنوان الفرعي (عربي)" : "Subtitle (Arabic)"}>
-              <Input
-                value={form.hero.subtitle.ar}
-                onChange={(e) =>
-                  setForm((f) => ({
-                    ...f,
-                    hero: { ...f.hero, subtitle: { ...f.hero.subtitle, ar: e.target.value } },
-                  }))
-                }
-              />
-            </FormField>
-            <FormField label={language === "ar" ? "الوصف (عربي)" : "Description (Arabic)"}>
-              <Textarea
-                rows={3}
-                value={form.hero.description.ar}
-                onChange={(e) =>
-                  setForm((f) => ({
-                    ...f,
-                    hero: {
-                      ...f.hero,
-                      description: { ...f.hero.description, ar: e.target.value },
-                    },
-                  }))
-                }
-              />
-            </FormField>
-            <div className="grid grid-cols-2 gap-3">
-              <FormField label={language === "ar" ? "نص الزر" : "CTA label"}>
-                <Input
-                  value={form.hero.cta.ar}
-                  onChange={(e) =>
-                    setForm((f) => ({
-                      ...f,
-                      hero: { ...f.hero, cta: { ...f.hero.cta, ar: e.target.value } },
-                    }))
-                  }
-                />
-              </FormField>
-              <FormField label={language === "ar" ? "رابط الزر" : "CTA link"}>
-                <Input
-                  value={form.hero.link}
-                  onChange={(e) =>
-                    setForm((f) => ({
-                      ...f,
-                      hero: { ...f.hero, link: e.target.value },
-                    }))
-                  }
-                />
-              </FormField>
+        <div className="px-6 py-4 border-b border-surface/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-background/60">
+          <div className="flex items-center gap-3">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Layout size={18} />
+            </span>
+            <div>
+              <h3 className="font-bold text-secondary">
+                {language === "ar" ? "قسم البطل (Hero)" : "Hero section"}
+              </h3>
+              <p className="text-xs text-gray-400">
+                {language === "ar"
+                  ? "حتى 10 شرائح — لكل صورة عنوان وزر وإجراء مستقل"
+                  : "Up to 10 slides — each with its own copy and CTA action"}
+              </p>
             </div>
           </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={addSlide}
+            disabled={form.hero.slides.length >= 10}
+          >
+            <Plus size={16} />
+            {language === "ar" ? "إضافة شريحة" : "Add slide"}
+          </Button>
+        </div>
 
-          <div>
-            <label className="block text-sm font-bold text-gray-600 mb-2 flex items-center gap-2">
-              <ImageIcon size={16} />
-              {language === "ar" ? "صورة الخلفية" : "Background image"}
-            </label>
-            <ImageUploadField
-              value={form.hero.image}
-              onChange={(url) =>
-                setForm((f) => ({ ...f, hero: { ...f.hero, image: url } }))
-              }
-              folder="cms"
-            />
+        <div className="p-4 sm:p-6 flex flex-col gap-5">
+          <div className="flex flex-wrap gap-2">
+            {form.hero.slides.map((s, i) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => setActiveSlide(i)}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${
+                  i === activeSlide
+                    ? "bg-primary text-background border-primary"
+                    : "bg-background border-surface text-secondary/70 hover:border-primary/40"
+                }`}
+              >
+                {language === "ar" ? `شريحة ${i + 1}` : `Slide ${i + 1}`}
+              </button>
+            ))}
           </div>
+
+          {slide ? (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+              <div className="lg:col-span-4 flex flex-col gap-3">
+                <FormField
+                  label={language === "ar" ? "صورة الشريحة" : "Slide image"}
+                  error={errors[`slide-${activeSlide}-image`]}
+                >
+                  <ImageUploadField
+                    value={slide.image}
+                    onChange={(url) => updateSlide(activeSlide, { image: url })}
+                    folder="cms"
+                    error={errors[`slide-${activeSlide}-image`]}
+                  />
+                </FormField>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={activeSlide === 0}
+                    onClick={() => moveSlide(activeSlide, -1)}
+                  >
+                    <ChevronUp size={16} />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={activeSlide >= form.hero.slides.length - 1}
+                    onClick={() => moveSlide(activeSlide, 1)}
+                  >
+                    <ChevronDown size={16} />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-500 ms-auto"
+                    disabled={form.hero.slides.length <= 1}
+                    onClick={() => removeSlide(activeSlide)}
+                  >
+                    <Trash2 size={16} />
+                    {language === "ar" ? "حذف" : "Delete"}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="lg:col-span-8 flex flex-col gap-4">
+                <p className="text-xs text-secondary/50">
+                  {language === "ar"
+                    ? "اكتب بالعربية فقط — الترجمة الإنجليزية تُحفظ تلقائياً عند الحفظ."
+                    : "Arabic only — English is auto-translated and saved on submit."}
+                </p>
+                <FormField
+                  label={language === "ar" ? "العنوان" : "Heading"}
+                  error={errors[`slide-${activeSlide}-heading`]}
+                >
+                  <Input
+                    value={slide.heading.ar}
+                    onChange={(e) => updateSlideLocale(activeSlide, "heading", e.target.value)}
+                  />
+                </FormField>
+                <FormField label={language === "ar" ? "العنوان الفرعي" : "Subtitle"}>
+                  <Input
+                    value={slide.subtitle.ar}
+                    onChange={(e) => updateSlideLocale(activeSlide, "subtitle", e.target.value)}
+                  />
+                </FormField>
+                <FormField label={language === "ar" ? "الوصف" : "Description"}>
+                  <Textarea
+                    rows={3}
+                    value={slide.description.ar}
+                    onChange={(e) => updateSlideLocale(activeSlide, "description", e.target.value)}
+                  />
+                </FormField>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <FormField label={language === "ar" ? "نص الزر" : "Button text"}>
+                    <Input
+                      value={slide.cta.ar}
+                      onChange={(e) => updateSlideLocale(activeSlide, "cta", e.target.value)}
+                    />
+                  </FormField>
+                  <FormField label={language === "ar" ? "إجراء الزر" : "Button action"}>
+                    <Select
+                      className="h-12"
+                      value={slide.action.type}
+                      onChange={(e) =>
+                        updateSlide(activeSlide, {
+                          action: {
+                            type: e.target.value as HeroCtaActionType,
+                            href: slide.action.href,
+                          },
+                        })
+                      }
+                    >
+                      {HERO_ACTION_OPTIONS.map((opt) => (
+                        <option key={opt.type} value={opt.type}>
+                          {opt.label[language]}
+                        </option>
+                      ))}
+                    </Select>
+                  </FormField>
+                </div>
+                {slide.action.type === "custom" ? (
+                  <FormField
+                    label={language === "ar" ? "الرابط المخصص" : "Custom link"}
+                    error={errors[`slide-${activeSlide}-href`]}
+                  >
+                    <Input
+                      className="dir-ltr text-start"
+                      placeholder="/shop or https://..."
+                      value={slide.action.href || ""}
+                      onChange={(e) =>
+                        updateSlide(activeSlide, {
+                          action: { type: "custom", href: e.target.value },
+                        })
+                      }
+                    />
+                  </FormField>
+                ) : (
+                  <p className="text-xs text-secondary/45">
+                    {
+                      HERO_ACTION_OPTIONS.find((o) => o.type === slide.action.type)?.description[
+                        language
+                      ]
+                    }
+                  </p>
+                )}
+                {slide.heading.en ? (
+                  <p className="text-xs text-gray-400 dir-ltr text-start">EN: {slide.heading.en}</p>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
         </div>
       </section>
 
@@ -246,11 +423,11 @@ export default function AdminCMS() {
               <h3 className="font-bold text-secondary">
                 {language === "ar" ? "الشريط الإعلاني" : "Announcement bar"}
               </h3>
-            <p className="text-xs text-gray-400">
-              {language === "ar"
-                ? "عربي فقط — ترجمة وتحويل العملة تلقائياً للزائر"
-                : "Arabic only — auto-translated and currency-converted for visitors"}
-            </p>
+              <p className="text-xs text-gray-400">
+                {language === "ar"
+                  ? "عربي فقط — ترجمة وتحويل العملة تلقائياً للزائر"
+                  : "Arabic only — auto-translated and currency-converted for visitors"}
+              </p>
             </div>
           </div>
 
@@ -292,7 +469,7 @@ export default function AdminCMS() {
                   ...f,
                   announcement: {
                     ...f.announcement,
-                    text: { ...f.announcement.text, ar: e.target.value, en: "" },
+                    text: { ar: e.target.value, en: "" },
                   },
                 }))
               }
@@ -326,8 +503,8 @@ export default function AdminCMS() {
 
       <Card variant="panel" padding="md" className="text-sm text-gray-500 leading-relaxed">
         {language === "ar"
-          ? "احفظ التغييرات ثم افتح الصفحة الرئيسية للتأكد من ظهور الشريط الإعلاني وقسم البطل."
-          : "Save changes, then open the homepage to verify the announcement bar and hero section."}
+          ? "احفظ التغييرات ثم افتح الصفحة الرئيسية للتأكد من ظهور الشرائح والشريط الإعلاني."
+          : "Save changes, then open the homepage to verify hero slides and the announcement bar."}
       </Card>
     </div>
   );

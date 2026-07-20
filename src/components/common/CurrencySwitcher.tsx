@@ -22,12 +22,13 @@ export default function CurrencySwitcher({
   className,
   onSelect,
 }: CurrencySwitcherProps) {
-  const { currency, setCurrency } = useCurrency();
+  const { currency, setCurrency, ready } = useCurrency();
   const { language, dir } = useLanguage();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const listId = useId();
   const current = getCurrencyMeta(currency);
+  const isDrawer = variant === "drawer";
 
   useEffect(() => {
     if (!open) return;
@@ -51,7 +52,28 @@ export default function CurrencySwitcher({
     onSelect?.(code);
   };
 
-  const isDrawer = variant === "drawer";
+  // Avoid EGP→geo / wrong-flag flash on first paint for new visitors.
+  if (!ready) {
+    return (
+      <div
+        className={cn(
+          "inline-flex items-center gap-2 rounded-xl border animate-pulse",
+          isDrawer
+            ? "w-full justify-between bg-background border-surface px-4 py-3"
+            : inverted
+              ? "border-white/20 bg-white/10 px-3 py-2"
+              : "border-surface bg-background/70 px-3 py-2",
+          className
+        )}
+        aria-hidden
+      >
+        <span
+          className={cn("rounded-sm bg-current opacity-20", isDrawer ? "h-5 w-7" : "h-4 w-6")}
+        />
+        <span className="h-3 w-8 rounded bg-current opacity-20" />
+      </div>
+    );
+  }
 
   return (
     <div ref={rootRef} className={cn("relative", className)}>

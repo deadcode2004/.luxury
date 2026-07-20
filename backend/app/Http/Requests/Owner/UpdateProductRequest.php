@@ -44,6 +44,7 @@ class UpdateProductRequest extends FormRequest
             'is_new' => ['sometimes', 'boolean'],
             'is_featured' => ['sometimes', 'boolean'],
             'is_best_seller' => ['sometimes', 'boolean'],
+            'is_offer' => ['sometimes', 'boolean'],
             'is_active' => ['sometimes', 'boolean'],
         ];
     }

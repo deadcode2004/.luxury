@@ -7,6 +7,7 @@ use App\Services\CmsService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class CmsController extends Controller
 {
@@ -25,20 +26,28 @@ class CmsController extends Controller
 
         $validated = $request->validate([
             'hero' => ['sometimes', 'array'],
-            'hero.heading' => ['sometimes', 'array'],
-            'hero.heading.ar' => ['nullable', 'string', 'max:255'],
-            'hero.heading.en' => ['nullable', 'string', 'max:255'],
-            'hero.subtitle' => ['sometimes', 'array'],
-            'hero.subtitle.ar' => ['nullable', 'string', 'max:255'],
-            'hero.subtitle.en' => ['nullable', 'string', 'max:255'],
-            'hero.description' => ['sometimes', 'array'],
-            'hero.description.ar' => ['nullable', 'string'],
-            'hero.description.en' => ['nullable', 'string'],
-            'hero.cta' => ['sometimes', 'array'],
-            'hero.cta.ar' => ['nullable', 'string', 'max:100'],
-            'hero.cta.en' => ['nullable', 'string', 'max:100'],
-            'hero.link' => ['nullable', 'string', 'max:255'],
-            'hero.image' => ['nullable', 'string', 'max:500'],
+            'hero.slides' => ['sometimes', 'array', 'max:10'],
+            'hero.slides.*.id' => ['nullable', 'string', 'max:64'],
+            'hero.slides.*.image' => ['nullable', 'string', 'max:500'],
+            'hero.slides.*.heading' => ['sometimes', 'array'],
+            'hero.slides.*.heading.ar' => ['nullable', 'string', 'max:255'],
+            'hero.slides.*.heading.en' => ['nullable', 'string', 'max:255'],
+            'hero.slides.*.subtitle' => ['sometimes', 'array'],
+            'hero.slides.*.subtitle.ar' => ['nullable', 'string', 'max:255'],
+            'hero.slides.*.subtitle.en' => ['nullable', 'string', 'max:255'],
+            'hero.slides.*.description' => ['sometimes', 'array'],
+            'hero.slides.*.description.ar' => ['nullable', 'string'],
+            'hero.slides.*.description.en' => ['nullable', 'string'],
+            'hero.slides.*.cta' => ['sometimes', 'array'],
+            'hero.slides.*.cta.ar' => ['nullable', 'string', 'max:100'],
+            'hero.slides.*.cta.en' => ['nullable', 'string', 'max:100'],
+            'hero.slides.*.action' => ['sometimes', 'array'],
+            'hero.slides.*.action.type' => [
+                'nullable',
+                'string',
+                Rule::in(['shop_all', 'shop_new', 'shop_offers', 'shop_discounts', 'shop_featured', 'custom']),
+            ],
+            'hero.slides.*.action.href' => ['nullable', 'string', 'max:500'],
             'announcement' => ['sometimes', 'array'],
             'announcement.enabled' => ['sometimes', 'boolean'],
             'announcement.text' => ['sometimes', 'array'],
