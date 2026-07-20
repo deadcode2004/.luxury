@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { getAppBuildId } from "@/lib/build/id";
+import { CACHE_PRIVATE_NO_STORE } from "@/lib/build/cachePolicy";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
-/** Public build stamp so clients can detect a newer deploy and hard-reload. */
+/** Deploy stamp for open tabs — must never be cached. */
 export async function GET() {
   return NextResponse.json(
     {
@@ -13,9 +13,8 @@ export async function GET() {
     },
     {
       headers: {
-        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+        "Cache-Control": CACHE_PRIVATE_NO_STORE,
         Pragma: "no-cache",
-        Expires: "0",
       },
     }
   );

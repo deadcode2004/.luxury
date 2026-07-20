@@ -26,10 +26,6 @@ const alexandria = Alexandria({
   display: "swap",
 });
 
-/** Never serve a prerendered HTML shell that Chrome can keep after a deploy. */
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
 export const metadata: Metadata = {
   ...buildMetadata(PAGE_SEO.home, "ar"),
   title: {
@@ -45,11 +41,10 @@ export const metadata: Metadata = {
 const CURRENCY_BOOTSTRAP = `(function(){try{var m=localStorage.getItem(${JSON.stringify(CURRENCY_MANUAL_KEY)});var raw=localStorage.getItem(${JSON.stringify(CURRENCY_STORAGE_KEY)});if(!raw)return;var v=JSON.parse(raw);if(v!=="EGP"&&v!=="SAR"&&v!=="USD")return;var hasCookie=document.cookie.split(";").some(function(c){return c.trim().indexOf(${JSON.stringify(CURRENCY_COOKIE + "=")})===0});if(!hasCookie||m==="true"){document.cookie=${JSON.stringify(CURRENCY_COOKIE + "=")}+v+"; Path=/; Max-Age=31536000; SameSite=Lax";}}catch(e){}})();`;
 
 /**
- * Runs before React. Chrome often keeps an orphaned Service Worker after "clear cache"
- * unless "Hosted app data" is also cleared — Firefox typically never registered one.
- * Unregister + wipe Cache Storage, then reload once so the live document takes over.
+ * One-time legacy cleanup only when a Service Worker still controls the origin.
+ * Does not disable HTTP cache and does not run a reload loop in normal visits.
  */
-const CACHE_BOOTSTRAP = `(function(){try{var FLAG="paradise:sw-purged";if(!("serviceWorker" in navigator))return;navigator.serviceWorker.getRegistrations().then(function(regs){var controlled=regs.length>0||!!navigator.serviceWorker.controller;if(!controlled)return;return Promise.all(regs.map(function(r){return r.unregister();})).then(function(){if(!("caches" in window))return null;return caches.keys().then(function(keys){return Promise.all(keys.map(function(k){return caches.delete(k);}));});}).then(function(){try{if(!sessionStorage.getItem(FLAG)){sessionStorage.setItem(FLAG,"1");location.reload();}}catch(e){}});});}catch(e){}})();`;
+const SW_LEGACY_BOOTSTRAP = `(function(){try{var FLAG="paradise:sw-purged";if(!("serviceWorker" in navigator))return;navigator.serviceWorker.getRegistrations().then(function(regs){var controlled=regs.length>0||!!navigator.serviceWorker.controller;if(!controlled)return;return Promise.all(regs.map(function(r){return r.unregister();})).then(function(){if(!("caches" in window))return null;return caches.keys().then(function(keys){return Promise.all(keys.map(function(k){return caches.delete(k);}));});}).then(function(){try{if(!sessionStorage.getItem(FLAG)){sessionStorage.setItem(FLAG,"1");location.reload();}}catch(e){}});});}catch(e){}})();`;
 
 export default async function RootLayout({
   children,
@@ -68,9 +63,7 @@ export default async function RootLayout({
     <html lang={language} dir={dir} className={`${alexandria.variable} antialiased h-full`}>
       <head>
         <meta name="paradise-build-id" content={buildId} />
-        <meta httpEquiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
-        <meta httpEquiv="Pragma" content="no-cache" />
-        <script dangerouslySetInnerHTML={{ __html: CACHE_BOOTSTRAP }} />
+        <script dangerouslySetInnerHTML={{ __html: SW_LEGACY_BOOTSTRAP }} />
         <script dangerouslySetInnerHTML={{ __html: CURRENCY_BOOTSTRAP }} />
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground" suppressHydrationWarning>

@@ -1,5 +1,9 @@
 import { execSync } from "node:child_process";
 import type { NextConfig } from "next";
+import {
+  CACHE_HTML_REVALIDATE,
+  CACHE_PRIVATE_NO_STORE,
+} from "./src/lib/build/cachePolicy";
 
 /**
  * Shared Next config for Local + Vercel.
@@ -23,10 +27,7 @@ function resolveBuildId(): string {
   }
 }
 
-/**
- * Stable per git commit / Vercel deploy.
- * Surfaced to the client so Chrome can detect a newer shell and hard-reload.
- */
+/** Stable per git commit / Vercel deploy — used by ClientCacheGuard. */
 const buildId = resolveBuildId();
 
 const nextConfig: NextConfig = {
@@ -34,8 +35,7 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_BUILD_ID: buildId,
   },
   experimental: {
-    // Keep dynamic segments uncached. Next 16 requires static >= 30s; intentional
-    // Link prefetch is disabled in UI (`prefetch={false}`) to avoid stale shells.
+    // Dynamic segments refetch on navigation. Static floor is Next 16 minimum (30s).
     staleTimes: {
       dynamic: 0,
       static: 30,
@@ -69,30 +69,37 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // Mutable JSON — never reuse across users/deploys.
         source: "/api/:path*",
         headers: [
-          {
-            key: "Cache-Control",
-            value: "no-store, no-cache, must-revalidate, max-age=0",
-          },
+          { key: "Cache-Control", value: CACHE_PRIVATE_NO_STORE },
           { key: "Pragma", value: "no-cache" },
-          { key: "CDN-Cache-Control", value: "no-store" },
-          { key: "Vercel-CDN-Cache-Control", value: "no-store" },
         ],
       },
       {
-        // HTML / RSC / pages — never treat as a long-lived document cache.
-        // Leave `/_next/static/*` alone so Next can apply immutable hashed-asset caching
-        // (fresh HTML → new hashes → browsers fetch new JS automatically).
-        source: "/((?!_next/static|_next/image).*)",
+        // Personalized / sensitive surfaces.
+        source: "/admin/:path*",
+        headers: [{ key: "Cache-Control", value: CACHE_PRIVATE_NO_STORE }],
+      },
+      {
+        source: "/account/:path*",
+        headers: [{ key: "Cache-Control", value: CACHE_PRIVATE_NO_STORE }],
+      },
+      {
+        source: "/checkout/:path*",
+        headers: [{ key: "Cache-Control", value: CACHE_PRIVATE_NO_STORE }],
+      },
+      {
+        /**
+         * Storefront HTML/RSC: allow browser storage but always revalidate.
+         * Better than no-store (enables conditional 304s) while still picking up
+         * new deploys. `/_next/static` is intentionally excluded — Next serves
+         * content-hashed assets with immutable long-cache.
+         */
+        source: "/((?!_next/static|_next/image|api/).*)",
         headers: [
-          {
-            key: "Cache-Control",
-            value: "private, no-store, no-cache, must-revalidate, max-age=0",
-          },
-          { key: "Pragma", value: "no-cache" },
-          { key: "CDN-Cache-Control", value: "no-store" },
-          { key: "Vercel-CDN-Cache-Control", value: "no-store" },
+          { key: "Cache-Control", value: CACHE_HTML_REVALIDATE },
+          { key: "Vary", value: "Cookie" },
         ],
       },
     ];
