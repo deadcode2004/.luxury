@@ -1,5 +1,6 @@
 import { apiRequest, ApiRequestError } from "@/lib/api/client";
 import type { HeroSlide } from "@/lib/cms/hero";
+import type { CmsContact, CmsSocial } from "@/lib/cms/footer";
 
 export type LocaleText = { ar: string; en: string };
 export type LocaleList = { ar: string[]; en: string[] };
@@ -82,6 +83,8 @@ export type CmsStorefront = {
     enabled: boolean;
     text: LocaleText;
   };
+  social: CmsSocial;
+  contact: CmsContact;
 };
 
 export type Paginated<T> = {

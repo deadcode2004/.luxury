@@ -12,6 +12,7 @@ import Textarea from "@/components/ui/Textarea";
 import Select from "@/components/ui/Select";
 import FormField from "@/components/ui/FormField";
 import ImageUploadField from "@/components/admin/ImageUploadField";
+import AdminCmsSocialContactCard from "@/components/admin/AdminCmsSocialContactCard";
 import {
   ApiRequestError,
   fetchOwnerCms,
@@ -24,6 +25,7 @@ import {
   type HeroCtaActionType,
   type HeroSlide,
 } from "@/lib/cms/hero";
+import { emptyCmsContact, emptyCmsSocial } from "@/lib/cms/footer";
 
 const emptyCms = (): CmsStorefront => ({
   hero: {
@@ -33,6 +35,8 @@ const emptyCms = (): CmsStorefront => ({
     enabled: true,
     text: { ar: "", en: "" },
   },
+  social: emptyCmsSocial(),
+  contact: emptyCmsContact(),
 });
 
 function clearSlideEn(slide: HeroSlide): HeroSlide {
@@ -81,7 +85,47 @@ export default function AdminCMS() {
       const slides = data.hero?.slides?.length
         ? data.hero.slides
         : emptyCms().hero.slides;
-      setForm({ ...data, hero: { slides } });
+      setForm({
+        ...emptyCms(),
+        ...data,
+        hero: { slides },
+        social: { ...emptyCmsSocial(), ...(data.social ?? {}) },
+        contact: {
+          ...emptyCmsContact(),
+          ...(data.contact ?? {}),
+          address: {
+            ...emptyCmsContact().address,
+            ...(data.contact?.address ?? {}),
+            text: {
+              ar: data.contact?.address?.text?.ar ?? "",
+              en: data.contact?.address?.text?.en ?? "",
+            },
+          },
+          phones: {
+            enabled: Boolean(data.contact?.phones?.enabled),
+            numbers:
+              data.contact?.phones?.numbers?.length
+                ? data.contact.phones.numbers
+                : [""],
+          },
+          hours: {
+            ...emptyCmsContact().hours,
+            ...(data.contact?.hours ?? {}),
+            text: {
+              ar: data.contact?.hours?.text?.ar ?? "",
+              en: data.contact?.hours?.text?.en ?? "",
+            },
+          },
+          email: {
+            enabled: Boolean(data.contact?.email?.enabled),
+            value: data.contact?.email?.value ?? "",
+          },
+          map: {
+            enabled: Boolean(data.contact?.map?.enabled),
+            embedUrl: data.contact?.map?.embedUrl ?? "",
+          },
+        },
+      });
       setActiveSlide(0);
     } catch (err) {
       toast(
@@ -208,11 +252,64 @@ export default function AdminCMS() {
           ...form.announcement,
           text: { ar: form.announcement.text.ar, en: "" },
         },
+        contact: {
+          ...form.contact,
+          address: {
+            ...form.contact.address,
+            text: { ar: form.contact.address.text.ar, en: "" },
+          },
+          hours: {
+            ...form.contact.hours,
+            text: { ar: form.contact.hours.text.ar, en: "" },
+          },
+          phones: {
+            ...form.contact.phones,
+            numbers: form.contact.phones.numbers.map((n) => n.trim()).filter(Boolean).length
+              ? form.contact.phones.numbers.map((n) => n.trim()).filter(Boolean)
+              : [""],
+          },
+        },
       };
       const saved = await updateOwnerCms(token, payload);
       setForm({
+        ...emptyCms(),
         ...saved,
         hero: { slides: saved.hero?.slides?.length ? saved.hero.slides : form.hero.slides },
+        social: { ...emptyCmsSocial(), ...(saved.social ?? {}) },
+        contact: {
+          ...emptyCmsContact(),
+          ...(saved.contact ?? {}),
+          address: {
+            ...emptyCmsContact().address,
+            ...(saved.contact?.address ?? {}),
+            text: {
+              ar: saved.contact?.address?.text?.ar ?? "",
+              en: saved.contact?.address?.text?.en ?? "",
+            },
+          },
+          phones: {
+            enabled: Boolean(saved.contact?.phones?.enabled),
+            numbers: saved.contact?.phones?.numbers?.length
+              ? saved.contact.phones.numbers
+              : [""],
+          },
+          hours: {
+            ...emptyCmsContact().hours,
+            ...(saved.contact?.hours ?? {}),
+            text: {
+              ar: saved.contact?.hours?.text?.ar ?? "",
+              en: saved.contact?.hours?.text?.en ?? "",
+            },
+          },
+          email: {
+            enabled: Boolean(saved.contact?.email?.enabled),
+            value: saved.contact?.email?.value ?? "",
+          },
+          map: {
+            enabled: Boolean(saved.contact?.map?.enabled),
+            embedUrl: saved.contact?.map?.embedUrl ?? "",
+          },
+        },
       });
       toast(language === "ar" ? "✔ تم حفظ محتوى المتجر" : "✔ Store content saved", "success");
     } catch (err) {
@@ -556,10 +653,17 @@ export default function AdminCMS() {
         </div>
       </section>
 
+      <AdminCmsSocialContactCard
+        social={form.social}
+        contact={form.contact}
+        onSocialChange={(social) => setForm((f) => ({ ...f, social }))}
+        onContactChange={(contact) => setForm((f) => ({ ...f, contact }))}
+      />
+
       <Card variant="panel" padding="md" className="text-sm text-gray-500 leading-relaxed w-full min-w-0">
         {language === "ar"
-          ? "احفظ التغييرات ثم افتح الصفحة الرئيسية للتأكد من ظهور الشرائح والشريط الإعلاني."
-          : "Save changes, then open the homepage to verify hero slides and the announcement bar."}
+          ? "احفظ التغييرات ثم افتح الصفحة الرئيسية وصفحة التواصل للتأكد من ظهور الروابط والمعلومات."
+          : "Save changes, then open the homepage and contact page to verify links and details."}
       </Card>
     </div>
   );

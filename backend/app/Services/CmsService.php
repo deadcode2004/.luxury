@@ -79,6 +79,36 @@ class CmsService
                     'en' => 'Free shipping on orders over 500 EGP',
                 ],
             ],
+            'social' => [
+                'twitter' => ['enabled' => false, 'value' => ''],
+                'instagram' => ['enabled' => false, 'value' => ''],
+                'facebook' => ['enabled' => false, 'value' => ''],
+                'whatsapp' => ['enabled' => false, 'value' => ''],
+                'tiktok' => ['enabled' => false, 'value' => ''],
+                'linkedin' => ['enabled' => false, 'value' => ''],
+            ],
+            'contact' => [
+                'address' => [
+                    'enabled' => false,
+                    'text' => ['ar' => '', 'en' => ''],
+                ],
+                'phones' => [
+                    'enabled' => false,
+                    'numbers' => [''],
+                ],
+                'email' => [
+                    'enabled' => false,
+                    'value' => '',
+                ],
+                'hours' => [
+                    'enabled' => false,
+                    'text' => ['ar' => '', 'en' => ''],
+                ],
+                'map' => [
+                    'enabled' => false,
+                    'embedUrl' => '',
+                ],
+            ],
         ];
     }
 
@@ -126,9 +156,19 @@ class CmsService
             $merged = array_replace_recursive($previous, $payload);
         }
 
+        // Phone numbers should replace, not merge by index.
+        if (isset($payload['contact']['phones']['numbers']) && is_array($payload['contact']['phones']['numbers'])) {
+            data_set($merged, 'contact.phones.numbers', array_values($payload['contact']['phones']['numbers']));
+        }
+
+        if (isset($payload['social']) && is_array($payload['social'])) {
+            $merged['social'] = array_replace_recursive($previous['social'] ?? [], $payload['social']);
+        }
+
         $merged = $this->normalizeStorefront($merged);
         $merged = $this->translateAnnouncement($merged, $previous);
         $merged = $this->translateHeroSlides($merged, $previous);
+        $merged = $this->translateContactLocales($merged, $previous);
 
         CmsSetting::query()->updateOrCreate(
             ['key' => self::STOREFRONT_KEY],
@@ -190,7 +230,72 @@ class CmsService
 
         $data['hero'] = ['slides' => $normalized !== [] ? $normalized : $this->defaults()['hero']['slides']];
 
+        $defaults = $this->defaults();
+        $social = is_array($data['social'] ?? null) ? $data['social'] : [];
+        $normalizedSocial = [];
+        foreach (array_keys($defaults['social']) as $platform) {
+            $row = is_array($social[$platform] ?? null) ? $social[$platform] : [];
+            $normalizedSocial[$platform] = [
+                'enabled' => (bool) ($row['enabled'] ?? false),
+                'value' => trim((string) ($row['value'] ?? '')),
+            ];
+        }
+        $data['social'] = $normalizedSocial;
+
+        $contact = is_array($data['contact'] ?? null) ? $data['contact'] : [];
+        $phones = data_get($contact, 'phones.numbers', ['']);
+        if (! is_array($phones) || $phones === []) {
+            $phones = [''];
+        }
+        $phones = array_values(array_map(fn ($n) => trim((string) $n), $phones));
+        if ($phones === []) {
+            $phones = [''];
+        }
+
+        $data['contact'] = [
+            'address' => [
+                'enabled' => (bool) data_get($contact, 'address.enabled', false),
+                'text' => $this->localePair(data_get($contact, 'address.text', [])),
+            ],
+            'phones' => [
+                'enabled' => (bool) data_get($contact, 'phones.enabled', false),
+                'numbers' => $phones,
+            ],
+            'email' => [
+                'enabled' => (bool) data_get($contact, 'email.enabled', false),
+                'value' => trim((string) data_get($contact, 'email.value', '')),
+            ],
+            'hours' => [
+                'enabled' => (bool) data_get($contact, 'hours.enabled', false),
+                'text' => $this->localePair(data_get($contact, 'hours.text', [])),
+            ],
+            'map' => [
+                'enabled' => (bool) data_get($contact, 'map.enabled', false),
+                'embedUrl' => trim((string) data_get($contact, 'map.embedUrl', '')),
+            ],
+        ];
+
         return $data;
+    }
+
+    private function translateContactLocales(array $merged, array $previous): array
+    {
+        foreach (['address', 'hours'] as $field) {
+            $ar = trim((string) data_get($merged, "contact.{$field}.text.ar", ''));
+            $en = trim((string) data_get($merged, "contact.{$field}.text.en", ''));
+            $prevAr = trim((string) data_get($previous, "contact.{$field}.text.ar", ''));
+
+            if ($ar === '') {
+                $merged['contact'][$field]['text']['en'] = '';
+                continue;
+            }
+
+            if ($en === '' || ($prevAr !== '' && $ar !== $prevAr)) {
+                $merged['contact'][$field]['text']['en'] = $this->translator->translate($ar);
+            }
+        }
+
+        return $merged;
     }
 
     private function translateAnnouncement(array $merged, array $previous): array
