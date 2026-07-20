@@ -101,13 +101,13 @@ export default function CategoryCombobox({
       {error ? <p className="mt-1 text-xs text-red-500">{error}</p> : null}
 
       {open ? (
-        className={cn(
-          "absolute z-50 mt-2 w-full rounded-2xl border border-surface bg-background shadow-floating overflow-hidden",
-          // Keep menu above modal chrome when space allows
-          "max-h-[min(16rem,40vh)]"
-        )}
-      >
-        <ul id={listId} role="listbox" className="max-h-[min(16rem,40vh)] overflow-y-auto p-1.5">
+        <div
+          className={cn(
+            "absolute z-50 mt-2 w-full rounded-2xl border border-surface bg-background shadow-floating overflow-hidden",
+            "max-h-[min(16rem,40vh)]"
+          )}
+        >
+          <ul id={listId} role="listbox" className="max-h-[min(16rem,40vh)] overflow-y-auto p-1.5">
             {filtered.map((cat) => {
               const active = cat.id === selectedId;
               return (
