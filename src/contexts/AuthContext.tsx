@@ -11,8 +11,11 @@ import { useLanguage } from "@/contexts/LanguageContext";
 export type AuthUser = {
   id: number;
   name: string;
+  name_i18n?: { ar?: string; en?: string } | null;
   first_name?: string;
+  first_name_i18n?: { ar?: string; en?: string } | null;
   last_name?: string;
+  last_name_i18n?: { ar?: string; en?: string } | null;
   email: string;
   phone?: string | null;
   avatar?: string | null;

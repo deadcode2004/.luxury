@@ -10,7 +10,10 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthService
 {
-    public function __construct(private readonly RealtimeHub $realtime) {}
+    public function __construct(
+        private readonly RealtimeHub $realtime,
+        private readonly UserNameLocaleService $names,
+    ) {}
 
     /**
      * @param  array{name?: string, first_name: string, last_name: string, email: string, phone?: string|null, password: string}  $data
@@ -28,6 +31,8 @@ class AuthService
             'role' => UserRole::User,
             'is_active' => true,
         ]);
+
+        $user = $this->names->ensureLocales($user);
 
         $token = $user->createToken('api')->plainTextToken;
         $this->realtime->customersChanged('registered', ['id' => $user->id]);

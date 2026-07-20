@@ -4,6 +4,7 @@ namespace Tests\Feature\Api;
 
 use App\Enums\UserRole;
 use App\Models\User;
+use App\Services\Translation\ProductTranslationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\Sanctum;
@@ -15,6 +16,26 @@ class AccountSettingsTest extends TestCase
 
     public function test_owner_can_update_profile_and_password(): void
     {
+        $this->mock(ProductTranslationService::class, function ($mock) {
+            $mock->shouldReceive('bilingualFromText')
+                ->andReturnUsing(function (string $text, $previous = null) {
+                    if ($previous && (trim((string) data_get($previous, 'ar', '')) === $text
+                        || trim((string) data_get($previous, 'en', '')) === $text)) {
+                        return [
+                            'ar' => (string) data_get($previous, 'ar', $text),
+                            'en' => (string) data_get($previous, 'en', $text),
+                        ];
+                    }
+
+                    // Arabic names → English; Latin names → Arabic stub.
+                    if (preg_match('/\p{Arabic}/u', $text)) {
+                        return ['ar' => $text, 'en' => 'Translated '.$text];
+                    }
+
+                    return ['ar' => 'مترجم '.$text, 'en' => $text];
+                });
+        });
+
         $owner = User::factory()->create([
             'first_name' => 'Old',
             'last_name' => 'Name',
@@ -26,18 +47,21 @@ class AccountSettingsTest extends TestCase
         Sanctum::actingAs($owner);
 
         $this->putJson('/api/v1/account/profile', [
-            'first_name' => 'Paradise',
-            'last_name' => 'Owner',
+            'first_name' => 'أحمد',
+            'last_name' => 'علي',
             'email' => 'owner@paradise.test',
             'phone' => '201000000001',
         ])->assertOk()
-            ->assertJsonPath('data.first_name', 'Paradise')
+            ->assertJsonPath('data.first_name', 'أحمد')
+            ->assertJsonPath('data.first_name_i18n.ar', 'أحمد')
+            ->assertJsonPath('data.first_name_i18n.en', 'Translated أحمد')
+            ->assertJsonPath('data.last_name_i18n.en', 'Translated علي')
             ->assertJsonPath('data.phone', '201000000001');
 
         $this->assertDatabaseHas('users', [
             'id' => $owner->id,
-            'first_name' => 'Paradise',
-            'last_name' => 'Owner',
+            'first_name' => 'أحمد',
+            'last_name' => 'علي',
             'phone' => '201000000001',
         ]);
 

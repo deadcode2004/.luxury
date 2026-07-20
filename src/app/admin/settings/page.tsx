@@ -14,15 +14,22 @@ import SidebarNav from "@/components/layout/SidebarNav";
 import { ApiRequestError, apiRequest } from "@/lib/api/client";
 import type { AppLanguage } from "@/lib/i18n/language";
 import { useAutoFetch } from "@/hooks/useAutoFetch";
+import { LocaleInput } from "@/components/admin/LocaleField";
+import { pickLocale } from "@/lib/i18n/localeText";
 
 type Section = "personal" | "security" | "notifications" | "language";
+
+type LocaleName = { ar?: string; en?: string } | null | undefined;
 
 type AccountSettingsPayload = {
   user: {
     id: number;
     name: string;
+    name_i18n?: LocaleName;
     first_name?: string | null;
+    first_name_i18n?: LocaleName;
     last_name?: string | null;
+    last_name_i18n?: LocaleName;
     email: string;
     phone?: string | null;
     role: "owner" | "user";
@@ -55,8 +62,10 @@ export default function AdminSettings() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [timezoneLabel, setTimezoneLabel] = useState("UTC");
   const [form, setForm] = useState({
-    first_name: "",
-    last_name: "",
+    first_name_ar: "",
+    first_name_en: "",
+    last_name_ar: "",
+    last_name_en: "",
     email: "",
     phone: "",
     current_password: "",
@@ -70,10 +79,16 @@ export default function AdminSettings() {
   const applyUser = useCallback(
     (u: AccountSettingsPayload["user"] | null | undefined) => {
       if (!u) return;
+      const firstAr = u.first_name_i18n?.ar || u.first_name || "";
+      const firstEn = u.first_name_i18n?.en || "";
+      const lastAr = u.last_name_i18n?.ar || u.last_name || "";
+      const lastEn = u.last_name_i18n?.en || "";
       setForm((f) => ({
         ...f,
-        first_name: u.first_name || "",
-        last_name: u.last_name || "",
+        first_name_ar: firstAr,
+        first_name_en: firstEn,
+        last_name_ar: lastAr,
+        last_name_en: lastEn,
         email: u.email || "",
         phone: u.phone || "",
         notify_orders: u.notify_orders ?? true,
@@ -127,10 +142,10 @@ export default function AdminSettings() {
   const validate = () => {
     const next: Record<string, string> = {};
     if (section === "personal") {
-      if (!form.first_name.trim()) {
+      if (!form.first_name_ar.trim()) {
         next.first_name = language === "ar" ? "مطلوب" : "Required";
       }
-      if (!form.last_name.trim()) {
+      if (!form.last_name_ar.trim()) {
         next.last_name = language === "ar" ? "مطلوب" : "Required";
       }
       if (!form.email.includes("@")) {
@@ -167,8 +182,9 @@ export default function AdminSettings() {
     try {
       if (section === "personal") {
         const ok = await updateProfile({
-          first_name: form.first_name.trim(),
-          last_name: form.last_name.trim(),
+          // Arabic is the editable source (same pattern as CMS/products).
+          first_name: form.first_name_ar.trim(),
+          last_name: form.last_name_ar.trim(),
           email: form.email.trim(),
           phone: form.phone.trim() || undefined,
         });
@@ -222,8 +238,20 @@ export default function AdminSettings() {
     );
   };
 
+  const displayFirst =
+    pickLocale(
+      { ar: form.first_name_ar, en: form.first_name_en },
+      language,
+      form.first_name_ar || form.first_name_en
+    ) || "";
+  const displayLast =
+    pickLocale(
+      { ar: form.last_name_ar, en: form.last_name_en },
+      language,
+      form.last_name_ar || form.last_name_en
+    ) || "";
   const initials =
-    `${form.first_name.charAt(0)}${form.last_name.charAt(0)}`.trim().toUpperCase() ||
+    `${displayFirst.charAt(0)}${displayLast.charAt(0)}`.trim().toUpperCase() ||
     user?.email?.charAt(0)?.toUpperCase() ||
     "A";
 
@@ -312,7 +340,7 @@ export default function AdminSettings() {
                 </div>
                 <div className="min-w-0">
                   <h3 className="font-bold text-secondary text-lg truncate">
-                    {form.first_name} {form.last_name}
+                    {displayFirst} {displayLast}
                   </h3>
                   <p className="text-sm text-gray-500">
                     {user?.role === "owner"
@@ -329,16 +357,19 @@ export default function AdminSettings() {
               <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                 <p className="md:col-span-2 text-xs text-secondary/50 leading-relaxed">
                   {language === "ar"
-                    ? "البريد ورقم الهاتف يظهران في صفحة التواصل بعد الحفظ."
-                    : "Email and phone appear on the contact page after saving."}
+                    ? "أدخل الاسم بالعربية؛ عند التبديل للإنجليزية يظهر الاسم المترجم تلقائياً. البريد والهاتف يظهران في صفحة التواصل بعد الحفظ."
+                    : "Enter the Arabic name; switch the dashboard to English to see the auto-translated name. Email and phone appear on the contact page after saving."}
                 </p>
                 <FormField
                   label={language === "ar" ? "الاسم الأول" : "First Name"}
                   error={errors.first_name}
                 >
-                  <Input
-                    value={form.first_name}
-                    onChange={(e) => setForm((f) => ({ ...f, first_name: e.target.value }))}
+                  <LocaleInput
+                    ar={form.first_name_ar}
+                    en={form.first_name_en}
+                    onArChange={(ar) =>
+                      setForm((f) => ({ ...f, first_name_ar: ar, first_name_en: "" }))
+                    }
                     className="h-12"
                   />
                 </FormField>
@@ -346,9 +377,12 @@ export default function AdminSettings() {
                   label={language === "ar" ? "اسم العائلة" : "Last Name"}
                   error={errors.last_name}
                 >
-                  <Input
-                    value={form.last_name}
-                    onChange={(e) => setForm((f) => ({ ...f, last_name: e.target.value }))}
+                  <LocaleInput
+                    ar={form.last_name_ar}
+                    en={form.last_name_en}
+                    onArChange={(ar) =>
+                      setForm((f) => ({ ...f, last_name_ar: ar, last_name_en: "" }))
+                    }
                     className="h-12"
                   />
                 </FormField>

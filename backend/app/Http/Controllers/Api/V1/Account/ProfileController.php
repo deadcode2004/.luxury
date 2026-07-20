@@ -9,6 +9,7 @@ use App\Http\Requests\Account\UpdateProfileRequest;
 use App\Http\Resources\AddressResource;
 use App\Http\Resources\UserResource;
 use App\Services\CmsService;
+use App\Services\UserNameLocaleService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,19 +20,23 @@ class ProfileController extends Controller
 {
     public function __construct(
         private readonly CmsService $cms,
+        private readonly UserNameLocaleService $names,
     ) {}
 
     public function show(Request $request): JsonResponse
     {
-        return ApiResponse::success(UserResource::make($request->user()));
+        $user = $this->names->ensureLocales($request->user());
+
+        return ApiResponse::success(UserResource::make($user));
     }
 
     public function settings(Request $request): JsonResponse
     {
         $timezone = (string) config('app.timezone', 'UTC');
+        $user = $this->names->ensureLocales($request->user());
 
         return ApiResponse::success([
-            'user' => UserResource::make($request->user())->resolve(),
+            'user' => UserResource::make($user)->resolve(),
             'timezone' => $timezone,
             'timezone_label' => $this->timezoneLabel($timezone),
         ]);
@@ -41,13 +46,16 @@ class ProfileController extends Controller
     {
         $user = $request->user();
         $data = $request->validated();
+        $localized = $this->names->localizeNameParts($user, $data);
+
         $user->update([
-            ...$data,
-            'name' => trim($data['first_name'].' '.$data['last_name']),
+            ...$localized,
+            'email' => $data['email'],
+            'phone' => $data['phone'] ?? null,
         ]);
 
-        $fresh = $user->fresh();
-        if ($fresh?->isOwner()) {
+        $fresh = $this->names->ensureLocales($user->fresh() ?? $user);
+        if ($fresh->isOwner()) {
             $this->cms->syncOwnerContact($fresh);
         }
 

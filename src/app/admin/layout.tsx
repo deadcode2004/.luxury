@@ -12,6 +12,7 @@ import {
 import DashboardShell from "@/components/layout/DashboardShell";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { pickLocale } from "@/lib/i18n/localeText";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
@@ -27,7 +28,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   const displayName =
-    [user?.first_name, user?.last_name].filter(Boolean).join(" ") ||
+    pickLocale(user?.name_i18n, language) ||
+    [
+      pickLocale(user?.first_name_i18n, language) || user?.first_name,
+      pickLocale(user?.last_name_i18n, language) || user?.last_name,
+    ]
+      .filter(Boolean)
+      .join(" ") ||
     user?.name ||
     (language === "ar" ? "المالك" : "Owner");
 

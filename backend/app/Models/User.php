@@ -18,8 +18,11 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name',
+        'name_i18n',
         'first_name',
+        'first_name_i18n',
         'last_name',
+        'last_name_i18n',
         'email',
         'phone',
         'avatar',
@@ -46,6 +49,9 @@ class User extends Authenticatable
             'notify_orders' => 'boolean',
             'notify_stock' => 'boolean',
             'notify_marketing' => 'boolean',
+            'name_i18n' => 'array',
+            'first_name_i18n' => 'array',
+            'last_name_i18n' => 'array',
         ];
     }
 
