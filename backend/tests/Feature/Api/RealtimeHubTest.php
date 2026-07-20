@@ -66,4 +66,17 @@ class RealtimeHubTest extends TestCase
         $this->assertContains('cms', $domains);
         $this->assertNotContains('coupons', $domains);
     }
+
+    public function test_sequential_publishes_never_drop_version_bumps(): void
+    {
+        /** @var RealtimeHub $hub */
+        $hub = $this->app->make(RealtimeHub::class);
+
+        $before = $hub->versions()['products'];
+        $hub->publish(RealtimeHub::DOMAIN_PRODUCTS, 'a');
+        $hub->publish(RealtimeHub::DOMAIN_PRODUCTS, 'b');
+        $hub->publish(RealtimeHub::DOMAIN_PRODUCTS, 'c');
+
+        $this->assertSame($before + 3, $hub->versions()['products']);
+    }
 }

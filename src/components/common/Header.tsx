@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useLayoutEffect, lazy, Suspense } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   Search,
   ShoppingBag,
@@ -76,7 +76,6 @@ export default function Header() {
   const { count: cartCount } = useCart();
   const { count: wishCount } = useWishlist();
   const { user, logout, loading: authLoading, isOwner } = useAuth();
-  const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
@@ -116,16 +115,6 @@ export default function Header() {
     };
   }, [isMobileMenuOpen]);
 
-  useEffect(() => {
-    ["/shop", "/collections", "/about", "/contact", "/cart", "/favorites"].forEach((href) => {
-      try {
-        router.prefetch(href);
-      } catch {
-        /* ignore */
-      }
-    });
-  }, [router]);
-
   const navLinks = [
     { name: { ar: "الرئيسية", en: "Home" }, href: "/" },
     { name: { ar: "تسوق", en: "Shop" }, href: "/shop" },
@@ -158,7 +147,6 @@ export default function Header() {
 
           <Link
             href="/"
-            prefetch
             className={`text-xl md:text-2xl font-bold tracking-widest uppercase transition-colors ${textColorClass}`}
           >
             PARADISE<span className={logoDotColorClass}>.</span>
@@ -169,7 +157,6 @@ export default function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                prefetch
                 className={`text-sm font-medium transition-colors relative group py-2 inline-flex items-center ${textColorClass} ${hoverColorClass}`}
               >
                 {link.name[language]}
@@ -201,7 +188,6 @@ export default function Header() {
 
             <Link
               href="/favorites"
-              prefetch
               className={`transition-colors relative hidden lg:inline-flex items-center justify-center p-2 active:scale-95 ${hoverColorClass}`}
             >
               <Heart size={18} />
@@ -209,7 +195,6 @@ export default function Header() {
             </Link>
             <Link
               href="/cart"
-              prefetch
               className={`transition-colors relative inline-flex items-center justify-center p-2 active:scale-95 ${hoverColorClass}`}
             >
               <ShoppingBag size={18} />
@@ -238,7 +223,6 @@ export default function Header() {
                         </div>
                         <Link
                           href="/account"
-                          prefetch
                           className="flex items-center gap-3 px-4 py-3 text-sm text-secondary/80 hover:bg-surface/50 hover:text-primary transition-all rounded-xl font-medium"
                         >
                           <User size={16} className="shrink-0" />
@@ -247,7 +231,6 @@ export default function Header() {
                         {isOwner && (
                           <Link
                             href="/admin"
-                            prefetch
                             className="flex items-center gap-3 px-4 py-3 text-sm text-secondary/80 hover:bg-surface/50 hover:text-primary transition-all rounded-xl font-bold"
                           >
                             <LayoutDashboard size={16} className="shrink-0" />
@@ -268,7 +251,6 @@ export default function Header() {
                       <>
                         <Link
                           href="/login"
-                          prefetch
                           className="w-full flex items-center gap-3 px-4 py-3 text-sm text-secondary/80 hover:bg-surface/50 hover:text-primary transition-all rounded-xl font-bold"
                         >
                           <LogIn size={16} className="shrink-0" />
@@ -276,7 +258,6 @@ export default function Header() {
                         </Link>
                         <Link
                           href="/register"
-                          prefetch
                           className="flex items-center gap-3 px-4 py-3 text-sm text-secondary/80 hover:bg-surface/50 hover:text-primary transition-all rounded-xl font-medium"
                         >
                           <User size={16} className="shrink-0" />
@@ -314,7 +295,6 @@ export default function Header() {
         <div className="p-5 flex justify-between items-center border-b border-surface">
           <Link
             href="/"
-            prefetch
             className="text-xl font-bold uppercase text-secondary"
             onClick={() => setIsMobileMenuOpen(false)}
           >
@@ -336,7 +316,6 @@ export default function Header() {
               <React.Fragment key={link.href}>
                 <Link
                   href={link.href}
-                  prefetch
                   className="text-base font-medium py-3.5 px-2 rounded-lg text-secondary hover:bg-surface/50 hover:text-primary transition-all inline-flex items-center"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -391,7 +370,6 @@ export default function Header() {
                     <>
                       <Link
                         href="/account"
-                        prefetch
                         className="text-sm text-secondary/70 hover:text-primary py-2 transition-colors"
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
@@ -400,7 +378,6 @@ export default function Header() {
                       {isOwner && (
                         <Link
                           href="/admin"
-                          prefetch
                           className="text-sm font-bold text-secondary/70 hover:text-primary py-2 transition-colors inline-flex items-center gap-2"
                           onClick={() => setIsMobileMenuOpen(false)}
                         >
@@ -422,7 +399,6 @@ export default function Header() {
                   ) : (
                     <Link
                       href="/login"
-                      prefetch
                       className="text-sm text-primary py-2 text-start font-bold"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
@@ -435,7 +411,6 @@ export default function Header() {
 
             <Link
               href="/favorites"
-              prefetch
               className="flex items-center gap-4 p-3 rounded-xl text-secondary/80 hover:bg-surface/50 hover:text-primary transition-all text-sm font-medium"
               onClick={() => setIsMobileMenuOpen(false)}
             >
@@ -448,7 +423,6 @@ export default function Header() {
 
             <Link
               href="/cart"
-              prefetch
               className="flex items-center gap-4 p-3 rounded-xl text-secondary/80 hover:bg-surface/50 hover:text-primary transition-all text-sm font-medium"
               onClick={() => setIsMobileMenuOpen(false)}
             >

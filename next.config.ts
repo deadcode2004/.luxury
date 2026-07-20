@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 import {
   CACHE_HTML_REVALIDATE,
   CACHE_PRIVATE_NO_STORE,
+  CACHE_PUBLIC_IMMUTABLE,
 } from "./src/lib/build/cachePolicy";
 
 /**
@@ -35,7 +36,12 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_BUILD_ID: buildId,
   },
   experimental: {
-    // Dynamic segments refetch on navigation. Static floor is Next 16 minimum (30s).
+    /**
+     * Router Cache (App Router client cache):
+     * - dynamic: 0 → navigations refetch RSC for dynamic segments (no stale shell)
+     * - static: 30 → Next 16 minimum; do not use Link prefetch={true} / router.prefetch
+     *   (those pin the static bucket and can hold a 30s-old shell)
+     */
     staleTimes: {
       dynamic: 0,
       static: 30,
@@ -77,6 +83,11 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        // UUID upload objects — content-addressed; safe to cache forever.
+        source: "/storage/:path*",
+        headers: [{ key: "Cache-Control", value: CACHE_PUBLIC_IMMUTABLE }],
+      },
+      {
         // Personalized / sensitive surfaces.
         source: "/admin/:path*",
         headers: [{ key: "Cache-Control", value: CACHE_PRIVATE_NO_STORE }],
@@ -92,11 +103,9 @@ const nextConfig: NextConfig = {
       {
         /**
          * Storefront HTML/RSC: allow browser storage but always revalidate.
-         * Better than no-store (enables conditional 304s) while still picking up
-         * new deploys. `/_next/static` is intentionally excluded — Next serves
-         * content-hashed assets with immutable long-cache.
+         * Excludes hashed static assets (Next immutable) and /storage (above).
          */
-        source: "/((?!_next/static|_next/image|api/).*)",
+        source: "/((?!_next/static|_next/image|api/|storage/).*)",
         headers: [
           { key: "Cache-Control", value: CACHE_HTML_REVALIDATE },
           { key: "Vary", value: "Cookie" },

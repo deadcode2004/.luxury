@@ -2,6 +2,7 @@
 
 namespace App\Services\Realtime;
 
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -10,6 +11,8 @@ use Illuminate\Support\Facades\Cache;
  * Mutations bump per-domain versions (and optionally append to an event log).
  * Clients poll /realtime/versions and refetch only when a subscribed domain changes.
  * Works with Redis in production and the array cache driver in tests.
+ *
+ * Writes are lock-serialized so concurrent publishes cannot drop a version bump.
  */
 class RealtimeHub
 {
@@ -44,6 +47,8 @@ class RealtimeHub
 
     private const EVENTS_KEY = 'realtime:events';
 
+    private const LOCK_KEY = 'realtime:publish_lock';
+
     private const MAX_EVENTS = 250;
 
     /**
@@ -54,6 +59,23 @@ class RealtimeHub
     {
         $domain = $this->assertDomain($domain);
 
+        try {
+            return Cache::lock(self::LOCK_KEY, 5)->block(
+                5,
+                fn () => $this->publishUnlocked($domain, $action, $payload)
+            );
+        } catch (LockTimeoutException) {
+            // Fail open: still attempt a best-effort publish so clients are not stuck forever.
+            return $this->publishUnlocked($domain, $action, $payload);
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array{id: int, domain: string, action: string, payload: array<string, mixed>, at: string}
+     */
+    private function publishUnlocked(string $domain, string $action, array $payload = []): array
+    {
         $versions = $this->versions();
         $versions[$domain] = ((int) ($versions[$domain] ?? 0)) + 1;
         Cache::forever(self::VERSIONS_KEY, $versions);

@@ -44,6 +44,7 @@ class FreshCatalogCacheTest extends TestCase
         $before = $this->getJson('/api/v1/products?per_page=50')->assertOk();
         $this->assertSame('قديم', $before->json('data.0.name.ar'));
         $cacheControl = strtolower((string) $before->headers->get('Cache-Control'));
+        $this->assertStringContainsString('private', $cacheControl);
         $this->assertStringContainsString('no-store', $cacheControl);
         $this->assertStringContainsString('no-cache', $cacheControl);
 

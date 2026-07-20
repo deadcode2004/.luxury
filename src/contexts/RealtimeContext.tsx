@@ -30,7 +30,9 @@ type RealtimeContextValue = {
 const RealtimeContext = createContext<RealtimeContextValue | null>(null);
 
 const CHANNEL_NAME = "paradise-realtime";
-const POLL_MS = 1600;
+/** Visible-tab poll. Mutations also signal via BroadcastChannel for same-browser tabs. */
+const POLL_MS = 4000;
+const HIDDEN_POLL_MS = 15000;
 
 function changedDomains(prev: DomainVersions, next: DomainVersions): RealtimeDomain[] {
   return (Object.keys(next) as RealtimeDomain[]).filter(
@@ -113,7 +115,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       if (typeof document !== "undefined" && document.visibilityState === "hidden") {
-        timer = setTimeout(poll, POLL_MS * 2);
+        timer = setTimeout(poll, HIDDEN_POLL_MS);
         return;
       }
       inFlight = true;

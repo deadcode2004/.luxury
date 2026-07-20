@@ -154,7 +154,7 @@ export function CurrencyProvider({
             : null;
         let country = cachedCountry;
         if (!country) {
-          const res = await fetch("/api/geo", { cache: "force-cache" });
+          const res = await fetch("/api/geo", { cache: "no-store" });
           const data = (await res.json().catch(() => ({}))) as { country?: string };
           country = data.country || null;
           if (country && typeof sessionStorage !== "undefined") {
