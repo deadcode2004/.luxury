@@ -6,6 +6,7 @@ import Link from "next/link";
 import { categories as mockCategories } from "@/data/mock";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { fetchPublicCategories, type ApiCategory } from "@/lib/api/owner";
+import { useRealtimeDomains } from "@/contexts/RealtimeContext";
 
 type DisplayCategory = {
   id: string;
@@ -41,6 +42,21 @@ export default function Categories() {
       cancelled = true;
     };
   }, []);
+
+  useRealtimeDomains(["categories"], () => {
+    void fetchPublicCategories()
+      .then((cats: ApiCategory[]) => {
+        if (!cats?.length) return;
+        setItems(
+          cats.map((c) => ({
+            id: c.code || String(c.id),
+            name: c.name,
+            image: c.image || "/images/products/paradisecare-home02.jpg",
+          }))
+        );
+      })
+      .catch(() => undefined);
+  });
 
   return (
     <section className="py-12 bg-background border-b border-surface">

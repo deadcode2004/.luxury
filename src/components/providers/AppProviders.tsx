@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
+import { RealtimeProvider } from "@/contexts/RealtimeContext";
 import DocumentMeta from "@/components/seo/DocumentMeta";
 import type { AppLanguage } from "@/lib/i18n/language";
 import type { CurrencyCode } from "@/lib/currency/cookie";
@@ -24,14 +25,16 @@ export default function AppProviders({
     <LanguageProvider initialLanguage={initialLanguage}>
       <ToastProvider>
         <CurrencyProvider initialCurrency={initialCurrency}>
-          <AuthProvider>
-            <CartProvider>
-              <WishlistProvider>
-                <DocumentMeta />
-                {children}
-              </WishlistProvider>
-            </CartProvider>
-          </AuthProvider>
+          <RealtimeProvider>
+            <AuthProvider>
+              <CartProvider>
+                <WishlistProvider>
+                  <DocumentMeta />
+                  {children}
+                </WishlistProvider>
+              </CartProvider>
+            </AuthProvider>
+          </RealtimeProvider>
         </CurrencyProvider>
       </ToastProvider>
     </LanguageProvider>

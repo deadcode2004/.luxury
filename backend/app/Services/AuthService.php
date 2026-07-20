@@ -5,10 +5,13 @@ namespace App\Services;
 use App\Enums\UserRole;
 use App\Exceptions\DomainException;
 use App\Models\User;
+use App\Services\Realtime\RealtimeHub;
 use Illuminate\Support\Facades\Hash;
 
 class AuthService
 {
+    public function __construct(private readonly RealtimeHub $realtime) {}
+
     /**
      * @param  array{name?: string, first_name: string, last_name: string, email: string, phone?: string|null, password: string}  $data
      * @return array{user: User, token: string}
@@ -27,6 +30,7 @@ class AuthService
         ]);
 
         $token = $user->createToken('api')->plainTextToken;
+        $this->realtime->customersChanged('registered', ['id' => $user->id]);
 
         return compact('user', 'token');
     }

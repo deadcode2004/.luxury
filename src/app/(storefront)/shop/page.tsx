@@ -17,6 +17,7 @@ import ShopFiltersSidebar, {
 import Button from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
 import PageHeader from "@/components/layout/PageHeader";
+import { useRealtimeDomains } from "@/contexts/RealtimeContext";
 
 function filtersFromParam(filter: string | null): Partial<ShopFilterState> {
   switch (filter) {
@@ -61,6 +62,12 @@ function ShopContent() {
       cancelled = true;
     };
   }, []);
+
+  useRealtimeDomains(["products"], () => {
+    void fetchPublicProducts({ perPage: 50 })
+      .then(setProducts)
+      .catch(() => undefined);
+  });
 
   const bounds = useMemo(() => getProductPriceBounds(products), [products]);
   const [filtersOpen, setFiltersOpen] = useState(true);

@@ -34,6 +34,7 @@ import {
 } from "@/lib/api/owner";
 import { pickLocale } from "@/lib/i18n/localeText";
 import { useAutoFetch } from "@/hooks/useAutoFetch";
+import { useRealtime } from "@/contexts/RealtimeContext";
 
 type FormState = {
   nameAr: string;
@@ -102,6 +103,7 @@ export default function AdminInventory() {
   const { language } = useLanguage();
   const { token } = useAuth();
   const { toast } = useToast();
+  const { signalLocal } = useRealtime();
 
   const [products, setProducts] = useState<ApiProduct[]>([]);
   const [categories, setCategories] = useState<ApiCategory[]>([]);
@@ -147,7 +149,7 @@ export default function AdminInventory() {
     }
   }, [token, query, language, toast]);
 
-  useAutoFetch(load);
+  useAutoFetch(load, { domains: ["products", "categories", "dashboard"] });
 
   const previewPrice = useMemo(() => {
     const base = Number(form.basePrice);
@@ -271,6 +273,7 @@ export default function AdminInventory() {
         toast(language === "ar" ? "✔ تمت إضافة المنتج" : "✔ Product created", "success");
       }
 
+      signalLocal(["products", "dashboard", "categories"]);
       setModalOpen(false);
       await load({ silent: true });
     } catch (err) {
@@ -293,6 +296,7 @@ export default function AdminInventory() {
     try {
       await deleteProduct(token, deleteId);
       toast(language === "ar" ? "✔ تم حذف المنتج" : "✔ Product deleted", "success");
+      signalLocal(["products", "dashboard"]);
       setDeleteId(null);
       await load({ silent: true });
     } catch (err) {
@@ -318,6 +322,7 @@ export default function AdminInventory() {
         }));
       }
       setEditCat(null);
+      signalLocal(["categories", "products", "dashboard"]);
       toast(language === "ar" ? "✔ تم تحديث القسم" : "✔ Category updated", "success");
     } catch (err) {
       toast(err instanceof ApiRequestError ? err.message : "Update failed", "danger");
@@ -336,6 +341,7 @@ export default function AdminInventory() {
         setForm((f) => ({ ...f, categoryId: null }));
       }
       setDeleteCat(null);
+      signalLocal(["categories", "products", "dashboard"]);
       toast(language === "ar" ? "✔ تم حذف القسم" : "✔ Category deleted", "success");
     } catch (err) {
       toast(

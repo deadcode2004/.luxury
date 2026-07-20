@@ -9,6 +9,7 @@ import ProductGrid from "@/components/home/ProductGrid";
 import type { Product } from "@/data/mock";
 import { fetchPublicProduct } from "@/lib/products/catalog";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useRealtimeDomains } from "@/contexts/RealtimeContext";
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -39,6 +40,15 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       cancelled = true;
     };
   }, [resolvedParams.id]);
+
+  useRealtimeDomains(["products"], () => {
+    void fetchPublicProduct(resolvedParams.id)
+      .then((res) => {
+        setProduct(res?.product ?? null);
+        setRelatedProducts(res?.related ?? []);
+      })
+      .catch(() => undefined);
+  });
 
   if (loading) {
     return (

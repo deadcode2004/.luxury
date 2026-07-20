@@ -17,6 +17,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { apiRequest } from "@/lib/api/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchPublicProducts, getCachedCatalog } from "@/lib/products/catalog";
+import { useRealtimeDomains } from "@/contexts/RealtimeContext";
 
 export type CartLine = {
   productId: string;
@@ -83,6 +84,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartLine[]>([]);
   const [ready, setReady] = useState(false);
   const [pending, startTransition] = useTransition();
+  const [catalogTick, setCatalogTick] = useState(0);
 
   useEffect(() => {
     setItems(readStorage<CartLine[]>(CART_KEY, []));
@@ -97,9 +99,25 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           );
           return next.length === prev.length ? prev : next;
         });
+        setCatalogTick((t) => t + 1);
       })
       .catch(() => undefined);
   }, []);
+
+  useRealtimeDomains(["products"], () => {
+    void fetchPublicProducts({ perPage: 50 })
+      .then((list) => {
+        const valid = new Set(list.map((p) => p.id));
+        setItems((prev) => {
+          const next = prev.filter(
+            (line) => valid.has(line.productId) || /^\d+$/.test(line.productId)
+          );
+          return next.length === prev.length ? prev : next;
+        });
+        setCatalogTick((t) => t + 1);
+      })
+      .catch(() => undefined);
+  });
 
   useEffect(() => {
     if (!ready) return;
@@ -243,7 +261,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           return { ...product, quantity: item.quantity };
         })
         .filter(Boolean) as Array<Product & { quantity: number }>,
-    [items]
+    // catalogTick forces re-resolve after live catalog updates (price/stock/name).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [items, catalogTick]
   );
 
   const totals = useMemo(() => calcOrderTotals(lines), [lines]);

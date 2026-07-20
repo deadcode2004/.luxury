@@ -23,11 +23,13 @@ import {
   type ApiCoupon,
 } from "@/lib/api/owner";
 import { useAutoFetch } from "@/hooks/useAutoFetch";
+import { useRealtime } from "@/contexts/RealtimeContext";
 
 export default function AdminCoupons() {
   const { language } = useLanguage();
   const { token } = useAuth();
   const { toast } = useToast();
+  const { signalLocal } = useRealtime();
   const [coupons, setCoupons] = useState<ApiCoupon[]>([]);
   // Start false so SSR HTML matches the first client paint.
   const [loading, setLoading] = useState(false);
@@ -68,7 +70,7 @@ export default function AdminCoupons() {
     }
   }, [token, query, language, toast]);
 
-  useAutoFetch(load);
+  useAutoFetch(load, { domains: ["coupons"] });
 
   const openCreate = () => {
     setEditing(null);
@@ -124,6 +126,7 @@ export default function AdminCoupons() {
         await createCoupon(token, body);
         toast(language === "ar" ? "✔ تم إنشاء الكوبون" : "✔ Coupon created", "success");
       }
+      signalLocal(["coupons"]);
       setModalOpen(false);
       await load({ silent: true });
     } catch (err) {
@@ -139,6 +142,7 @@ export default function AdminCoupons() {
     try {
       await deleteCoupon(token, deleteId);
       toast(language === "ar" ? "✔ تم حذف الكوبون" : "✔ Coupon deleted", "success");
+      signalLocal(["coupons"]);
       setDeleteId(null);
       await load({ silent: true });
     } catch (err) {

@@ -4,13 +4,17 @@ namespace App\Services\Owner;
 
 use App\Models\Category;
 use App\Services\CategoryService;
+use App\Services\Realtime\RealtimeHub;
 use App\Services\Translation\ProductTranslationService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 class OwnerCategoryService
 {
-    public function __construct(private readonly ProductTranslationService $translator) {}
+    public function __construct(
+        private readonly ProductTranslationService $translator,
+        private readonly RealtimeHub $realtime,
+    ) {}
 
     public function list(): Collection
     {
@@ -22,6 +26,7 @@ class OwnerCategoryService
         $data = $this->normalizeAndTranslate($data);
         $category = Category::query()->create($data);
         CategoryService::flushCache();
+        $this->realtime->categoriesChanged('created', ['id' => $category->id, 'code' => $category->code]);
 
         return $category;
     }
@@ -32,14 +37,18 @@ class OwnerCategoryService
         $data = $this->normalizeAndTranslate($data, $previous);
         $category->update($data);
         CategoryService::flushCache();
+        $this->realtime->categoriesChanged('updated', ['id' => $category->id, 'code' => $category->code]);
 
         return $category->fresh();
     }
 
     public function delete(Category $category): void
     {
+        $id = $category->id;
+        $code = $category->code;
         $category->delete();
         CategoryService::flushCache();
+        $this->realtime->categoriesChanged('deleted', ['id' => $id, 'code' => $code]);
     }
 
     /**

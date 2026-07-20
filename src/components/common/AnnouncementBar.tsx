@@ -6,6 +6,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { fetchPublicCms, type CmsStorefront } from "@/lib/api/owner";
 import { localizeAnnouncementAmounts } from "@/lib/format/announcement";
 import { cn } from "@/lib/cn";
+import { useRealtimeDomains } from "@/contexts/RealtimeContext";
 
 type AnnouncementBarProps = {
   className?: string;
@@ -29,6 +30,12 @@ export default function AnnouncementBar({ className }: AnnouncementBarProps) {
       cancelled = true;
     };
   }, []);
+
+  useRealtimeDomains(["cms"], () => {
+    void fetchPublicCms()
+      .then(setCms)
+      .catch(() => undefined);
+  });
 
   const displayText = useMemo(() => {
     if (!cms?.announcement?.enabled) return null;

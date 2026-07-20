@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\V1\Owner\DashboardController;
 use App\Http\Controllers\Api\V1\Owner\InventoryController;
 use App\Http\Controllers\Api\V1\Owner\OrderController as OwnerOrderController;
 use App\Http\Controllers\Api\V1\Owner\UploadController;
+use App\Http\Controllers\Api\V1\Realtime\RealtimeController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -28,6 +29,12 @@ Route::prefix('v1')->group(function () {
             Route::post('logout', [AuthController::class, 'logout']);
         });
     });
+
+    Route::get('realtime/versions', [RealtimeController::class, 'versions']);
+    Route::get('realtime/events', [RealtimeController::class, 'events'])
+        ->middleware('auth:sanctum');
+    // Public event feed (storefront domains only — controller filters by auth)
+    Route::get('realtime/feed', [RealtimeController::class, 'events']);
 
     Route::get('categories', [CategoryController::class, 'index']);
     Route::get('products', [ProductController::class, 'index']);

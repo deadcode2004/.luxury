@@ -51,7 +51,7 @@ export default function AdminOverview() {
     }
   }, [token, language, toast]);
 
-  useAutoFetch(load);
+  useAutoFetch(load, { domains: ["dashboard", "orders", "products", "customers"] });
 
   const stats = data?.stats;
   const cards = [

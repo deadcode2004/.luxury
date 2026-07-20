@@ -11,6 +11,7 @@ import FormField from "@/components/ui/FormField";
 import { useToast } from "@/components/ui/Toast";
 import { fetchPublicCms, type CmsStorefront } from "@/lib/api/owner";
 import { emptyCmsContact, mapEmbedSrc } from "@/lib/cms/footer";
+import { useRealtimeDomains } from "@/contexts/RealtimeContext";
 
 export default function ContactPage() {
   const { language } = useLanguage();
@@ -31,6 +32,12 @@ export default function ContactPage() {
       cancelled = true;
     };
   }, []);
+
+  useRealtimeDomains(["cms"], () => {
+    void fetchPublicCms()
+      .then(setCms)
+      .catch(() => undefined);
+  });
 
   const contact = useMemo(
     () => ({ ...emptyCmsContact(), ...(cms?.contact ?? {}) }),

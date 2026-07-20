@@ -180,6 +180,42 @@ export async function deleteCoupon(token: string, id: number) {
   return apiRequest<null>(`/owner/coupons/${id}`, { method: "DELETE", token, cache: "no-store" });
 }
 
+export async function fetchOwnerOrders(token: string, params: { search?: string; status?: string } = {}) {
+  const qs = new URLSearchParams();
+  qs.set("per_page", "50");
+  if (params.search) qs.set("search", params.search);
+  if (params.status && params.status !== "all") qs.set("status", params.status);
+  return apiRequest<ApiOrder[]>(`/owner/orders?${qs.toString()}`, { token, cache: "no-store" });
+}
+
+export async function updateOwnerOrderStatus(token: string, id: number, status: string) {
+  return apiRequest<ApiOrder>(`/owner/orders/${id}/status`, {
+    method: "PATCH",
+    token,
+    body: { status },
+    cache: "no-store",
+  });
+}
+
+export type ApiCustomer = {
+  id: number;
+  name: string;
+  email: string;
+  phone?: string | null;
+  is_active?: boolean;
+  orders_count?: number;
+  spent?: number;
+  created_at?: string | null;
+};
+
+export async function fetchOwnerCustomers(token: string, search = "") {
+  const q = search ? `&search=${encodeURIComponent(search)}` : "";
+  return apiRequest<ApiCustomer[]>(`/owner/customers?per_page=50${q}`, {
+    token,
+    cache: "no-store",
+  });
+}
+
 export async function fetchOwnerCms(token: string) {
   return ownerGet<CmsStorefront>("/owner/cms", token);
 }
@@ -193,7 +229,7 @@ export async function fetchPublicCms() {
 }
 
 export async function fetchPublicCategories() {
-  return apiRequest<ApiCategory[]>("/categories", { cache: "force-cache" });
+  return apiRequest<ApiCategory[]>("/categories", { cache: "no-store" });
 }
 
 export async function uploadOwnerFile(

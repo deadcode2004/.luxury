@@ -11,6 +11,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\Realtime\RealtimeHub;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
@@ -19,6 +20,7 @@ class OrderService
     public function __construct(
         private readonly CartService $cartService,
         private readonly CartTotalsCalculator $totals,
+        private readonly RealtimeHub $realtime,
     ) {}
 
     /**
@@ -125,6 +127,16 @@ class OrderService
             $order->load(['items.product', 'user']);
             event(new OrderPlaced($order));
 
+            // Stock + order + customer spend / dashboard all move together.
+            $this->realtime->productsChanged('stock_changed', [
+                'order_id' => $order->id,
+                'product_ids' => $productIds,
+            ]);
+            $this->realtime->ordersChanged('created', [
+                'id' => $order->id,
+                'number' => $order->number,
+            ]);
+
             return $order;
         });
     }
@@ -160,8 +172,14 @@ class OrderService
     public function updateStatus(Order $order, OrderStatus $status): Order
     {
         $order->update(['status' => $status]);
+        $fresh = $order->fresh(['items', 'user']);
+        $this->realtime->ordersChanged('status_updated', [
+            'id' => $fresh->id,
+            'number' => $fresh->number,
+            'status' => $fresh->status?->value,
+        ]);
 
-        return $order->fresh(['items', 'user']);
+        return $fresh;
     }
 
     private function generateOrderNumber(): string

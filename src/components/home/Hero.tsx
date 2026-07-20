@@ -7,6 +7,7 @@ import { ArrowRight, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { fetchPublicCms } from "@/lib/api/owner";
 import { emptyHeroSlide, heroActionHref, type HeroSlide } from "@/lib/cms/hero";
+import { useRealtimeDomains } from "@/contexts/RealtimeContext";
 
 const FALLBACK_SLIDES: HeroSlide[] = [
   emptyHeroSlide({
@@ -56,18 +57,29 @@ export default function Hero() {
 
   useEffect(() => {
     let cancelled = false;
-    fetchPublicCms()
-      .then((cms) => {
-        const slides = cms?.hero?.slides?.filter((s) => s?.image || s?.heading?.ar) ?? [];
-        if (!cancelled && slides.length > 0) {
-          setCmsSlides(slides);
-        }
-      })
-      .catch(() => undefined);
+    const load = () =>
+      fetchPublicCms()
+        .then((cms) => {
+          const slides = cms?.hero?.slides?.filter((s) => s?.image || s?.heading?.ar) ?? [];
+          if (!cancelled && slides.length > 0) {
+            setCmsSlides(slides);
+          }
+        })
+        .catch(() => undefined);
+    void load();
     return () => {
       cancelled = true;
     };
   }, []);
+
+  useRealtimeDomains(["cms"], () => {
+    void fetchPublicCms()
+      .then((cms) => {
+        const slides = cms?.hero?.slides?.filter((s) => s?.image || s?.heading?.ar) ?? [];
+        if (slides.length > 0) setCmsSlides(slides);
+      })
+      .catch(() => undefined);
+  });
 
   const slides = useMemo(() => cmsSlides ?? FALLBACK_SLIDES, [cmsSlides]);
   const active = slides[currentSlide] ?? slides[0];

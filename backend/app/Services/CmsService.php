@@ -6,6 +6,7 @@ use App\Exceptions\DomainException;
 use App\Enums\UserRole;
 use App\Models\CmsSetting;
 use App\Models\User;
+use App\Services\Realtime\RealtimeHub;
 use App\Services\Translation\ProductTranslationService;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Log;
@@ -26,7 +27,10 @@ class CmsService
         'custom',
     ];
 
-    public function __construct(private readonly ProductTranslationService $translator) {}
+    public function __construct(
+        private readonly ProductTranslationService $translator,
+        private readonly RealtimeHub $realtime,
+    ) {}
 
     public function defaults(): array
     {
@@ -177,6 +181,8 @@ class CmsService
             ['key' => self::STOREFRONT_KEY],
             ['value' => $merged]
         );
+
+        $this->realtime->cmsChanged('owner_contact_synced');
     }
 
     /**
@@ -262,6 +268,8 @@ class CmsService
             ['key' => self::STOREFRONT_KEY],
             ['value' => $merged]
         );
+
+        $this->realtime->cmsChanged('updated');
 
         return $merged;
     }

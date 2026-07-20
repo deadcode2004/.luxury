@@ -16,6 +16,7 @@ import {
 import { useLanguage } from "@/contexts/LanguageContext";
 import { fetchPublicCms, type CmsStorefront } from "@/lib/api/owner";
 import { emptyCmsSocial, socialHref, type SocialPlatform } from "@/lib/cms/footer";
+import { useRealtimeDomains } from "@/contexts/RealtimeContext";
 
 const SOCIAL_ICONS: Record<SocialPlatform, { icon: React.ReactNode; label: string }> = {
   twitter: { icon: <FaTwitter size={16} />, label: "Twitter" },
@@ -51,6 +52,12 @@ export default function Footer() {
       cancelled = true;
     };
   }, []);
+
+  useRealtimeDomains(["cms"], () => {
+    void fetchPublicCms()
+      .then(setCms)
+      .catch(() => undefined);
+  });
 
   const social = useMemo(
     () => ({ ...emptyCmsSocial(), ...(cms?.social ?? {}) }),

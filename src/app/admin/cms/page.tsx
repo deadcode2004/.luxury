@@ -28,6 +28,7 @@ import {
 import { emptyCmsContact, emptyCmsSocial } from "@/lib/cms/footer";
 import { pickLocale } from "@/lib/i18n/localeText";
 import { useAutoFetch } from "@/hooks/useAutoFetch";
+import { useRealtime } from "@/contexts/RealtimeContext";
 
 const emptyCms = (): CmsStorefront => ({
   hero: {
@@ -55,6 +56,7 @@ export default function AdminCMS() {
   const { language } = useLanguage();
   const { token } = useAuth();
   const { toast } = useToast();
+  const { signalLocal } = useRealtime();
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
@@ -138,7 +140,7 @@ export default function AdminCMS() {
     }
   }, [token, language, toast]);
 
-  useAutoFetch(load);
+  useAutoFetch(load, { domains: ["cms"] });
 
   const updateSlide = (index: number, patch: Partial<HeroSlide>, clearEn = false) => {
     setForm((f) => {
@@ -305,6 +307,7 @@ export default function AdminCMS() {
           },
         },
       });
+      signalLocal(["cms"]);
       toast(language === "ar" ? "✔ تم حفظ محتوى المتجر" : "✔ Store content saved", "success");
     } catch (err) {
       toast(err instanceof ApiRequestError ? err.message : "Save failed", "danger");

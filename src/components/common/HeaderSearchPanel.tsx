@@ -11,6 +11,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatMoney } from "@/lib/format/currency";
 import { cn } from "@/lib/cn";
 import { fetchPublicProducts, getCachedCatalog } from "@/lib/products/catalog";
+import { useRealtimeDomains } from "@/contexts/RealtimeContext";
 
 type HeaderSearchPanelProps = {
   open: boolean;
@@ -73,6 +74,12 @@ export default function HeaderSearchPanel({
       cancelled = true;
     };
   }, []);
+
+  useRealtimeDomains(["products"], () => {
+    void fetchPublicProducts({ perPage: 50 })
+      .then(setCatalog)
+      .catch(() => undefined);
+  });
 
   useEffect(() => {
     if (!open) return;

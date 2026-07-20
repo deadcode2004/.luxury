@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/Toast";
 import { Filter, Eye, Edit } from "lucide-react";
 import Table, { TableToolbar, TableRow, TableCell } from "@/components/ui/Table";
@@ -12,45 +13,79 @@ import Pagination from "@/components/layout/Pagination";
 import Modal from "@/components/ui/Modal";
 import FormField from "@/components/ui/FormField";
 import Select from "@/components/ui/Select";
-
-type Order = {
-  id: string;
-  customer: string;
-  date: string;
-  total: string;
-  status: string;
-  items: number;
-};
-
-const INITIAL: Order[] = [
-  { id: "#ORD-9025", customer: "Sarah Ahmed", date: "2026-10-15", total: "1,250 EGP", status: "pending", items: 3 },
-  { id: "#ORD-9024", customer: "Mohammed K.", date: "2026-10-14", total: "450 EGP", status: "processing", items: 1 },
-  { id: "#ORD-9023", customer: "Lina Mahmoud", date: "2026-10-12", total: "3,200 EGP", status: "delivered", items: 5 },
-  { id: "#ORD-9022", customer: "Omar Sami", date: "2026-10-10", total: "890 EGP", status: "delivered", items: 2 },
-  { id: "#ORD-9021", customer: "Fatima Ali", date: "2026-10-09", total: "150 EGP", status: "cancelled", items: 1 },
-];
+import {
+  ApiRequestError,
+  fetchOwnerOrders,
+  updateOwnerOrderStatus,
+  type ApiOrder,
+} from "@/lib/api/owner";
+import { useAutoFetch } from "@/hooks/useAutoFetch";
+import { useRealtime } from "@/contexts/RealtimeContext";
 
 const STATUSES = ["pending", "processing", "delivered", "cancelled"] as const;
 
+function formatDate(iso?: string | null) {
+  if (!iso) return "—";
+  try {
+    return new Date(iso).toISOString().slice(0, 10);
+  } catch {
+    return "—";
+  }
+}
+
 export default function AdminOrders() {
   const { language } = useLanguage();
+  const { token } = useAuth();
   const { toast } = useToast();
-  const [orders, setOrders] = useState(INITIAL);
+  const { signalLocal } = useRealtime();
+  const [orders, setOrders] = useState<ApiOrder[]>([]);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [filterOpen, setFilterOpen] = useState(false);
-  const [viewOrder, setViewOrder] = useState<Order | null>(null);
-  const [editOrder, setEditOrder] = useState<Order | null>(null);
+  const [viewOrder, setViewOrder] = useState<ApiOrder | null>(null);
+  const [editOrder, setEditOrder] = useState<ApiOrder | null>(null);
   const [nextStatus, setNextStatus] = useState("pending");
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const load = useCallback(
+    async (options?: { silent?: boolean }) => {
+      if (!token) return;
+      if (!options?.silent) setLoading(true);
+      try {
+        const list = await fetchOwnerOrders(token, {
+          search: query,
+          status: statusFilter,
+        });
+        setOrders(Array.isArray(list) ? list : []);
+      } catch (err) {
+        if (!options?.silent) {
+          toast(
+            err instanceof ApiRequestError
+              ? err.message
+              : language === "ar"
+                ? "تعذر تحميل الطلبات"
+                : "Failed to load orders",
+            "danger"
+          );
+        }
+      } finally {
+        if (!options?.silent) setLoading(false);
+      }
+    },
+    [token, query, statusFilter, language, toast]
+  );
+
+  useAutoFetch(load, { domains: ["orders", "dashboard"] });
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return orders.filter((o) => {
+      const customer = o.customer?.name || o.customer?.email || "";
       const matchesQuery =
         !q ||
-        o.id.toLowerCase().includes(q) ||
-        o.customer.toLowerCase().includes(q);
+        o.number.toLowerCase().includes(q) ||
+        customer.toLowerCase().includes(q);
       const matchesStatus = statusFilter === "all" || o.status === statusFilter;
       return matchesQuery && matchesStatus;
     });
@@ -103,41 +138,59 @@ export default function AdminOrders() {
           />
         }
       >
-        {filtered.map((order) => (
-          <TableRow key={order.id}>
-            <TableCell className="font-bold text-secondary">{order.id}</TableCell>
-            <TableCell className="text-gray-600">{order.customer}</TableCell>
-            <TableCell className="text-gray-500">{order.date}</TableCell>
-            <TableCell className="text-gray-500">{order.items}</TableCell>
-            <TableCell className="font-bold text-secondary">{order.total}</TableCell>
-            <TableCell>
-              <StatusBadge status={order.status} uppercase />
-            </TableCell>
-            <TableCell align="center">
-              <div className="flex items-center justify-center gap-3">
-                <button
-                  type="button"
-                  className="text-gray-400 hover:text-primary active:scale-95 transition-all"
-                  title={language === "ar" ? "عرض التفاصيل" : "View Details"}
-                  onClick={() => setViewOrder(order)}
-                >
-                  <Eye size={18} />
-                </button>
-                <button
-                  type="button"
-                  className="text-gray-400 hover:text-blue-500 active:scale-95 transition-all"
-                  title={language === "ar" ? "تعديل الحالة" : "Edit Status"}
-                  onClick={() => {
-                    setEditOrder(order);
-                    setNextStatus(order.status);
-                  }}
-                >
-                  <Edit size={18} />
-                </button>
-              </div>
+        {loading && orders.length === 0 ? (
+          <TableRow>
+            <TableCell colSpan={7} className="text-center text-gray-400 py-10">
+              {language === "ar" ? "جاري التحميل..." : "Loading..."}
             </TableCell>
           </TableRow>
-        ))}
+        ) : filtered.length === 0 ? (
+          <TableRow>
+            <TableCell colSpan={7} className="text-center text-gray-400 py-10">
+              {language === "ar" ? "لا توجد طلبات" : "No orders yet"}
+            </TableCell>
+          </TableRow>
+        ) : (
+          filtered.map((order) => (
+            <TableRow key={order.id}>
+              <TableCell className="font-bold text-secondary">{order.number}</TableCell>
+              <TableCell className="text-gray-600">
+                {order.customer?.name || order.customer?.email || "—"}
+              </TableCell>
+              <TableCell className="text-gray-500">{formatDate(order.placed_at)}</TableCell>
+              <TableCell className="text-gray-500">{order.items_count ?? "—"}</TableCell>
+              <TableCell className="font-bold text-secondary">
+                {Number(order.total).toLocaleString()} {order.currency || "EGP"}
+              </TableCell>
+              <TableCell>
+                <StatusBadge status={order.status} uppercase />
+              </TableCell>
+              <TableCell align="center">
+                <div className="flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    className="text-gray-400 hover:text-primary active:scale-95 transition-all"
+                    title={language === "ar" ? "عرض التفاصيل" : "View Details"}
+                    onClick={() => setViewOrder(order)}
+                  >
+                    <Eye size={18} />
+                  </button>
+                  <button
+                    type="button"
+                    className="text-gray-400 hover:text-blue-500 active:scale-95 transition-all"
+                    title={language === "ar" ? "تعديل الحالة" : "Edit Status"}
+                    onClick={() => {
+                      setEditOrder(order);
+                      setNextStatus(order.status);
+                    }}
+                  >
+                    <Edit size={18} />
+                  </button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))
+        )}
       </Table>
 
       <Modal
@@ -162,19 +215,11 @@ export default function AdminOrders() {
             onClick={() => {
               setStatusFilter("all");
               setFilterOpen(false);
-              toast(language === "ar" ? "تم إعادة التصفية" : "Filters cleared", "info");
             }}
           >
             {language === "ar" ? "مسح" : "Clear"}
           </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => {
-              setFilterOpen(false);
-              toast(language === "ar" ? "✔ تم تطبيق التصفية" : "✔ Filters applied", "success");
-            }}
-          >
+          <Button variant="secondary" size="sm" onClick={() => setFilterOpen(false)}>
             {language === "ar" ? "تطبيق" : "Apply"}
           </Button>
         </div>
@@ -189,15 +234,15 @@ export default function AdminOrders() {
           <div className="space-y-3 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-500">{language === "ar" ? "رقم الطلب" : "Order ID"}</span>
-              <span className="font-bold">{viewOrder.id}</span>
+              <span className="font-bold">{viewOrder.number}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-500">{language === "ar" ? "العميل" : "Customer"}</span>
-              <span>{viewOrder.customer}</span>
+              <span>{viewOrder.customer?.name || viewOrder.customer?.email || "—"}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-500">{language === "ar" ? "المنتجات" : "Items"}</span>
-              <span>{viewOrder.items}</span>
+              <span>{viewOrder.items_count ?? "—"}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-500">{language === "ar" ? "الحالة" : "Status"}</span>
@@ -205,7 +250,9 @@ export default function AdminOrders() {
             </div>
             <div className="flex justify-between border-t border-gray-100 pt-3">
               <span className="text-gray-500">{language === "ar" ? "الإجمالي" : "Total"}</span>
-              <span className="font-bold text-secondary">{viewOrder.total}</span>
+              <span className="font-bold text-secondary">
+                {Number(viewOrder.total).toLocaleString()} {viewOrder.currency || "EGP"}
+              </span>
             </div>
           </div>
         )}
@@ -221,21 +268,33 @@ export default function AdminOrders() {
             className="flex flex-col gap-4"
             onSubmit={async (e) => {
               e.preventDefault();
+              if (!token) return;
               setSaving(true);
-              await new Promise((r) => setTimeout(r, 350));
-              setOrders((prev) =>
-                prev.map((o) => (o.id === editOrder.id ? { ...o, status: nextStatus } : o))
-              );
-              setSaving(false);
-              setEditOrder(null);
-              toast(
-                language === "ar" ? "✔ تم تحديث حالة الطلب" : "✔ Order status updated",
-                "success"
-              );
+              try {
+                const updated = await updateOwnerOrderStatus(token, editOrder.id, nextStatus);
+                setOrders((prev) => prev.map((o) => (o.id === updated.id ? { ...o, ...updated } : o)));
+                signalLocal(["orders", "dashboard", "customers"]);
+                setEditOrder(null);
+                toast(
+                  language === "ar" ? "✔ تم تحديث حالة الطلب" : "✔ Order status updated",
+                  "success"
+                );
+              } catch (err) {
+                toast(
+                  err instanceof ApiRequestError
+                    ? err.message
+                    : language === "ar"
+                      ? "تعذر تحديث الحالة"
+                      : "Failed to update status",
+                  "danger"
+                );
+              } finally {
+                setSaving(false);
+              }
             }}
           >
             <p className="text-sm text-gray-500">
-              {editOrder.id} · {editOrder.customer}
+              {editOrder.number} · {editOrder.customer?.name || editOrder.customer?.email || ""}
             </p>
             <FormField label={language === "ar" ? "الحالة الجديدة" : "New Status"}>
               <Select value={nextStatus} onChange={(e) => setNextStatus(e.target.value)}>

@@ -10,6 +10,7 @@ import Reviews from "@/components/home/Reviews";
 import InstagramGallery from "@/components/home/InstagramGallery";
 import type { Product } from "@/data/mock";
 import { fetchPublicProducts } from "@/lib/products/catalog";
+import { useRealtimeDomains } from "@/contexts/RealtimeContext";
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -27,6 +28,12 @@ export default function Home() {
       cancelled = true;
     };
   }, []);
+
+  useRealtimeDomains(["products"], () => {
+    void fetchPublicProducts({ perPage: 50 })
+      .then(setProducts)
+      .catch(() => undefined);
+  });
 
   const featuredProducts = products.filter((p) => p.isFeatured);
   const bestSellers = products.filter((p) => p.isBestSeller);

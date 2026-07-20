@@ -1,34 +1,44 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
+import { useRealtimeDomains } from "@/contexts/RealtimeContext";
+import type { RealtimeDomain } from "@/lib/realtime/types";
 
 type LoadFn = (options?: { silent?: boolean }) => void | Promise<void>;
 
+type Options = {
+  /** Domains that should silently re-fetch this loader when they change. */
+  domains?: RealtimeDomain[];
+};
+
 /**
- * Keeps dashboard data in sync without a manual Refresh button:
- * - runs `load` whenever its identity changes (mount / search deps)
- * - silently re-fetches when the tab/window becomes visible again
+ * Keeps live data in sync without Refresh buttons:
+ * - runs `load` on mount / when identity changes
+ * - silently re-fetches when subscribed realtime domains bump
+ * - silently re-fetches when the tab becomes visible again (catch-up)
  */
-export function useAutoFetch(load: LoadFn) {
+export function useAutoFetch(load: LoadFn, options: Options = {}) {
   const loadRef = useRef(load);
   loadRef.current = load;
+  const domains = options.domains ?? [];
 
   useEffect(() => {
     void load();
   }, [load]);
 
-  useEffect(() => {
-    const refresh = () => {
-      void loadRef.current({ silent: true });
-    };
-    const onVisibility = () => {
-      if (document.visibilityState === "visible") refresh();
-    };
-    window.addEventListener("focus", refresh);
-    document.addEventListener("visibilitychange", onVisibility);
-    return () => {
-      window.removeEventListener("focus", refresh);
-      document.removeEventListener("visibilitychange", onVisibility);
-    };
+  const silentReload = useCallback(() => {
+    void loadRef.current({ silent: true });
   }, []);
+
+  useRealtimeDomains(domains, () => {
+    silentReload();
+  });
+
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") silentReload();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [silentReload]);
 }
