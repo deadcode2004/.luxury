@@ -2,7 +2,11 @@
 
 namespace App\Services;
 
+use App\Exceptions\DomainException;
 use App\Models\CmsSetting;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class CmsService
 {
@@ -43,16 +47,34 @@ class CmsService
 
     public function getStorefront(): array
     {
-        $row = CmsSetting::query()->where('key', self::STOREFRONT_KEY)->first();
-        if (! $row) {
+        if (! $this->tableReady()) {
             return $this->defaults();
         }
 
-        return array_replace_recursive($this->defaults(), $row->value ?? []);
+        try {
+            $row = CmsSetting::query()->where('key', self::STOREFRONT_KEY)->first();
+            if (! $row) {
+                return $this->defaults();
+            }
+
+            return array_replace_recursive($this->defaults(), $row->value ?? []);
+        } catch (QueryException $e) {
+            Log::warning('CMS read failed; returning defaults', ['error' => $e->getMessage()]);
+
+            return $this->defaults();
+        }
     }
 
     public function updateStorefront(array $payload): array
     {
+        if (! $this->tableReady()) {
+            throw new DomainException(
+                'CMS table is missing. Run `php artisan migrate` then try again.',
+                503,
+                'CMS_TABLE_MISSING'
+            );
+        }
+
         $merged = array_replace_recursive($this->getStorefront(), $payload);
 
         CmsSetting::query()->updateOrCreate(
@@ -61,5 +83,14 @@ class CmsService
         );
 
         return $merged;
+    }
+
+    private function tableReady(): bool
+    {
+        try {
+            return Schema::hasTable('cms_settings');
+        } catch (\Throwable) {
+            return false;
+        }
     }
 }
