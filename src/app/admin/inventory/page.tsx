@@ -17,6 +17,7 @@ import FormField from "@/components/ui/FormField";
 import Select from "@/components/ui/Select";
 import CategoryCombobox from "@/components/admin/CategoryCombobox";
 import ImageUploadField from "@/components/admin/ImageUploadField";
+import TranslatedPreview from "@/components/admin/TranslatedPreview";
 import {
   ApiRequestError,
   applyDiscount,
@@ -32,6 +33,7 @@ import {
   type ApiCategory,
   type ApiProduct,
 } from "@/lib/api/owner";
+import { pickLocale } from "@/lib/i18n/localeText";
 
 type FormState = {
   nameAr: string;
@@ -241,13 +243,15 @@ export default function AdminInventory() {
       };
 
       if (editing) {
-        await updateProduct(token, editing.id, body);
+        const saved = await updateProduct(token, editing.id, body);
+        setEditing(saved);
         toast(language === "ar" ? "✔ تم حفظ التعديلات" : "✔ Product updated", "success");
       } else {
-        await createProduct(token, {
+        const created = await createProduct(token, {
           ...body,
           code: slugCode(form.nameAr),
         });
+        setEditing(created);
         toast(language === "ar" ? "✔ تمت إضافة المنتج" : "✔ Product created", "success");
       }
 
@@ -384,10 +388,10 @@ export default function AdminInventory() {
             <TableRow key={product.id}>
               <TableCell className="font-mono text-xs">{product.code}</TableCell>
               <TableCell className="font-bold text-secondary">
-                {product.name?.[language] || product.name?.ar}
+                {pickLocale(product.name, language)}
               </TableCell>
               <TableCell>
-                {product.category?.name?.[language] || product.category?.name?.ar || "—"}
+                {pickLocale(product.category?.name, language, "—")}
               </TableCell>
               <TableCell>{product.stock}</TableCell>
               <TableCell>
@@ -480,6 +484,11 @@ export default function AdminInventory() {
             </div>
 
             <div className="lg:col-span-8 flex flex-col gap-4 sm:gap-5">
+              <p className="text-xs text-secondary/50 leading-relaxed">
+                {language === "ar"
+                  ? "أدخل النصوص بالعربية فقط — الترجمة الإنجليزية تُحفظ تلقائياً عند الحفظ، وتظهر في المتجر ولوحة التحكم عند اختيار الإنجليزية."
+                  : "Enter Arabic only — English is auto-translated on save and shown in the store and dashboard when English is selected."}
+              </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <FormField
                   label={language === "ar" ? "اسم المنتج (عربي)" : "Product name (Arabic)"}
@@ -489,6 +498,7 @@ export default function AdminInventory() {
                     value={form.nameAr}
                     onChange={(e) => setForm((f) => ({ ...f, nameAr: e.target.value }))}
                   />
+                  <TranslatedPreview english={editing?.name?.en} className="mt-2" />
                 </FormField>
                 <FormField
                   label={language === "ar" ? "العلامة التجارية (عربي)" : "Brand (Arabic)"}
@@ -498,6 +508,7 @@ export default function AdminInventory() {
                     value={form.brandAr}
                     onChange={(e) => setForm((f) => ({ ...f, brandAr: e.target.value }))}
                   />
+                  <TranslatedPreview english={editing?.brand?.en} className="mt-2" />
                 </FormField>
               </div>
 
@@ -522,9 +533,16 @@ export default function AdminInventory() {
                 />
                 <p className="mt-1.5 text-[11px] leading-relaxed text-gray-400">
                   {language === "ar"
-                    ? "أدخل الاسم بالعربية — يُترجم للإنجليزية مرة واحدة ويُحفظ في قاعدة البيانات"
-                    : "Enter Arabic name — translated to English once and stored in the database"}
+                    ? "أدخل الاسم بالعربية — يُترجم للإنجليزية تلقائياً ويُحفظ في قاعدة البيانات"
+                    : "Enter Arabic name — auto-translated to English and stored in the database"}
                 </p>
+                <TranslatedPreview
+                  english={
+                    categories.find((c) => c.id === form.categoryId)?.name?.en ||
+                    editing?.category?.name?.en
+                  }
+                  className="mt-2"
+                />
               </FormField>
 
               <FormField label={language === "ar" ? "وصف المنتج" : "Description"}>
@@ -536,6 +554,7 @@ export default function AdminInventory() {
                     language === "ar" ? "اكتب الوصف بالعربية..." : "Write description in Arabic..."
                   }
                 />
+                <TranslatedPreview english={editing?.description?.en} className="mt-2" />
               </FormField>
             </div>
           </div>
@@ -549,6 +568,7 @@ export default function AdminInventory() {
                 value={form.ingredientsAr}
                 onChange={(e) => setForm((f) => ({ ...f, ingredientsAr: e.target.value }))}
               />
+              <TranslatedPreview englishLines={editing?.ingredients?.en ?? undefined} className="mt-2" />
             </FormField>
             <FormField label={language === "ar" ? "طريقة الاستخدام" : "How to use"}>
               <Textarea
@@ -556,6 +576,7 @@ export default function AdminInventory() {
                 value={form.usageAr}
                 onChange={(e) => setForm((f) => ({ ...f, usageAr: e.target.value }))}
               />
+              <TranslatedPreview english={editing?.usage?.en} className="mt-2" />
             </FormField>
           </div>
 
@@ -689,6 +710,7 @@ export default function AdminInventory() {
               ? "عند تغيير الاسم العربي تُحدَّث الترجمة الإنجليزية تلقائياً مرة واحدة."
               : "Changing the Arabic name re-translates English once automatically."}
           </p>
+          <TranslatedPreview english={editCat?.name?.en} />
           <div className="flex justify-end gap-2">
             <Button variant="ghost" onClick={() => setEditCat(null)}>
               {language === "ar" ? "إلغاء" : "Cancel"}

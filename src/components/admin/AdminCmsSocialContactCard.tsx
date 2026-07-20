@@ -14,6 +14,7 @@ import {
   type CmsSocial,
   type SocialPlatform,
 } from "@/lib/cms/footer";
+import TranslatedPreview from "@/components/admin/TranslatedPreview";
 
 type Props = {
   social: CmsSocial;
@@ -232,11 +233,7 @@ export default function AdminCmsSocialContactCard({
                 }
               />
             </FormField>
-            {contact.address.text.en ? (
-              <p className="text-[11px] text-gray-400 dir-ltr text-start break-words">
-                EN: {contact.address.text.en}
-              </p>
-            ) : null}
+            <TranslatedPreview english={contact.address.text.en} />
           </div>
 
           {/* Phones */}
@@ -359,11 +356,7 @@ export default function AdminCmsSocialContactCard({
                 }
               />
             </FormField>
-            {contact.hours.text.en ? (
-              <p className="text-[11px] text-gray-400 dir-ltr text-start break-words">
-                EN: {contact.hours.text.en}
-              </p>
-            ) : null}
+            <TranslatedPreview english={contact.hours.text.en} />
           </div>
 
           {/* Map */}

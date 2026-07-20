@@ -128,11 +128,17 @@ export default function CategoryCombobox({
                       }}
                     >
                       <span className="block text-sm font-bold text-secondary truncate">
-                        {cat.name?.ar}
+                        {language === "en" && cat.name?.en ? cat.name.en : cat.name?.ar}
                       </span>
-                      <span className="block text-[11px] text-secondary/50 truncate">
-                        {cat.name?.en}
-                      </span>
+                      {language === "en" && cat.name?.ar ? (
+                        <span className="block text-[11px] text-secondary/50 truncate">
+                          {cat.name.ar}
+                        </span>
+                      ) : cat.name?.en ? (
+                        <span className="block text-[11px] text-secondary/50 truncate">
+                          {cat.name.en}
+                        </span>
+                      ) : null}
                     </button>
                     {active ? <Check size={14} className="text-primary shrink-0" /> : null}
                     {onEdit ? (

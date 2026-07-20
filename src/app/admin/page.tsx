@@ -21,6 +21,7 @@ import {
   fetchOwnerDashboard,
   type DashboardData,
 } from "@/lib/api/owner";
+import { pickLocale } from "@/lib/i18n/localeText";
 
 export default function AdminOverview() {
   const { language } = useLanguage();
@@ -225,7 +226,7 @@ export default function AdminOverview() {
                 >
                   <div className="min-w-0">
                     <p className="text-sm font-bold text-secondary truncate">
-                      {p.name?.[language] || p.name?.ar}
+                      {pickLocale(p.name, language)}
                     </p>
                     <p className="text-[11px] text-gray-400">{p.code}</p>
                   </div>

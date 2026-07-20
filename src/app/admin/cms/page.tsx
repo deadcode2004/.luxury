@@ -13,6 +13,7 @@ import Select from "@/components/ui/Select";
 import FormField from "@/components/ui/FormField";
 import ImageUploadField from "@/components/admin/ImageUploadField";
 import AdminCmsSocialContactCard from "@/components/admin/AdminCmsSocialContactCard";
+import TranslatedPreview from "@/components/admin/TranslatedPreview";
 import {
   ApiRequestError,
   fetchOwnerCms,
@@ -26,6 +27,7 @@ import {
   type HeroSlide,
 } from "@/lib/cms/hero";
 import { emptyCmsContact, emptyCmsSocial } from "@/lib/cms/footer";
+import { pickLocale } from "@/lib/i18n/localeText";
 
 const emptyCms = (): CmsStorefront => ({
   hero: {
@@ -524,12 +526,14 @@ export default function AdminCMS() {
                       value={slide.heading.ar}
                       onChange={(e) => updateSlideLocale(activeSlide, "heading", e.target.value)}
                     />
+                    <TranslatedPreview english={slide.heading.en} className="mt-2" />
                   </FormField>
                   <FormField label={language === "ar" ? "العنوان الفرعي" : "Subtitle"}>
                     <Input
                       value={slide.subtitle.ar}
                       onChange={(e) => updateSlideLocale(activeSlide, "subtitle", e.target.value)}
                     />
+                    <TranslatedPreview english={slide.subtitle.en} className="mt-2" />
                   </FormField>
                   <FormField label={language === "ar" ? "الوصف" : "Description"}>
                     <Textarea
@@ -537,6 +541,7 @@ export default function AdminCMS() {
                       value={slide.description.ar}
                       onChange={(e) => updateSlideLocale(activeSlide, "description", e.target.value)}
                     />
+                    <TranslatedPreview english={slide.description.en} className="mt-2" />
                   </FormField>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full min-w-0">
                     <FormField label={language === "ar" ? "نص الزر" : "Button text"}>
@@ -544,6 +549,7 @@ export default function AdminCMS() {
                         value={slide.cta.ar}
                         onChange={(e) => updateSlideLocale(activeSlide, "cta", e.target.value)}
                       />
+                      <TranslatedPreview english={slide.cta.en} className="mt-2" />
                     </FormField>
                     <FormField label={language === "ar" ? "إجراء الزر" : "Button action"}>
                       <Select
@@ -591,11 +597,6 @@ export default function AdminCMS() {
                       }
                     </p>
                   )}
-                  {slide.heading.en ? (
-                    <p className="text-xs text-gray-400 dir-ltr text-start break-words">
-                      EN: {slide.heading.en}
-                    </p>
-                  ) : null}
                 </div>
               </div>
             ) : null}
@@ -670,15 +671,11 @@ export default function AdminCMS() {
 
               {form.announcement.enabled && form.announcement.text.ar ? (
                 <div className="mt-auto rounded-xl bg-secondary text-background text-center text-sm py-3 px-3 break-words w-full">
-                  {form.announcement.text.ar}
+                  {pickLocale(form.announcement.text, language)}
                 </div>
               ) : null}
 
-              {form.announcement.text.en ? (
-                <p className="text-xs text-gray-400 dir-ltr text-start break-words">
-                  EN: {form.announcement.text.en}
-                </p>
-              ) : null}
+              <TranslatedPreview english={form.announcement.text.en} />
             </div>
           </aside>
         </div>
