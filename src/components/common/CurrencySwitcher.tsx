@@ -5,6 +5,7 @@ import { Check, ChevronDown } from "lucide-react";
 import { useCurrency, type CurrencyCode } from "@/contexts/CurrencyContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { CURRENCY_OPTIONS, getCurrencyMeta } from "@/lib/currency/meta";
+import CurrencyFlag from "@/components/common/CurrencyFlag";
 import { cn } from "@/lib/cn";
 
 type CurrencySwitcherProps = {
@@ -71,24 +72,11 @@ export default function CurrencySwitcher({
           open && inverted && "bg-white/25 border-white/50"
         )}
       >
-        <span className="inline-flex items-center gap-2 min-w-0">
-          {isDrawer ? (
-            <span
-              className={cn(
-                "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold",
-                !inverted ? "bg-primary/10 text-primary" : "bg-background/20 text-background"
-              )}
-            >
-              {current.symbol}
-            </span>
-          ) : (
-            <span
-              className="inline-flex h-6 w-6 shrink-0 items-center justify-center text-lg leading-none select-none"
-              aria-hidden
-            >
-              {current.flag}
-            </span>
-          )}
+        <span className="inline-flex items-center gap-2.5 min-w-0">
+          <CurrencyFlag
+            code={current.code}
+            className={cn(isDrawer ? "h-5 w-7 rounded-md" : "h-4 w-6")}
+          />
           <span className="flex flex-col items-start leading-tight min-w-0">
             <span className="text-xs font-bold tracking-wide">{current.code}</span>
             {isDrawer ? (
@@ -138,15 +126,7 @@ export default function CurrencySwitcher({
                       : "text-secondary/80 hover:bg-surface/70 hover:text-secondary"
                   )}
                 >
-                  <span
-                    className={cn(
-                      "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-base leading-none",
-                      active ? "bg-primary/10 ring-1 ring-primary/20" : "bg-surface"
-                    )}
-                    aria-hidden
-                  >
-                    {option.flag}
-                  </span>
+                  <CurrencyFlag code={option.code} className="h-5 w-7 rounded-md" />
                   <span className="flex-1 min-w-0">
                     <span className="block text-sm font-bold">{option.code}</span>
                     <span className="block text-[11px] opacity-70 truncate">
