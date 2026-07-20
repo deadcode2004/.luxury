@@ -8,15 +8,10 @@ import { localizeAnnouncementAmounts } from "@/lib/format/announcement";
 import { cn } from "@/lib/cn";
 
 type AnnouncementBarProps = {
-  /** `hero` = sits with the homepage Hero; `default` = standalone strip. */
-  variant?: "default" | "hero";
   className?: string;
 };
 
-export default function AnnouncementBar({
-  variant = "default",
-  className,
-}: AnnouncementBarProps) {
+export default function AnnouncementBar({ className }: AnnouncementBarProps) {
   const { language } = useLanguage();
   const { currency, convertFromEgp, ready } = useCurrency();
   const [cms, setCms] = useState<CmsStorefront | null>(null);
@@ -52,10 +47,7 @@ export default function AnnouncementBar({
   return (
     <div
       className={cn(
-        "w-full text-center text-xs sm:text-sm font-medium tracking-wide px-4",
-        variant === "hero"
-          ? "rounded-full bg-secondary/90 backdrop-blur-md text-background py-2 shadow-soft"
-          : "bg-secondary text-background py-2.5",
+        "w-full bg-secondary text-background text-center text-xs sm:text-sm font-medium tracking-wide py-2.5 px-4",
         className
       )}
     >

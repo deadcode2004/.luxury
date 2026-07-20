@@ -7,7 +7,6 @@ import { ArrowRight, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { fetchPublicCms } from "@/lib/api/owner";
 import { emptyHeroSlide, heroActionHref, type HeroSlide } from "@/lib/cms/hero";
-import AnnouncementBar from "@/components/common/AnnouncementBar";
 
 const FALLBACK_SLIDES: HeroSlide[] = [
   emptyHeroSlide({
@@ -132,13 +131,6 @@ export default function Hero() {
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Announcement sits with the Hero (not in the global header). */}
-      <div className="absolute top-16 sm:top-20 inset-x-0 z-30 px-3 sm:px-6 pointer-events-none">
-        <div className="pointer-events-auto max-w-4xl mx-auto">
-          <AnnouncementBar variant="hero" />
-        </div>
-      </div>
-
       {slides.map((slide, index) => (
         <div
           key={`${slide.id}-${index}`}

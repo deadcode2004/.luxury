@@ -233,7 +233,7 @@ export default function AdminCMS() {
   const slide = form.hero.slides[activeSlide] ?? form.hero.slides[0];
 
   return (
-    <div className="flex flex-col gap-8 max-w-5xl">
+    <div className="flex flex-col gap-8 max-w-7xl">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-secondary tracking-tight">
@@ -251,7 +251,8 @@ export default function AdminCMS() {
         </Button>
       </div>
 
-      <section className="rounded-3xl border border-surface bg-white/70 overflow-hidden">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+      <section className="xl:col-span-7 rounded-3xl border border-surface bg-white/70 overflow-hidden">
         <div className="px-6 py-4 border-b border-surface/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-background/60">
           <div className="flex items-center gap-3">
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -462,7 +463,7 @@ export default function AdminCMS() {
         </div>
       </section>
 
-      <section className="rounded-3xl border border-surface bg-white/70 overflow-hidden">
+      <section className="xl:col-span-5 rounded-3xl border border-surface bg-white/70 overflow-hidden xl:sticky xl:top-24">
         <div className="px-6 py-4 border-b border-surface/70 flex items-center justify-between gap-3 bg-background/60">
           <div className="flex items-center gap-3">
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-accent/15 text-accent">
@@ -480,7 +481,7 @@ export default function AdminCMS() {
             </div>
           </div>
 
-          <label className="relative inline-flex items-center cursor-pointer">
+          <label className="relative inline-flex items-center cursor-pointer shrink-0">
             <input
               type="checkbox"
               className="sr-only peer"
@@ -549,6 +550,7 @@ export default function AdminCMS() {
           ) : null}
         </div>
       </section>
+      </div>
 
       <Card variant="panel" padding="md" className="text-sm text-gray-500 leading-relaxed">
         {language === "ar"
