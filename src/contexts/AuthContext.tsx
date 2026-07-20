@@ -16,6 +16,10 @@ export type AuthUser = {
   email: string;
   phone?: string | null;
   role: "owner" | "user";
+  is_active?: boolean;
+  notify_orders?: boolean;
+  notify_stock?: boolean;
+  notify_marketing?: boolean;
 };
 
 type AuthContextValue = {
@@ -41,6 +45,16 @@ type AuthContextValue = {
     last_name: string;
     email: string;
     phone?: string;
+  }) => Promise<boolean>;
+  changePassword: (payload: {
+    current_password: string;
+    password: string;
+    password_confirmation: string;
+  }) => Promise<boolean>;
+  updateNotifications: (payload: {
+    notify_orders?: boolean;
+    notify_stock?: boolean;
+    notify_marketing?: boolean;
   }) => Promise<boolean>;
 };
 
@@ -224,6 +238,74 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [language, toast, token]
   );
 
+  const changePassword = useCallback(
+    async (payload: {
+      current_password: string;
+      password: string;
+      password_confirmation: string;
+    }) => {
+      if (!token) return false;
+      setLoading(true);
+      try {
+        await apiRequest<null>("/account/password", {
+          method: "PUT",
+          token,
+          body: payload,
+        });
+        toast(
+          language === "ar" ? "✔ تم تغيير كلمة المرور" : "✔ Password updated",
+          "success"
+        );
+        return true;
+      } catch (error) {
+        toast(
+          error instanceof ApiRequestError
+            ? error.message
+            : language === "ar"
+              ? "✖ تعذر تغيير كلمة المرور"
+              : "✖ Failed to change password",
+          "danger"
+        );
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [language, toast, token]
+  );
+
+  const updateNotifications = useCallback(
+    async (payload: {
+      notify_orders?: boolean;
+      notify_stock?: boolean;
+      notify_marketing?: boolean;
+    }) => {
+      if (!token) return false;
+      try {
+        const data = await apiRequest<AuthUser>("/account/notifications", {
+          method: "PUT",
+          token,
+          body: payload,
+        });
+        setUser(data);
+        writeStorage(USER_KEY, data);
+        setAuthCookies(data.role);
+        return true;
+      } catch (error) {
+        toast(
+          error instanceof ApiRequestError
+            ? error.message
+            : language === "ar"
+              ? "✖ تعذر حفظ الإشعارات"
+              : "✖ Failed to save notifications",
+          "danger"
+        );
+        return false;
+      }
+    },
+    [language, toast, token]
+  );
+
   const value = useMemo(
     () => ({
       user,
@@ -237,8 +319,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logout,
       refreshProfile,
       updateProfile,
+      changePassword,
+      updateNotifications,
     }),
-    [user, token, ready, loading, login, register, logout, refreshProfile, updateProfile]
+    [
+      user,
+      token,
+      ready,
+      loading,
+      login,
+      register,
+      logout,
+      refreshProfile,
+      updateProfile,
+      changePassword,
+      updateNotifications,
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

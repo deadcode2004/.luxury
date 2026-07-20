@@ -25,6 +25,9 @@ class User extends Authenticatable
         'password',
         'role',
         'is_active',
+        'notify_orders',
+        'notify_stock',
+        'notify_marketing',
     ];
 
     protected $hidden = [
@@ -39,6 +42,9 @@ class User extends Authenticatable
             'password' => 'hashed',
             'role' => UserRole::class,
             'is_active' => 'boolean',
+            'notify_orders' => 'boolean',
+            'notify_stock' => 'boolean',
+            'notify_marketing' => 'boolean',
         ];
     }
 

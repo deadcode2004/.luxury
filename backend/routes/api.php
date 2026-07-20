@@ -49,6 +49,9 @@ Route::prefix('v1')->group(function () {
 
         Route::get('account/profile', [ProfileController::class, 'show']);
         Route::put('account/profile', [ProfileController::class, 'update']);
+        Route::get('account/settings', [ProfileController::class, 'settings']);
+        Route::put('account/password', [ProfileController::class, 'updatePassword']);
+        Route::put('account/notifications', [ProfileController::class, 'updateNotifications']);
         Route::get('account/addresses', [ProfileController::class, 'addresses']);
 
         Route::prefix('owner')->middleware('owner')->group(function () {
