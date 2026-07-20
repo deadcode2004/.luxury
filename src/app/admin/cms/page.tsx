@@ -8,12 +8,11 @@ import { Megaphone, Save, Layout, Plus, Trash2, ChevronUp, ChevronDown, ChevronL
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-import Textarea from "@/components/ui/Textarea";
 import Select from "@/components/ui/Select";
 import FormField from "@/components/ui/FormField";
 import ImageUploadField from "@/components/admin/ImageUploadField";
 import AdminCmsSocialContactCard from "@/components/admin/AdminCmsSocialContactCard";
-import TranslatedPreview from "@/components/admin/TranslatedPreview";
+import { LocaleInput, LocaleTextarea } from "@/components/admin/LocaleField";
 import {
   ApiRequestError,
   fetchOwnerCms,
@@ -515,41 +514,41 @@ export default function AdminCMS() {
                 <div className="lg:col-span-8 flex flex-col gap-3 sm:gap-4 min-w-0 w-full">
                   <p className="text-xs text-secondary/50">
                     {language === "ar"
-                      ? "اكتب بالعربية فقط — الترجمة الإنجليزية تُحفظ تلقائياً عند الحفظ."
-                      : "Arabic only — English is auto-translated and saved on submit."}
+                      ? "اكتب بالعربية — الترجمة الإنجليزية تُحفظ تلقائياً. بدّل لغة اللوحة لعرضها في نفس الحقول."
+                      : "Edit in Arabic — English auto-saves on submit. Switch dashboard language to see it in the same fields."}
                   </p>
                   <FormField
                     label={language === "ar" ? "العنوان" : "Heading"}
                     error={errors[`slide-${activeSlide}-heading`]}
                   >
-                    <Input
-                      value={slide.heading.ar}
-                      onChange={(e) => updateSlideLocale(activeSlide, "heading", e.target.value)}
+                    <LocaleInput
+                      ar={slide.heading.ar}
+                      en={slide.heading.en}
+                      onArChange={(ar) => updateSlideLocale(activeSlide, "heading", ar)}
                     />
-                    <TranslatedPreview english={slide.heading.en} className="mt-2" />
                   </FormField>
                   <FormField label={language === "ar" ? "العنوان الفرعي" : "Subtitle"}>
-                    <Input
-                      value={slide.subtitle.ar}
-                      onChange={(e) => updateSlideLocale(activeSlide, "subtitle", e.target.value)}
+                    <LocaleInput
+                      ar={slide.subtitle.ar}
+                      en={slide.subtitle.en}
+                      onArChange={(ar) => updateSlideLocale(activeSlide, "subtitle", ar)}
                     />
-                    <TranslatedPreview english={slide.subtitle.en} className="mt-2" />
                   </FormField>
                   <FormField label={language === "ar" ? "الوصف" : "Description"}>
-                    <Textarea
+                    <LocaleTextarea
                       rows={3}
-                      value={slide.description.ar}
-                      onChange={(e) => updateSlideLocale(activeSlide, "description", e.target.value)}
+                      ar={slide.description.ar}
+                      en={slide.description.en}
+                      onArChange={(ar) => updateSlideLocale(activeSlide, "description", ar)}
                     />
-                    <TranslatedPreview english={slide.description.en} className="mt-2" />
                   </FormField>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full min-w-0">
                     <FormField label={language === "ar" ? "نص الزر" : "Button text"}>
-                      <Input
-                        value={slide.cta.ar}
-                        onChange={(e) => updateSlideLocale(activeSlide, "cta", e.target.value)}
+                      <LocaleInput
+                        ar={slide.cta.ar}
+                        en={slide.cta.en}
+                        onArChange={(ar) => updateSlideLocale(activeSlide, "cta", ar)}
                       />
-                      <TranslatedPreview english={slide.cta.en} className="mt-2" />
                     </FormField>
                     <FormField label={language === "ar" ? "إجراء الزر" : "Button action"}>
                       <Select
@@ -639,43 +638,43 @@ export default function AdminCMS() {
 
             <div className="p-3 sm:p-5 flex flex-col gap-4 flex-1 w-full min-w-0">
               <FormField
-                label={language === "ar" ? "نص الإعلان (عربي فقط)" : "Announcement (Arabic only)"}
+                label={language === "ar" ? "نص الإعلان" : "Announcement"}
                 error={errors.announcementAr}
               >
-                <Textarea
+                <LocaleTextarea
                   rows={4}
                   disabled={!form.announcement.enabled}
-                  value={form.announcement.text.ar}
-                  onChange={(e) =>
+                  ar={form.announcement.text.ar}
+                  en={form.announcement.text.en}
+                  onArChange={(ar) =>
                     setForm((f) => ({
                       ...f,
                       announcement: {
                         ...f.announcement,
-                        text: { ar: e.target.value, en: "" },
+                        text: { ar, en: "" },
                       },
                     }))
                   }
                   placeholder={
                     language === "ar"
                       ? "مثال: شحن مجاني للطلبات فوق 500 ج.م"
-                      : "Example: شحن مجاني للطلبات فوق 500 ج.م"
+                      : "Switch to Arabic to edit…"
                   }
                 />
               </FormField>
 
               <p className="text-xs text-secondary/50 leading-relaxed">
                 {language === "ar"
-                  ? "يُترجم تلقائياً عند الحفظ. اكتب المبالغ بالجنيه (مثل 500 ج.م)."
-                  : "Auto-translated on save. Write amounts in EGP (e.g. 500 ج.م)."}
+                  ? "يُترجم تلقائياً عند الحفظ. اكتب المبالغ بالجنيه (مثل 500 ج.م). بدّل لغة اللوحة لعرض الإنجليزية في نفس الحقل."
+                  : "Auto-translated on save. Write amounts in EGP. Switch to Arabic to edit this field."}
               </p>
 
-              {form.announcement.enabled && form.announcement.text.ar ? (
+              {form.announcement.enabled &&
+              (form.announcement.text.ar || form.announcement.text.en) ? (
                 <div className="mt-auto rounded-xl bg-secondary text-background text-center text-sm py-3 px-3 break-words w-full">
                   {pickLocale(form.announcement.text, language)}
                 </div>
               ) : null}
-
-              <TranslatedPreview english={form.announcement.text.en} />
             </div>
           </aside>
         </div>

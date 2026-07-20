@@ -12,12 +12,11 @@ import StatusBadge from "@/components/ui/StatusBadge";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
-import Textarea from "@/components/ui/Textarea";
 import FormField from "@/components/ui/FormField";
 import Select from "@/components/ui/Select";
 import CategoryCombobox from "@/components/admin/CategoryCombobox";
 import ImageUploadField from "@/components/admin/ImageUploadField";
-import TranslatedPreview from "@/components/admin/TranslatedPreview";
+import { LocaleInput, LocaleTextarea } from "@/components/admin/LocaleField";
 import {
   ApiRequestError,
   applyDiscount,
@@ -37,16 +36,22 @@ import { pickLocale } from "@/lib/i18n/localeText";
 
 type FormState = {
   nameAr: string;
+  nameEn: string;
   brandAr: string;
+  brandEn: string;
   categoryText: string;
+  categoryEn: string;
   categoryId: number | null;
   basePrice: string;
   discountType: "none" | "fixed" | "percent";
   discountValue: string;
   stock: string;
   descriptionAr: string;
+  descriptionEn: string;
   ingredientsAr: string;
+  ingredientsEn: string;
   usageAr: string;
+  usageEn: string;
   image: string;
   isNew: boolean;
   isFeatured: boolean;
@@ -57,16 +62,22 @@ type FormState = {
 
 const emptyForm = (): FormState => ({
   nameAr: "",
+  nameEn: "",
   brandAr: "",
+  brandEn: "",
   categoryText: "",
+  categoryEn: "",
   categoryId: null,
   basePrice: "",
   discountType: "none",
   discountValue: "",
   stock: "10",
   descriptionAr: "",
+  descriptionEn: "",
   ingredientsAr: "",
+  ingredientsEn: "",
   usageAr: "",
+  usageEn: "",
   image: "",
   isNew: true,
   isFeatured: false,
@@ -157,16 +168,22 @@ export default function AdminInventory() {
     setEditing(product);
     setForm({
       nameAr: product.name?.ar || "",
+      nameEn: product.name?.en || "",
       brandAr: product.brand?.ar || "",
+      brandEn: product.brand?.en || "",
       categoryText: product.category?.name?.ar || "",
+      categoryEn: product.category?.name?.en || "",
       categoryId: product.category_id,
       basePrice: String(disc.basePrice),
       discountType: disc.discountType,
       discountValue: disc.discountValue ? String(disc.discountValue) : "",
       stock: String(product.stock),
       descriptionAr: product.description?.ar || "",
+      descriptionEn: product.description?.en || "",
       ingredientsAr: (product.ingredients?.ar || []).join("\n"),
+      ingredientsEn: (product.ingredients?.en || []).join("\n"),
       usageAr: product.usage?.ar || "",
+      usageEn: product.usage?.en || "",
       image: product.image || "",
       isNew: product.is_new,
       isFeatured: product.is_featured,
@@ -295,7 +312,11 @@ export default function AdminInventory() {
       });
       setCategories((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
       if (form.categoryId === updated.id) {
-        setForm((f) => ({ ...f, categoryText: updated.name.ar }));
+        setForm((f) => ({
+          ...f,
+          categoryText: updated.name.ar,
+          categoryEn: updated.name.en || "",
+        }));
       }
       setEditCat(null);
       toast(language === "ar" ? "✔ تم تحديث القسم" : "✔ Category updated", "success");
@@ -486,29 +507,29 @@ export default function AdminInventory() {
             <div className="lg:col-span-8 flex flex-col gap-4 sm:gap-5">
               <p className="text-xs text-secondary/50 leading-relaxed">
                 {language === "ar"
-                  ? "أدخل النصوص بالعربية فقط — الترجمة الإنجليزية تُحفظ تلقائياً عند الحفظ، وتظهر في المتجر ولوحة التحكم عند اختيار الإنجليزية."
-                  : "Enter Arabic only — English is auto-translated on save and shown in the store and dashboard when English is selected."}
+                  ? "أدخل النصوص بالعربية — عند الحفظ تُترجم للإنجليزية تلقائياً. بدّل لغة اللوحة لعرض الترجمة داخل نفس الحقول."
+                  : "Edit content in Arabic. English is auto-translated on save — switch the dashboard language to see it in the same fields."}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <FormField
-                  label={language === "ar" ? "اسم المنتج (عربي)" : "Product name (Arabic)"}
+                  label={language === "ar" ? "اسم المنتج" : "Product name"}
                   error={errors.nameAr}
                 >
-                  <Input
-                    value={form.nameAr}
-                    onChange={(e) => setForm((f) => ({ ...f, nameAr: e.target.value }))}
+                  <LocaleInput
+                    ar={form.nameAr}
+                    en={form.nameEn}
+                    onArChange={(nameAr) => setForm((f) => ({ ...f, nameAr, nameEn: "" }))}
                   />
-                  <TranslatedPreview english={editing?.name?.en} className="mt-2" />
                 </FormField>
                 <FormField
-                  label={language === "ar" ? "العلامة التجارية (عربي)" : "Brand (Arabic)"}
+                  label={language === "ar" ? "العلامة التجارية" : "Brand"}
                   error={errors.brandAr}
                 >
-                  <Input
-                    value={form.brandAr}
-                    onChange={(e) => setForm((f) => ({ ...f, brandAr: e.target.value }))}
+                  <LocaleInput
+                    ar={form.brandAr}
+                    en={form.brandEn}
+                    onArChange={(brandAr) => setForm((f) => ({ ...f, brandAr, brandEn: "" }))}
                   />
-                  <TranslatedPreview english={editing?.brand?.en} className="mt-2" />
                 </FormField>
               </div>
 
@@ -516,13 +537,17 @@ export default function AdminInventory() {
                 <CategoryCombobox
                   categories={categories}
                   valueText={form.categoryText}
+                  valueEn={form.categoryEn}
                   selectedId={form.categoryId}
-                  onChangeText={(text) => setForm((f) => ({ ...f, categoryText: text }))}
+                  onChangeText={(text) =>
+                    setForm((f) => ({ ...f, categoryText: text, categoryEn: "" }))
+                  }
                   onSelect={(cat) =>
                     setForm((f) => ({
                       ...f,
                       categoryId: cat?.id ?? null,
                       categoryText: cat?.name?.ar ?? f.categoryText,
+                      categoryEn: cat?.name?.en ?? "",
                     }))
                   }
                   onEdit={(cat) => {
@@ -533,28 +558,23 @@ export default function AdminInventory() {
                 />
                 <p className="mt-1.5 text-[11px] leading-relaxed text-gray-400">
                   {language === "ar"
-                    ? "أدخل الاسم بالعربية — يُترجم للإنجليزية تلقائياً ويُحفظ في قاعدة البيانات"
-                    : "Enter Arabic name — auto-translated to English and stored in the database"}
+                    ? "أدخل الاسم بالعربية — يُترجم للإنجليزية تلقائياً عند الحفظ"
+                    : "Enter the Arabic name while the dashboard is in Arabic — English fills in after save"}
                 </p>
-                <TranslatedPreview
-                  english={
-                    categories.find((c) => c.id === form.categoryId)?.name?.en ||
-                    editing?.category?.name?.en
-                  }
-                  className="mt-2"
-                />
               </FormField>
 
               <FormField label={language === "ar" ? "وصف المنتج" : "Description"}>
-                <Textarea
+                <LocaleTextarea
                   rows={3}
-                  value={form.descriptionAr}
-                  onChange={(e) => setForm((f) => ({ ...f, descriptionAr: e.target.value }))}
+                  ar={form.descriptionAr}
+                  en={form.descriptionEn}
+                  onArChange={(descriptionAr) =>
+                    setForm((f) => ({ ...f, descriptionAr, descriptionEn: "" }))
+                  }
                   placeholder={
-                    language === "ar" ? "اكتب الوصف بالعربية..." : "Write description in Arabic..."
+                    language === "ar" ? "اكتب الوصف بالعربية..." : "Switch to Arabic to edit…"
                   }
                 />
-                <TranslatedPreview english={editing?.description?.en} className="mt-2" />
               </FormField>
             </div>
           </div>
@@ -563,20 +583,22 @@ export default function AdminInventory() {
             <FormField
               label={language === "ar" ? "المكونات (سطر لكل مكوّن)" : "Ingredients (one per line)"}
             >
-              <Textarea
+              <LocaleTextarea
                 rows={4}
-                value={form.ingredientsAr}
-                onChange={(e) => setForm((f) => ({ ...f, ingredientsAr: e.target.value }))}
+                ar={form.ingredientsAr}
+                en={form.ingredientsEn}
+                onArChange={(ingredientsAr) =>
+                  setForm((f) => ({ ...f, ingredientsAr, ingredientsEn: "" }))
+                }
               />
-              <TranslatedPreview englishLines={editing?.ingredients?.en ?? undefined} className="mt-2" />
             </FormField>
             <FormField label={language === "ar" ? "طريقة الاستخدام" : "How to use"}>
-              <Textarea
+              <LocaleTextarea
                 rows={4}
-                value={form.usageAr}
-                onChange={(e) => setForm((f) => ({ ...f, usageAr: e.target.value }))}
+                ar={form.usageAr}
+                en={form.usageEn}
+                onArChange={(usageAr) => setForm((f) => ({ ...f, usageAr, usageEn: "" }))}
               />
-              <TranslatedPreview english={editing?.usage?.en} className="mt-2" />
             </FormField>
           </div>
 
@@ -702,15 +724,21 @@ export default function AdminInventory() {
         title={language === "ar" ? "تعديل القسم" : "Edit category"}
       >
         <div className="flex flex-col gap-4">
-          <FormField label={language === "ar" ? "اسم القسم (عربي)" : "Category name (Arabic)"}>
-            <Input value={editCatName} onChange={(e) => setEditCatName(e.target.value)} />
+          <FormField label={language === "ar" ? "اسم القسم" : "Category name"}>
+            <LocaleInput
+              ar={editCatName}
+              en={editCat?.name?.en}
+              onArChange={(v) => {
+                setEditCatName(v);
+                setEditCat((c) => (c ? { ...c, name: { ...c.name, ar: v, en: "" } } : c));
+              }}
+            />
           </FormField>
           <p className="text-xs text-gray-400">
             {language === "ar"
-              ? "عند تغيير الاسم العربي تُحدَّث الترجمة الإنجليزية تلقائياً مرة واحدة."
-              : "Changing the Arabic name re-translates English once automatically."}
+              ? "عدّل بالعربية — الترجمة الإنجليزية تتحدث تلقائياً بعد الحفظ. بدّل لغة اللوحة لعرض الإنجليزية في نفس الحقل."
+              : "Edit in Arabic — English updates on save. Switch the dashboard language to see English in this field."}
           </p>
-          <TranslatedPreview english={editCat?.name?.en} />
           <div className="flex justify-end gap-2">
             <Button variant="ghost" onClick={() => setEditCat(null)}>
               {language === "ar" ? "إلغاء" : "Cancel"}

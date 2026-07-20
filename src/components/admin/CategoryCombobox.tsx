@@ -8,7 +8,10 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 type CategoryComboboxProps = {
   categories: ApiCategory[];
+  /** Arabic name used for create/resolve. */
   valueText: string;
+  /** Saved English translation shown when dashboard language is EN. */
+  valueEn?: string;
   selectedId: number | null;
   onChangeText: (text: string) => void;
   onSelect: (category: ApiCategory | null) => void;
@@ -21,6 +24,7 @@ type CategoryComboboxProps = {
 export default function CategoryCombobox({
   categories,
   valueText,
+  valueEn = "",
   selectedId,
   onChangeText,
   onSelect,
@@ -33,6 +37,8 @@ export default function CategoryCombobox({
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const listId = useId();
+  const isAr = language === "ar";
+  const displayValue = isAr ? valueText : valueEn.trim() || valueText;
 
   const filtered = useMemo(() => {
     const q = valueText.trim().toLowerCase();
@@ -64,25 +70,33 @@ export default function CategoryCombobox({
         className={cn(
           "flex items-center gap-2 rounded-xl border bg-white h-12 px-3 transition-colors",
           error ? "border-red-300" : "border-gray-200 focus-within:border-primary",
-          disabled && "opacity-60"
+          (disabled || !isAr) && "opacity-60"
         )}
       >
         <input
           type="text"
           disabled={disabled}
-          value={valueText}
-          onFocus={() => setOpen(true)}
+          readOnly={!isAr}
+          dir={isAr ? "rtl" : "ltr"}
+          value={displayValue}
+          onFocus={() => {
+            if (isAr) setOpen(true);
+          }}
           onChange={(e) => {
+            if (!isAr) return;
             onChangeText(e.target.value);
             onSelect(null);
             setOpen(true);
           }}
           placeholder={
-            language === "ar"
-              ? "اكتب أو اختر قسماً (عربي)"
-              : "Type or select a category (Arabic)"
+            isAr
+              ? "اكتب أو اختر قسماً"
+              : "Switch to Arabic to edit category"
           }
-          className="flex-1 min-w-0 bg-transparent text-sm text-secondary outline-none"
+          className={cn(
+            "flex-1 min-w-0 bg-transparent text-sm text-secondary outline-none",
+            !isAr && "text-start"
+          )}
           aria-autocomplete="list"
           aria-controls={listId}
           aria-expanded={open}
@@ -90,7 +104,7 @@ export default function CategoryCombobox({
         />
         <button
           type="button"
-          disabled={disabled}
+          disabled={disabled || !isAr}
           onClick={() => setOpen((v) => !v)}
           className="p-1 text-gray-400 hover:text-secondary"
           aria-label="Toggle"
@@ -100,7 +114,7 @@ export default function CategoryCombobox({
       </div>
       {error ? <p className="mt-1 text-xs text-red-500">{error}</p> : null}
 
-      {open ? (
+      {open && isAr ? (
         <div
           className={cn(
             "absolute z-50 mt-2 w-full rounded-2xl border border-surface bg-background shadow-floating overflow-hidden",
@@ -128,14 +142,10 @@ export default function CategoryCombobox({
                       }}
                     >
                       <span className="block text-sm font-bold text-secondary truncate">
-                        {language === "en" && cat.name?.en ? cat.name.en : cat.name?.ar}
+                        {cat.name?.ar}
                       </span>
-                      {language === "en" && cat.name?.ar ? (
-                        <span className="block text-[11px] text-secondary/50 truncate">
-                          {cat.name.ar}
-                        </span>
-                      ) : cat.name?.en ? (
-                        <span className="block text-[11px] text-secondary/50 truncate">
+                      {cat.name?.en ? (
+                        <span className="block text-[11px] text-secondary/50 truncate dir-ltr text-start">
                           {cat.name.en}
                         </span>
                       ) : null}
@@ -177,16 +187,14 @@ export default function CategoryCombobox({
                   }}
                 >
                   <Plus size={16} />
-                  {language === "ar"
-                    ? `إنشاء قسم جديد: “${valueText.trim()}”`
-                    : `Create new category: “${valueText.trim()}”`}
+                  {`إنشاء قسم جديد: “${valueText.trim()}”`}
                 </button>
               </li>
             ) : null}
 
             {filtered.length === 0 && !valueText.trim() ? (
               <li className="px-3 py-4 text-sm text-secondary/50 text-center">
-                {language === "ar" ? "لا توجد أقسام بعد" : "No categories yet"}
+                لا توجد أقسام بعد
               </li>
             ) : null}
           </ul>

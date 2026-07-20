@@ -14,7 +14,7 @@ import {
   type CmsSocial,
   type SocialPlatform,
 } from "@/lib/cms/footer";
-import TranslatedPreview from "@/components/admin/TranslatedPreview";
+import { LocaleTextarea } from "@/components/admin/LocaleField";
 
 type Props = {
   social: CmsSocial;
@@ -217,23 +217,23 @@ export default function AdminCmsSocialContactCard({
                 }
               />
             </div>
-            <FormField label={language === "ar" ? "العنوان (عربي)" : "Address (Arabic)"}>
-              <Textarea
+            <FormField label={language === "ar" ? "العنوان" : "Address"}>
+              <LocaleTextarea
                 rows={2}
                 disabled={!contact.address.enabled}
-                value={contact.address.text.ar}
-                onChange={(e) =>
+                ar={contact.address.text.ar}
+                en={contact.address.text.en}
+                onArChange={(ar) =>
                   onContactChange({
                     ...contact,
                     address: {
                       ...contact.address,
-                      text: { ar: e.target.value, en: "" },
+                      text: { ar, en: "" },
                     },
                   })
                 }
               />
             </FormField>
-            <TranslatedPreview english={contact.address.text.en} />
           </div>
 
           {/* Phones */}
@@ -335,28 +335,28 @@ export default function AdminCmsSocialContactCard({
                 }
               />
             </div>
-            <FormField label={language === "ar" ? "ساعات العمل (عربي)" : "Hours (Arabic)"}>
-              <Textarea
+            <FormField label={language === "ar" ? "ساعات العمل" : "Working hours"}>
+              <LocaleTextarea
                 rows={2}
                 disabled={!contact.hours.enabled}
-                value={contact.hours.text.ar}
-                onChange={(e) =>
+                ar={contact.hours.text.ar}
+                en={contact.hours.text.en}
+                onArChange={(ar) =>
                   onContactChange({
                     ...contact,
                     hours: {
                       ...contact.hours,
-                      text: { ar: e.target.value, en: "" },
+                      text: { ar, en: "" },
                     },
                   })
                 }
                 placeholder={
                   language === "ar"
                     ? "الأحد - الخميس: 9 ص - 10 م"
-                    : "Sun - Thu: 9 AM - 10 PM"
+                    : "Switch to Arabic to edit…"
                 }
               />
             </FormField>
-            <TranslatedPreview english={contact.hours.text.en} />
           </div>
 
           {/* Map */}
