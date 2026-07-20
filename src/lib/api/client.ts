@@ -32,7 +32,10 @@ type RequestOptions = {
   body?: unknown;
   token?: string | null;
   signal?: AbortSignal;
-  /** Defaults to no-store for mutations; GET may opt into force-cache. */
+  /**
+   * Always defaults to no-store so Next.js / browser never reuse stale catalog JSON.
+   * Opt into caching only for explicitly safe endpoints (e.g. geo).
+   */
   cache?: RequestCache;
 };
 
@@ -40,6 +43,8 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   const headers: HeadersInit = {
     Accept: "application/json",
     "Content-Type": "application/json",
+    "Cache-Control": "no-cache",
+    Pragma: "no-cache",
   };
 
   if (options.token) {
@@ -56,7 +61,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
       headers,
       body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
       signal: options.signal,
-      cache: options.cache ?? (method === "GET" ? "default" : "no-store"),
+      cache: options.cache ?? "no-store",
     });
   } catch {
     throw new ApiRequestError({

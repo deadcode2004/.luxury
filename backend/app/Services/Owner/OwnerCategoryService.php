@@ -4,6 +4,7 @@ namespace App\Services\Owner;
 
 use App\Models\Category;
 use App\Services\CategoryService;
+use App\Services\ProductService;
 use App\Services\Realtime\RealtimeHub;
 use App\Services\Translation\ProductTranslationService;
 use Illuminate\Support\Collection;
@@ -26,6 +27,7 @@ class OwnerCategoryService
         $data = $this->normalizeAndTranslate($data);
         $category = Category::query()->create($data);
         CategoryService::flushCache();
+        ProductService::flushListCache();
         $this->realtime->categoriesChanged('created', ['id' => $category->id, 'code' => $category->code]);
 
         return $category;
@@ -37,6 +39,7 @@ class OwnerCategoryService
         $data = $this->normalizeAndTranslate($data, $previous);
         $category->update($data);
         CategoryService::flushCache();
+        ProductService::flushListCache();
         $this->realtime->categoriesChanged('updated', ['id' => $category->id, 'code' => $category->code]);
 
         return $category->fresh();
@@ -48,6 +51,7 @@ class OwnerCategoryService
         $code = $category->code;
         $category->delete();
         CategoryService::flushCache();
+        ProductService::flushListCache();
         $this->realtime->categoriesChanged('deleted', ['id' => $id, 'code' => $code]);
     }
 

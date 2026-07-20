@@ -9,7 +9,7 @@ import React, {
   useState,
   useTransition,
 } from "react";
-import { products as catalogFallback, type Product } from "@/data/mock";
+import type { Product } from "@/data/mock";
 import { readStorage, writeStorage } from "@/lib/storage";
 import { calcOrderTotals } from "@/lib/cart/totals";
 import { useToast } from "@/components/ui/Toast";
@@ -44,6 +44,10 @@ const CartContext = createContext<CartContextValue | null>(null);
 /** Cache backend product code/id → numeric id so add-to-cart does not refetch the catalog. */
 let productCodeMapPromise: Promise<Map<string, number>> | null = null;
 
+function invalidateProductCodeMap() {
+  productCodeMapPromise = null;
+}
+
 function getProductCodeMap(token: string): Promise<Map<string, number>> {
   if (!productCodeMapPromise) {
     productCodeMapPromise = apiRequest<Array<{ id: number; code: string }>>("/products?per_page=50", {
@@ -67,14 +71,12 @@ function getProductCodeMap(token: string): Promise<Map<string, number>> {
 }
 
 function resolveProduct(productId: string): Product | undefined {
-  return (
-    getCachedCatalog().find((p) => p.id === productId) ||
-    catalogFallback.find((p) => p.id === productId)
-  );
+  // Live catalog only — never fall back to hardcoded mock products.
+  return getCachedCatalog().find((p) => p.id === productId);
 }
 
 function stockOf(productId: string): number {
-  return resolveProduct(productId)?.stock ?? 99;
+  return resolveProduct(productId)?.stock ?? 0;
 }
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
@@ -105,6 +107,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useRealtimeDomains(["products"], () => {
+    invalidateProductCodeMap();
     void fetchPublicProducts({ perPage: 50 })
       .then((list) => {
         const valid = new Set(list.map((p) => p.id));

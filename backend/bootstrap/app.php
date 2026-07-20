@@ -2,6 +2,7 @@
 
 use App\Exceptions\DomainException;
 use App\Http\Middleware\EnsureUserIsOwner;
+use App\Http\Middleware\PreventApiResponseCaching;
 use App\Support\ApiResponse;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
@@ -29,6 +30,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->api(prepend: [
             \Illuminate\Http\Middleware\HandleCors::class,
+        ]);
+
+        $middleware->api(append: [
+            PreventApiResponseCaching::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -8,66 +8,67 @@ use Illuminate\Support\Facades\Cache;
 
 class ProductService
 {
+    /**
+     * Public catalog reads always hit the database.
+     *
+     * Caching product lists caused cross-browser stale storefront data after
+     * admin edits (Redis TTL up to 5 minutes). Realtime architecture requires
+     * every visitor to see the current DB state immediately.
+     */
     public function list(array $filters = []): LengthAwarePaginator
     {
         $perPage = min((int) ($filters['per_page'] ?? 12), 50);
-        $page = max((int) ($filters['page'] ?? 1), 1);
-        $version = (string) Cache::get('products:list:version', '0');
 
-        $cacheKey = 'products:list:v'.$version.':'.md5(json_encode([$filters, $perPage, $page]));
+        $query = Product::query()
+            ->with('category')
+            ->active();
 
-        return Cache::remember($cacheKey, now()->addMinutes(5), function () use ($filters, $perPage) {
-            $query = Product::query()
-                ->with('category')
-                ->active();
+        if (! empty($filters['category_id'])) {
+            $query->where('category_id', $filters['category_id']);
+        }
 
-            if (! empty($filters['category_id'])) {
-                $query->where('category_id', $filters['category_id']);
-            }
+        if (! empty($filters['category_code'])) {
+            $query->whereHas('category', fn ($q) => $q->where('code', $filters['category_code']));
+        }
 
-            if (! empty($filters['category_code'])) {
-                $query->whereHas('category', fn ($q) => $q->where('code', $filters['category_code']));
-            }
+        if (! empty($filters['search'])) {
+            $term = '%'.$filters['search'].'%';
+            $query->where(function ($q) use ($term) {
+                $q->where('code', 'like', $term)
+                    ->orWhere('name', 'like', $term)
+                    ->orWhere('brand', 'like', $term);
+            });
+        }
 
-            if (! empty($filters['search'])) {
-                $term = '%'.$filters['search'].'%';
-                $query->where(function ($q) use ($term) {
-                    $q->where('code', 'like', $term)
-                        ->orWhere('name', 'like', $term)
-                        ->orWhere('brand', 'like', $term);
-                });
-            }
+        if (! empty($filters['featured'])) {
+            $query->where('is_featured', true);
+        }
 
-            if (! empty($filters['featured'])) {
-                $query->where('is_featured', true);
-            }
+        if (! empty($filters['best_seller'])) {
+            $query->where('is_best_seller', true);
+        }
 
-            if (! empty($filters['best_seller'])) {
-                $query->where('is_best_seller', true);
-            }
+        if (! empty($filters['new']) || ! empty($filters['is_new'])) {
+            $query->where('is_new', true);
+        }
 
-            if (! empty($filters['new']) || ! empty($filters['is_new'])) {
-                $query->where('is_new', true);
-            }
+        if (! empty($filters['offers']) || ! empty($filters['is_offer'])) {
+            $query->where('is_offer', true);
+        }
 
-            if (! empty($filters['offers']) || ! empty($filters['is_offer'])) {
-                $query->where('is_offer', true);
-            }
+        if (! empty($filters['discounts']) || ! empty($filters['on_sale'])) {
+            $query->whereNotNull('old_price')->whereColumn('old_price', '>', 'price');
+        }
 
-            if (! empty($filters['discounts']) || ! empty($filters['on_sale'])) {
-                $query->whereNotNull('old_price')->whereColumn('old_price', '>', 'price');
-            }
+        $sort = $filters['sort'] ?? 'featured';
+        match ($sort) {
+            'price-asc' => $query->orderBy('price'),
+            'price-desc' => $query->orderByDesc('price'),
+            'newest' => $query->orderByDesc('is_new')->orderByDesc('id'),
+            default => $query->orderByDesc('is_featured')->orderByDesc('id'),
+        };
 
-            $sort = $filters['sort'] ?? 'featured';
-            match ($sort) {
-                'price-asc' => $query->orderBy('price'),
-                'price-desc' => $query->orderByDesc('price'),
-                'newest' => $query->orderByDesc('is_new')->orderByDesc('id'),
-                default => $query->orderByDesc('is_featured')->orderByDesc('id'),
-            };
-
-            return $query->paginate($perPage);
-        });
+        return $query->paginate($perPage);
     }
 
     public function findByIdOrCode(string|int $id): Product
@@ -98,8 +99,11 @@ class ProductService
             ->get();
     }
 
+    /**
+     * Clears any legacy list-cache version marker left from older releases.
+     */
     public static function flushListCache(): void
     {
-        Cache::forever('products:list:version', now()->timestamp);
+        Cache::forget('products:list:version');
     }
 }

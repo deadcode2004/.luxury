@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { categories as mockCategories } from "@/data/mock";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { fetchPublicCategories, type ApiCategory } from "@/lib/api/owner";
 import { useRealtimeDomains } from "@/contexts/RealtimeContext";
@@ -14,30 +13,31 @@ type DisplayCategory = {
   image: string;
 };
 
+function mapCategories(cats: ApiCategory[]): DisplayCategory[] {
+  return (cats || []).map((c) => ({
+    id: c.code || String(c.id),
+    name: c.name,
+    image: c.image || "/images/products/paradisecare-home02.jpg",
+  }));
+}
+
 export default function Categories() {
   const { language } = useLanguage();
-  const [items, setItems] = useState<DisplayCategory[]>(
-    mockCategories.map((c) => ({
-      id: c.id,
-      name: c.name,
-      image: c.image,
-    }))
-  );
+  const [items, setItems] = useState<DisplayCategory[]>([]);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     fetchPublicCategories()
       .then((cats: ApiCategory[]) => {
-        if (cancelled || !cats?.length) return;
-        setItems(
-          cats.map((c) => ({
-            id: c.code || String(c.id),
-            name: c.name,
-            image: c.image || "/images/products/paradisecare-home02.jpg",
-          }))
-        );
+        if (!cancelled) setItems(mapCategories(cats));
       })
-      .catch(() => undefined);
+      .catch(() => {
+        if (!cancelled) setItems([]);
+      })
+      .finally(() => {
+        if (!cancelled) setReady(true);
+      });
     return () => {
       cancelled = true;
     };
@@ -45,18 +45,23 @@ export default function Categories() {
 
   useRealtimeDomains(["categories"], () => {
     void fetchPublicCategories()
-      .then((cats: ApiCategory[]) => {
-        if (!cats?.length) return;
-        setItems(
-          cats.map((c) => ({
-            id: c.code || String(c.id),
-            name: c.name,
-            image: c.image || "/images/products/paradisecare-home02.jpg",
-          }))
-        );
-      })
+      .then((cats: ApiCategory[]) => setItems(mapCategories(cats)))
       .catch(() => undefined);
   });
+
+  if (!ready) {
+    return (
+      <section className="py-12 bg-background border-b border-surface">
+        <div className="container mx-auto px-4 md:px-8 text-center text-secondary/40 py-16">
+          {language === "ar" ? "جاري التحميل..." : "Loading..."}
+        </div>
+      </section>
+    );
+  }
+
+  if (items.length === 0) {
+    return null;
+  }
 
   return (
     <section className="py-12 bg-background border-b border-surface">
