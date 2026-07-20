@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/Toast";
-import { Megaphone, Save, Layout, Plus, Trash2, ChevronUp, ChevronDown } from "lucide-react";
+import { Megaphone, Save, Layout, Plus, Trash2, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -55,6 +55,23 @@ export default function AdminCMS() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState<CmsStorefront>(emptyCms);
   const [activeSlide, setActiveSlide] = useState(0);
+  const tabsRef = useRef<HTMLDivElement>(null);
+
+  const scrollTabs = (dir: -1 | 1) => {
+    const el = tabsRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * Math.min(220, el.clientWidth * 0.7), behavior: "smooth" });
+  };
+
+  const selectSlide = (index: number) => {
+    setActiveSlide(index);
+    // Keep the active tab visible inside the horizontal scroller.
+    requestAnimationFrame(() => {
+      const el = tabsRef.current;
+      const btn = el?.querySelector<HTMLElement>(`[data-slide-tab="${index}"]`);
+      btn?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    });
+  };
 
   const load = useCallback(async () => {
     if (!token) return;
@@ -122,6 +139,10 @@ export default function AdminCMS() {
       const next = form.hero.slides.length;
       return next >= 10 ? i : next;
     });
+    requestAnimationFrame(() => {
+      const el = tabsRef.current;
+      if (el) el.scrollTo({ left: el.scrollWidth, behavior: "smooth" });
+    });
   };
 
   const removeSlide = (index: number) => {
@@ -130,7 +151,8 @@ export default function AdminCMS() {
       const slides = f.hero.slides.filter((_, i) => i !== index);
       return { ...f, hero: { slides } };
     });
-    setActiveSlide((i) => Math.max(0, Math.min(i, form.hero.slides.length - 2)));
+    const nextIndex = Math.max(0, Math.min(activeSlide, form.hero.slides.length - 2));
+    selectSlide(nextIndex);
   };
 
   const moveSlide = (index: number, dir: -1 | 1) => {
@@ -143,7 +165,7 @@ export default function AdminCMS() {
       slides[target] = tmp;
       return { ...f, hero: { slides } };
     });
-    setActiveSlide((i) => i + dir);
+    selectSlide(index + dir);
   };
 
   const save = async () => {
@@ -259,25 +281,52 @@ export default function AdminCMS() {
         </div>
 
         <div className="p-4 sm:p-6 flex flex-col gap-5">
-          <div className="flex flex-wrap gap-2">
-            {form.hero.slides.map((s, i) => (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => setActiveSlide(i)}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${
-                  i === activeSlide
-                    ? "bg-primary text-background border-primary"
-                    : "bg-background border-surface text-secondary/70 hover:border-primary/40"
-                }`}
-              >
-                {language === "ar" ? `شريحة ${i + 1}` : `Slide ${i + 1}`}
-              </button>
-            ))}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <button
+              type="button"
+              onClick={() => scrollTabs(-1)}
+              className="shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-full border border-surface bg-background text-secondary/70 hover:border-primary/40 hover:text-primary transition-colors"
+              aria-label={language === "ar" ? "تمرير الشرائح لليمين" : "Scroll slides left"}
+            >
+              <ChevronLeft size={16} />
+            </button>
+
+            <div
+              ref={tabsRef}
+              className="flex-1 min-w-0 flex items-center gap-2 overflow-x-auto scroll-smooth snap-x snap-mandatory py-1 px-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+              {form.hero.slides.map((s, i) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  data-slide-tab={i}
+                  onClick={() => selectSlide(i)}
+                  className={`snap-start shrink-0 px-3 py-1.5 rounded-full text-xs font-bold border transition-colors whitespace-nowrap ${
+                    i === activeSlide
+                      ? "bg-primary text-background border-primary"
+                      : "bg-background border-surface text-secondary/70 hover:border-primary/40"
+                  }`}
+                >
+                  {language === "ar" ? `شريحة ${i + 1}` : `Slide ${i + 1}`}
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => scrollTabs(1)}
+              className="shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-full border border-surface bg-background text-secondary/70 hover:border-primary/40 hover:text-primary transition-colors"
+              aria-label={language === "ar" ? "تمرير الشرائح لليسار" : "Scroll slides right"}
+            >
+              <ChevronRight size={16} />
+            </button>
           </div>
 
           {slide ? (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            <div
+              key={slide.id}
+              className="grid grid-cols-1 lg:grid-cols-12 gap-5"
+            >
               <div className="lg:col-span-4 flex flex-col gap-3">
                 <FormField
                   label={language === "ar" ? "صورة الشريحة" : "Slide image"}

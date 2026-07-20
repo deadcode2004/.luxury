@@ -22,7 +22,6 @@ import { useWishlist } from "@/contexts/WishlistContext";
 import { useAuth } from "@/contexts/AuthContext";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import CurrencySwitcher from "@/components/common/CurrencySwitcher";
-import AnnouncementBar from "@/components/common/AnnouncementBar";
 
 const HeaderSearchPanel = lazy(() => import("@/components/common/HeaderSearchPanel"));
 
@@ -137,7 +136,6 @@ export default function Header() {
   return (
     <>
       <div className="fixed top-0 w-full z-40">
-        <AnnouncementBar />
         <header
           className={`w-full ${
             isTransparent
