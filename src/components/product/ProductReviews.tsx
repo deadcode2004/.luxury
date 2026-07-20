@@ -1,19 +1,21 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
 import { Star } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/Toast";
 import { useRealtime, useRealtimeDomains } from "@/contexts/RealtimeContext";
-import AuthModal from "@/components/auth/AuthModal";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import FormField from "@/components/ui/FormField";
+import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
 import { ApiRequestError } from "@/lib/api/client";
 import {
   fetchProductReviews,
+  reviewerAvatarUrl,
   submitProductReview,
   type ApiReview,
 } from "@/lib/api/reviews";
@@ -22,21 +24,27 @@ import { pickLocale } from "@/lib/i18n/localeText";
 type ProductReviewsProps = {
   productId: string;
   onStatsChange?: () => void;
+  /** When true, open the add-review modal (e.g. from product rating click). */
+  openSignal?: number;
 };
 
-export default function ProductReviews({ productId, onStatsChange }: ProductReviewsProps) {
+export default function ProductReviews({
+  productId,
+  onStatsChange,
+  openSignal = 0,
+}: ProductReviewsProps) {
   const { language } = useLanguage();
-  const { token, isAuthenticated } = useAuth();
+  const { token, user, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const { signalLocal } = useRealtime();
 
   const [reviews, setReviews] = useState<ApiReview[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
-  const [authOpen, setAuthOpen] = useState(false);
   const [rating, setRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState("");
+  const [authorName, setAuthorName] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -60,30 +68,21 @@ export default function ProductReviews({ productId, onStatsChange }: ProductRevi
     void load();
   });
 
-  const openAdd = () => {
-    if (!isAuthenticated) {
-      setAuthOpen(true);
-      toast(
-        language === "ar"
-          ? "سجّل الدخول لإضافة تقييم"
-          : "Please sign in to leave a review",
-        "info"
-      );
-      return;
-    }
+  const openAdd = useCallback(() => {
     setRating(5);
     setHoverRating(0);
     setComment("");
+    setAuthorName("");
     setError("");
     setModalOpen(true);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (openSignal > 0) openAdd();
+  }, [openSignal, openAdd]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) {
-      setAuthOpen(true);
-      return;
-    }
     const trimmed = comment.trim();
     if (rating < 1 || rating > 5) {
       setError(language === "ar" ? "اختر عدد النجوم" : "Choose a star rating");
@@ -91,7 +90,9 @@ export default function ProductReviews({ productId, onStatsChange }: ProductRevi
     }
     if (trimmed.length < 3) {
       setError(
-        language === "ar" ? "اكتب تعليقاً أقصر قليلاً (٣ أحرف على الأقل)" : "Comment must be at least 3 characters"
+        language === "ar"
+          ? "اكتب تعليقاً (٣ أحرف على الأقل)"
+          : "Comment must be at least 3 characters"
       );
       return;
     }
@@ -105,11 +106,19 @@ export default function ProductReviews({ productId, onStatsChange }: ProductRevi
     setSaving(true);
     setError("");
     try {
-      const created = await submitProductReview(token, {
-        product_id: numericId,
-        rating,
-        comment: trimmed,
-      });
+      const created = await submitProductReview(
+        {
+          product_id: numericId,
+          rating,
+          comment: trimmed,
+          ...(isAuthenticated
+            ? {}
+            : authorName.trim()
+              ? { author_name: authorName.trim() }
+              : {}),
+        },
+        token
+      );
       setReviews((prev) => [created, ...prev.filter((r) => r.id !== created.id)]);
       signalLocal(["products", "dashboard"]);
       onStatsChange?.();
@@ -129,9 +138,11 @@ export default function ProductReviews({ productId, onStatsChange }: ProductRevi
   };
 
   const displayStars = hoverRating || rating;
+  const loggedInName = user?.name || [user?.first_name, user?.last_name].filter(Boolean).join(" ") || "";
+  const loggedInAvatar = reviewerAvatarUrl(loggedInName || "User", user?.avatar);
 
   return (
-    <section className="border-t border-gray-100 pt-16">
+    <section id="product-reviews" className="border-t border-gray-100 pt-16 scroll-mt-28">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold text-secondary">
@@ -158,11 +169,14 @@ export default function ProductReviews({ productId, onStatsChange }: ProductRevi
         </p>
       ) : reviews.length === 0 ? (
         <div className="text-center py-14 px-6 bg-white/60 border border-dashed border-gray-200 rounded-2xl">
-          <p className="text-secondary/70 text-base">
+          <p className="text-secondary/70 text-base mb-5">
             {language === "ar"
               ? "كن أول من يقيّم هذا المنتج."
               : "Be the first to review this product."}
           </p>
+          <Button type="button" variant="outline" size="sm" onClick={openAdd}>
+            {language === "ar" ? "إضافة تقييم" : "Add Review"}
+          </Button>
         </div>
       ) : (
         <ul className="space-y-5 max-w-3xl mx-auto">
@@ -173,6 +187,7 @@ export default function ProductReviews({ productId, onStatsChange }: ProductRevi
               review.comment?.ar ||
               review.comment?.en ||
               "";
+            const avatar = review.author_avatar || reviewerAvatarUrl(author);
             return (
               <li
                 key={review.id}
@@ -180,8 +195,15 @@ export default function ProductReviews({ productId, onStatsChange }: ProductRevi
               >
                 <div className="flex items-start justify-between gap-4 mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-secondary text-background flex items-center justify-center font-bold text-sm">
-                      {author.charAt(0)}
+                    <div className="relative w-10 h-10 rounded-full overflow-hidden bg-secondary shrink-0">
+                      <Image
+                        src={avatar}
+                        alt={author}
+                        fill
+                        className="object-cover"
+                        sizes="40px"
+                        unoptimized
+                      />
                     </div>
                     <div>
                       <p className="font-bold text-secondary text-sm">{author}</p>
@@ -219,6 +241,43 @@ export default function ProductReviews({ productId, onStatsChange }: ProductRevi
         size="md"
       >
         <form className="flex flex-col gap-5" onSubmit={onSubmit}>
+          {isAuthenticated && user ? (
+            <div className="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
+              <div className="relative w-12 h-12 rounded-full overflow-hidden bg-secondary shrink-0">
+                <Image
+                  src={loggedInAvatar}
+                  alt={loggedInName}
+                  fill
+                  className="object-cover"
+                  sizes="48px"
+                  unoptimized
+                />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-gray-500">
+                  {language === "ar" ? "التقييم باسم" : "Reviewing as"}
+                </p>
+                <p className="font-bold text-secondary truncate">{loggedInName}</p>
+              </div>
+            </div>
+          ) : (
+            <FormField
+              label={
+                language === "ar" ? "الاسم (اختياري)" : "Name (optional)"
+              }
+            >
+              <Input
+                value={authorName}
+                onChange={(e) => setAuthorName(e.target.value)}
+                placeholder={
+                  language === "ar" ? "اسمك كما سيظهر مع التقييم" : "Your display name"
+                }
+                disabled={saving}
+                maxLength={120}
+              />
+            </FormField>
+          )}
+
           <FormField label={language === "ar" ? "التقييم" : "Rating"}>
             <div
               className="flex gap-1"
@@ -246,10 +305,7 @@ export default function ProductReviews({ productId, onStatsChange }: ProductRevi
             </div>
           </FormField>
 
-          <FormField
-            label={language === "ar" ? "تعليقك" : "Your comment"}
-            error={error}
-          >
+          <FormField label={language === "ar" ? "تعليقك" : "Your comment"} error={error}>
             <Textarea
               rows={4}
               value={comment}
@@ -279,8 +335,6 @@ export default function ProductReviews({ productId, onStatsChange }: ProductRevi
           </div>
         </form>
       </Modal>
-
-      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
     </section>
   );
 }

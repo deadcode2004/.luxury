@@ -5,11 +5,11 @@ namespace App\Http\Controllers\Api\V1\Catalog;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Catalog\StoreReviewRequest;
 use App\Http\Resources\ReviewResource;
-use App\Models\Product;
 use App\Services\ProductService;
 use App\Services\ReviewService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 
 class ReviewController extends Controller
 {
@@ -36,8 +36,11 @@ class ReviewController extends Controller
 
     public function store(StoreReviewRequest $request): JsonResponse
     {
+        // Optional auth: bearer token attaches the logged-in shopper when present.
+        $user = Auth::guard('sanctum')->user() ?? $request->user();
+
         $review = $this->reviews->create(
-            $request->user(),
+            $user,
             $request->validated()
         );
 

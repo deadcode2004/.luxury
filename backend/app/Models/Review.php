@@ -12,6 +12,7 @@ class Review extends Model
         'product_id',
         'user_id',
         'author',
+        'author_avatar',
         'rating',
         'comment',
         'is_published',

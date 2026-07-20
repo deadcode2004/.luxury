@@ -4,7 +4,6 @@ namespace Tests\Feature\Api;
 
 use App\Models\Category;
 use App\Models\Product;
-use App\Models\Review;
 use App\Models\User;
 use App\Services\Translation\ProductTranslationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -33,19 +32,21 @@ class ProductReviewsTest extends TestCase
     {
         $this->mock(ProductTranslationService::class, function ($mock) {
             $mock->shouldReceive('bilingualFromText')
-                ->once()
-                ->withArgs(fn ($text) => $text === 'منتج ممتاز جداً')
-                ->andReturn([
-                    'ar' => 'منتج ممتاز جداً',
-                    'en' => 'Excellent product',
-                ]);
+                ->twice()
+                ->andReturnUsing(function (string $text) {
+                    if ($text === 'منتج ممتاز جداً') {
+                        return ['ar' => 'منتج ممتاز جداً', 'en' => 'Excellent product'];
+                    }
+
+                    return ['ar' => 'سارة علي', 'en' => 'Sara Ali'];
+                });
         });
 
         $product = $this->makeProduct();
         $user = User::factory()->create([
-            'name' => 'Sara Ali',
-            'first_name' => 'Sara',
-            'last_name' => 'Ali',
+            'name' => 'سارة علي',
+            'first_name' => 'سارة',
+            'last_name' => 'علي',
         ]);
 
         $response = $this->actingAs($user, 'sanctum')->postJson('/api/v1/reviews', [
@@ -58,7 +59,8 @@ class ProductReviewsTest extends TestCase
             ->assertJsonPath('data.rating', 5)
             ->assertJsonPath('data.comment.ar', 'منتج ممتاز جداً')
             ->assertJsonPath('data.comment.en', 'Excellent product')
-            ->assertJsonPath('data.author.ar', 'Sara Ali');
+            ->assertJsonPath('data.author.ar', 'سارة علي')
+            ->assertJsonPath('data.author.en', 'Sara Ali');
 
         $this->assertDatabaseHas('reviews', [
             'product_id' => $product->id,
@@ -71,15 +73,57 @@ class ProductReviewsTest extends TestCase
         $this->assertEquals(5.0, (float) $product->rating);
     }
 
-    public function test_guest_cannot_submit_review(): void
+    public function test_guest_can_submit_review_with_optional_name(): void
     {
+        $this->mock(ProductTranslationService::class, function ($mock) {
+            $mock->shouldReceive('bilingualFromText')
+                ->twice()
+                ->andReturnUsing(function (string $text) {
+                    if (str_contains($text, 'Nice')) {
+                        return ['ar' => 'منتج لطيف', 'en' => 'Nice product'];
+                    }
+
+                    return ['ar' => 'أحمد', 'en' => 'Ahmed'];
+                });
+        });
+
         $product = $this->makeProduct();
 
         $this->postJson('/api/v1/reviews', [
             'product_id' => $product->id,
             'rating' => 4,
-            'comment' => 'Nice',
-        ])->assertUnauthorized();
+            'comment' => 'Nice product',
+            'author_name' => 'Ahmed',
+        ])
+            ->assertCreated()
+            ->assertJsonPath('data.author.ar', 'أحمد')
+            ->assertJsonPath('data.author.en', 'Ahmed');
+
+        $this->assertDatabaseHas('reviews', [
+            'product_id' => $product->id,
+            'user_id' => null,
+            'rating' => 4,
+        ]);
+    }
+
+    public function test_guest_without_name_defaults_to_visitor(): void
+    {
+        $this->mock(ProductTranslationService::class, function ($mock) {
+            $mock->shouldReceive('bilingualFromText')
+                ->once()
+                ->andReturn(['ar' => 'تعليق', 'en' => 'Comment']);
+        });
+
+        $product = $this->makeProduct();
+
+        $this->postJson('/api/v1/reviews', [
+            'product_id' => $product->id,
+            'rating' => 5,
+            'comment' => 'تعليق جميل هنا',
+        ])
+            ->assertCreated()
+            ->assertJsonPath('data.author.ar', 'زائر')
+            ->assertJsonPath('data.author.en', 'Guest');
     }
 
     public function test_bilingual_from_text_skips_retranslate_when_unchanged(): void

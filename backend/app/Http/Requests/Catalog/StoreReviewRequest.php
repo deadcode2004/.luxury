@@ -8,7 +8,7 @@ class StoreReviewRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        return true;
     }
 
     public function rules(): array
@@ -17,6 +17,7 @@ class StoreReviewRequest extends FormRequest
             'product_id' => ['required', 'integer', 'exists:products,id'],
             'rating' => ['required', 'integer', 'min:1', 'max:5'],
             'comment' => ['required', 'string', 'min:3', 'max:2000'],
+            'author_name' => ['nullable', 'string', 'min:2', 'max:120'],
         ];
     }
 }

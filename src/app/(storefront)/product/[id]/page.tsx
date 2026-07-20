@@ -18,6 +18,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reviewOpenSignal, setReviewOpenSignal] = useState(0);
 
   const reloadProduct = () =>
     fetchPublicProduct(resolvedParams.id)
@@ -82,7 +83,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             <ProductGallery images={images} />
           </div>
           <div>
-            <ProductInfo product={product} />
+            <ProductInfo
+              product={product}
+              onWriteReview={() => setReviewOpenSignal((n) => n + 1)}
+            />
           </div>
         </div>
 
@@ -91,7 +95,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         </div>
 
         <div className="mb-24">
-          <ProductReviews productId={product.id} onStatsChange={() => void reloadProduct()} />
+          <ProductReviews
+            productId={product.id}
+            openSignal={reviewOpenSignal}
+            onStatsChange={() => void reloadProduct()}
+          />
         </div>
 
         {relatedProducts.length > 0 && (

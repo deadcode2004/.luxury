@@ -15,6 +15,7 @@ class ReviewResource extends JsonResource
             'code' => $this->code,
             'product_id' => $this->product_id,
             'author' => $this->author,
+            'author_avatar' => $this->author_avatar,
             'rating' => $this->rating,
             'comment' => $this->comment,
             'created_at' => $this->created_at?->toIso8601String(),

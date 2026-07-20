@@ -14,9 +14,10 @@ import Button from "@/components/ui/Button";
 
 interface ProductInfoProps {
   product: Product;
+  onWriteReview?: () => void;
 }
 
-export default function ProductInfo({ product }: ProductInfoProps) {
+export default function ProductInfo({ product, onWriteReview }: ProductInfoProps) {
   const { language } = useLanguage();
   const router = useRouter();
   const { addItem } = useCart();
@@ -81,7 +82,18 @@ export default function ProductInfo({ product }: ProductInfoProps) {
         {product.name[language]}
       </h1>
 
-      <div className="flex items-center gap-4 mb-6">
+      <button
+        type="button"
+        onClick={() => {
+          onWriteReview?.();
+          document.getElementById("product-reviews")?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }}
+        className="flex items-center gap-4 mb-6 text-start group"
+        title={language === "ar" ? "أضف تقييمك" : "Write a review"}
+      >
         <div className="flex text-accent">
           {[...Array(5)].map((_, i) => (
             <Star
@@ -92,10 +104,13 @@ export default function ProductInfo({ product }: ProductInfoProps) {
             />
           ))}
         </div>
-        <span className="text-sm text-gray-500 font-medium">
+        <span className="text-sm text-gray-500 font-medium group-hover:text-primary transition-colors underline-offset-4 group-hover:underline">
           {product.rating} ({product.reviews} {language === "ar" ? "تقييم" : "Reviews"})
+          <span className="ms-2 text-primary font-bold no-underline">
+            {language === "ar" ? "· أضف تقييم" : "· Add review"}
+          </span>
         </span>
-      </div>
+      </button>
 
       <div className="flex items-end gap-4 mb-8">
         <span className="text-3xl font-bold text-secondary">

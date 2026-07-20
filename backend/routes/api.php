@@ -42,11 +42,10 @@ Route::prefix('v1')->group(function () {
     Route::get('products/{product}', [ProductController::class, 'show']);
     Route::get('products/{product}/reviews', [ReviewController::class, 'forProduct']);
     Route::get('reviews', [ReviewController::class, 'index']);
+    Route::post('reviews', [ReviewController::class, 'store'])->middleware('throttle:20,1');
     Route::get('cms', [PublicCmsController::class, 'show']);
 
     Route::middleware('auth:sanctum')->group(function () {
-        Route::post('reviews', [ReviewController::class, 'store'])->middleware('throttle:20,1');
-
         Route::get('cart', [CartController::class, 'show']);
         Route::post('cart/items', [CartController::class, 'store']);
         Route::patch('cart/items/{productId}', [CartController::class, 'update']);

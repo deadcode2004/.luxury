@@ -25,6 +25,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "fastly.picsum.photos",
       },
+      {
+        protocol: "https",
+        hostname: "ui-avatars.com",
+      },
     ],
     // Must include every `quality={...}` used in the app (Next 16).
     qualities: [75, 90, 100],

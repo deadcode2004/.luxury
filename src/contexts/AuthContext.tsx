@@ -15,6 +15,7 @@ export type AuthUser = {
   last_name?: string;
   email: string;
   phone?: string | null;
+  avatar?: string | null;
   role: "owner" | "user";
   is_active?: boolean;
   notify_orders?: boolean;
