@@ -27,7 +27,8 @@ export default function AdminOverview() {
   const { token } = useAuth();
   const { toast } = useToast();
   const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Start false so SSR HTML matches the first client paint.
+  const [loading, setLoading] = useState(false);
 
   const load = useCallback(async () => {
     if (!token) return;

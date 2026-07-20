@@ -28,7 +28,9 @@ export default function AdminCoupons() {
   const { token } = useAuth();
   const { toast } = useToast();
   const [coupons, setCoupons] = useState<ApiCoupon[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Start false so SSR HTML matches the first client paint.
+  const [loading, setLoading] = useState(false);
+  const [hasFetched, setHasFetched] = useState(false);
   const [query, setQuery] = useState("");
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -61,6 +63,7 @@ export default function AdminCoupons() {
       );
     } finally {
       setLoading(false);
+      setHasFetched(true);
     }
   }, [token, query, language, toast]);
 
@@ -193,7 +196,7 @@ export default function AdminCoupons() {
           language === "ar" ? "إجراءات" : "Actions",
         ]}
       >
-        {loading ? (
+        {loading || !hasFetched ? (
           <TableRow>
             <TableCell colSpan={7} className="text-center text-gray-400 py-10">
               {language === "ar" ? "جاري التحميل..." : "Loading..."}

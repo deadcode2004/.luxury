@@ -38,7 +38,9 @@ export default function AdminCMS() {
   const { token } = useAuth();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
-  const [loading, setLoading] = useState(true);
+  // Start false so SSR HTML matches the first client paint.
+  const [loading, setLoading] = useState(false);
+  const [hasFetched, setHasFetched] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState<CmsStorefront>(emptyCms);
 
@@ -58,6 +60,7 @@ export default function AdminCMS() {
       );
     } finally {
       setLoading(false);
+      setHasFetched(true);
     }
   }, [token, language, toast]);
 
@@ -95,7 +98,7 @@ export default function AdminCMS() {
     }
   };
 
-  if (loading) {
+  if (loading || !hasFetched) {
     return (
       <div className="py-20 text-center text-gray-400">
         {language === "ar" ? "جاري التحميل..." : "Loading..."}

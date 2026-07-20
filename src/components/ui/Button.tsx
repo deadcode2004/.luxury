@@ -47,13 +47,15 @@ export default function Button({
   children,
   ...props
 }: ButtonProps) {
-  const isDisabled = disabled || loading;
+  const isDisabled = Boolean(disabled || loading);
 
   return (
     <button
+      {...props}
       type={type}
-      disabled={isDisabled}
-      aria-busy={loading || undefined}
+      // Avoid disabled={false} vs missing-attribute hydration mismatches.
+      disabled={isDisabled ? true : undefined}
+      aria-busy={loading ? true : undefined}
       className={cn(
         "inline-flex flex-row items-center justify-center gap-2 whitespace-nowrap transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed [&_svg]:inline-block [&_svg]:shrink-0 [&_svg]:align-middle",
         variantClasses[variant],
@@ -61,7 +63,6 @@ export default function Button({
         fullWidth && "w-full",
         className
       )}
-      {...props}
     >
       {loading && <Spinner size={size === "sm" ? 14 : 18} />}
       {children}
