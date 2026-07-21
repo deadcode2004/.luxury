@@ -22,8 +22,13 @@ type SearchableSelectProps = {
   disabled?: boolean;
   error?: boolean;
   className?: string;
-  /** Compact trigger (used inside phone dial picker). */
+  /** Compact trigger (standalone dial button). */
   compact?: boolean;
+  /**
+   * Borderless trigger for embedding inside another field shell
+   * (e.g. phone input with dial picker).
+   */
+  embedded?: boolean;
   /** Max options rendered after filter (perf). */
   limit?: number;
   emptyLabel?: string;
@@ -40,6 +45,7 @@ export default function SearchableSelect({
   error = false,
   className,
   compact = false,
+  embedded = false,
   limit = 120,
   emptyLabel = "No results",
   "aria-label": ariaLabel,
@@ -87,7 +93,7 @@ export default function SearchableSelect({
   }, [open]);
 
   return (
-    <div ref={rootRef} className={cn("relative w-full", className)}>
+    <div ref={rootRef} className={cn("relative", embedded ? "shrink-0" : "w-full", className)}>
       <button
         type="button"
         disabled={disabled}
@@ -97,13 +103,20 @@ export default function SearchableSelect({
         aria-label={ariaLabel}
         onClick={() => !disabled && setOpen((v) => !v)}
         className={cn(
-          "w-full bg-gray-50 border border-gray-200 rounded-lg h-14 px-3 sm:px-4 text-sm",
-          "flex items-center gap-2 text-start transition-colors",
-          "focus:outline-none focus:border-primary focus:bg-white",
-          "disabled:opacity-50 disabled:cursor-not-allowed",
-          open && "border-primary bg-white",
-          error && "border-red-300",
-          compact && "min-w-[7.5rem] w-auto shrink-0 px-2.5 sm:px-3"
+          "flex items-center gap-1.5 text-start transition-colors text-sm",
+          "focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed",
+          embedded
+            ? cn(
+                "h-full rounded-s-lg px-2.5 sm:px-3 bg-transparent hover:bg-black/[0.03]",
+                "min-w-[5.5rem]"
+              )
+            : cn(
+                "w-full bg-gray-50 border border-gray-200 rounded-lg h-14 px-3 sm:px-4",
+                "focus:border-primary focus:bg-white",
+                open && "border-primary bg-white",
+                error && "border-red-300"
+              ),
+          compact && !embedded && "min-w-[7.5rem] w-auto shrink-0 px-2.5 sm:px-3"
         )}
       >
         {selected?.flag ? (
@@ -113,18 +126,19 @@ export default function SearchableSelect({
         ) : null}
         <span
           className={cn(
-            "flex-1 truncate",
+            "truncate",
+            embedded ? "max-w-[4.5rem] sm:max-w-[5.5rem]" : "flex-1",
             selected ? "text-secondary font-medium" : "text-gray-400"
           )}
         >
           {selected
-            ? compact && selected.meta
-              ? selected.meta
+            ? compact || embedded
+              ? selected.meta || selected.label
               : selected.label
             : placeholder}
         </span>
         <ChevronDown
-          size={16}
+          size={14}
           className={cn(
             "shrink-0 text-gray-400 transition-transform",
             open && "rotate-180"
@@ -135,9 +149,11 @@ export default function SearchableSelect({
       {open ? (
         <div
           className={cn(
-            "absolute z-50 mt-2 w-full min-w-[16rem] overflow-hidden rounded-xl border border-surface",
+            "absolute z-50 mt-2 overflow-hidden rounded-xl border border-surface",
             "bg-white shadow-floating",
-            compact && "start-0"
+            embedded || compact
+              ? "start-0 w-[min(22rem,calc(100vw-2rem))]"
+              : "w-full min-w-[16rem]"
           )}
         >
           <div className="flex items-center gap-2 border-b border-surface/70 px-3 py-2.5">
@@ -180,9 +196,9 @@ export default function SearchableSelect({
                           {option.flag}
                         </span>
                       ) : null}
-                      <span className="flex-1 truncate">{option.label}</span>
+                      <span className="flex-1 truncate min-w-0">{option.label}</span>
                       {option.meta ? (
-                        <span className="text-xs text-gray-400 shrink-0 dir-ltr">
+                        <span className="text-xs text-gray-400 shrink-0 dir-ltr font-medium">
                           {option.meta}
                         </span>
                       ) : null}

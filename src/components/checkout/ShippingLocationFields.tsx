@@ -15,13 +15,18 @@ type ShippingLocationFieldsProps = {
   countryCode: string;
   stateCode: string;
   city: string;
+  fullAddress: string;
+  zipCode: string;
   onCountryChange: (countryCode: string) => void;
   onStateChange: (stateCode: string) => void;
   onCityChange: (city: string) => void;
+  onFullAddressChange: (value: string) => void;
+  onZipCodeChange: (value: string) => void;
   errors?: {
     country?: string;
     state?: string;
     city?: string;
+    full_address?: string;
   };
 };
 
@@ -29,18 +34,25 @@ export default function ShippingLocationFields({
   countryCode,
   stateCode,
   city,
+  fullAddress,
+  zipCode,
   onCountryChange,
   onStateChange,
   onCityChange,
+  onFullAddressChange,
+  onZipCodeChange,
   errors,
 }: ShippingLocationFieldsProps) {
   const { language } = useLanguage();
 
   const countries = useMemo(() => getCountryOptions(language), [language]);
-  const states = useMemo(() => getStateOptions(countryCode), [countryCode]);
+  const states = useMemo(
+    () => getStateOptions(countryCode, language),
+    [countryCode, language]
+  );
   const cities = useMemo(
-    () => getCityOptions(countryCode, stateCode),
-    [countryCode, stateCode]
+    () => getCityOptions(countryCode, stateCode, language),
+    [countryCode, stateCode, language]
   );
 
   const hasStates = states.length > 0;
@@ -50,6 +62,7 @@ export default function ShippingLocationFields({
 
   return (
     <>
+      {/* Row: Country + State */}
       <FormField label={language === "ar" ? "الدولة" : "Country"} error={errors?.country}>
         <SearchableSelect
           value={countryCode}
@@ -92,11 +105,8 @@ export default function ShippingLocationFields({
         />
       </FormField>
 
-      <FormField
-        className="md:col-span-2"
-        label={language === "ar" ? "المدينة" : "City"}
-        error={errors?.city}
-      >
+      {/* Row: City + Full address */}
+      <FormField label={language === "ar" ? "المدينة" : "City"} error={errors?.city}>
         {useCitySelect ? (
           <SearchableSelect
             value={city}
@@ -130,6 +140,37 @@ export default function ShippingLocationFields({
             className={errors?.city ? "border-red-300" : ""}
           />
         )}
+      </FormField>
+
+      <FormField
+        label={language === "ar" ? "العنوان بالكامل" : "Full Address"}
+        error={errors?.full_address}
+      >
+        <Input
+          value={fullAddress}
+          onChange={(e) => onFullAddressChange(e.target.value)}
+          className={errors?.full_address ? "border-red-300" : ""}
+          autoComplete="street-address"
+          placeholder={
+            language === "ar"
+              ? "الشارع، رقم المبنى، علامة مميزة..."
+              : "Street, building number, landmark..."
+          }
+        />
+      </FormField>
+
+      {/* Row: Zip full width */}
+      <FormField
+        className="md:col-span-2"
+        label={language === "ar" ? "الرمز البريدي" : "Zip / Postal Code"}
+      >
+        <Input
+          value={zipCode}
+          onChange={(e) => onZipCodeChange(e.target.value)}
+          autoComplete="postal-code"
+          className="text-start dir-ltr"
+          placeholder={language === "ar" ? "الرمز البريدي" : "Postal code"}
+        />
       </FormField>
     </>
   );

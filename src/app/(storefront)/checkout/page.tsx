@@ -44,8 +44,8 @@ const GEO_SESSION_KEY = "paradise_geo_country";
 function findStateForCity(countryCode: string, cityName: string) {
   const needle = cityName.trim().toLowerCase();
   if (!needle || !countryCode) return { stateCode: "", city: cityName };
-  for (const state of getStateOptions(countryCode)) {
-    const match = getCityOptions(countryCode, state.value).find(
+  for (const state of getStateOptions(countryCode, "en")) {
+    const match = getCityOptions(countryCode, state.value, "en").find(
       (c) => c.value.toLowerCase() === needle
     );
     if (match) return { stateCode: state.value, city: match.value };
@@ -222,7 +222,7 @@ export default function CheckoutPage() {
       next.email = language === "ar" ? "بريد غير صالح" : "Invalid email";
     }
     if (!form.country_code) next.country = language === "ar" ? "مطلوب" : "Required";
-    const states = getStateOptions(form.country_code);
+    const states = getStateOptions(form.country_code, language);
     if (states.length > 0 && !form.state_code) {
       next.state = language === "ar" ? "مطلوب" : "Required";
     }
@@ -438,45 +438,22 @@ export default function CheckoutPage() {
                   countryCode={form.country_code}
                   stateCode={form.state_code}
                   city={form.city}
+                  fullAddress={form.full_address}
+                  zipCode={form.zip_code}
                   onCountryChange={onCountryChange}
                   onStateChange={onStateChange}
                   onCityChange={(city) => setForm((f) => ({ ...f, city }))}
+                  onFullAddressChange={(full_address) =>
+                    setForm((f) => ({ ...f, full_address }))
+                  }
+                  onZipCodeChange={(zip_code) => setForm((f) => ({ ...f, zip_code }))}
                   errors={{
                     country: errors.country,
                     state: errors.state,
                     city: errors.city,
+                    full_address: errors.full_address,
                   }}
                 />
-
-                <FormField
-                  className="md:col-span-2"
-                  label={language === "ar" ? "العنوان بالكامل" : "Full Address"}
-                  error={errors.full_address}
-                >
-                  <Input
-                    value={form.full_address}
-                    onChange={(e) => setForm((f) => ({ ...f, full_address: e.target.value }))}
-                    className={errors.full_address ? "border-red-300" : ""}
-                    autoComplete="street-address"
-                    placeholder={
-                      language === "ar"
-                        ? "الشارع، رقم المبنى، علامة مميزة..."
-                        : "Street, building number, landmark..."
-                    }
-                  />
-                </FormField>
-
-                <FormField
-                  className="md:col-span-2"
-                  label={language === "ar" ? "الرمز البريدي" : "Zip / Postal Code"}
-                >
-                  <Input
-                    value={form.zip_code}
-                    onChange={(e) => setForm((f) => ({ ...f, zip_code: e.target.value }))}
-                    autoComplete="postal-code"
-                    className="max-w-xs text-start dir-ltr"
-                  />
-                </FormField>
               </div>
             </Card>
 

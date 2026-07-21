@@ -1,5 +1,15 @@
 import { City, Country, State } from "country-state-city";
+import {
+  getCitiesByCountryCode,
+  getCountryByCode as getArCountryByCode,
+} from "countries-cities-ar";
+import citiesI18n from "i18n-iso-cities";
+import arCities from "i18n-iso-cities/langs/ar.json";
+import enCities from "i18n-iso-cities/langs/en.json";
 import type { AppLanguage } from "@/lib/i18n/language";
+
+citiesI18n.registerLocale(arCities);
+citiesI18n.registerLocale(enCities);
 
 export type GeoOption = {
   value: string;
@@ -7,9 +17,11 @@ export type GeoOption = {
   searchText: string;
   flag?: string;
   dialCode?: string;
+  meta?: string;
 };
 
 const regionNamesCache = new Map<string, Intl.DisplayNames>();
+const arPlaceCache = new Map<string, string>();
 
 function regionNames(language: AppLanguage) {
   const key = language === "ar" ? "ar" : "en";
@@ -21,20 +33,81 @@ function regionNames(language: AppLanguage) {
   return cached;
 }
 
-/** Localized country display name (falls back to English dataset name). */
+function normalizeKey(value: string) {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\u0600-\u06ff\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** Localized country display name (AR/EN). */
 export function countryDisplayName(isoCode: string, language: AppLanguage, fallback?: string) {
+  const code = isoCode.toUpperCase();
+  const fromPackage = getArCountryByCode(code);
+  if (language === "ar" && fromPackage?.nameAr) return fromPackage.nameAr;
+  if (language === "en" && fromPackage?.name) return fromPackage.name;
+
   try {
-    const name = regionNames(language).of(isoCode.toUpperCase());
+    const name = regionNames(language).of(code);
     if (name) return name;
   } catch {
     // ignore
   }
-  return fallback || isoCode;
+  return fallback || fromPackage?.name || code;
+}
+
+/** Best-effort place name localization (state / city). Value stays English for stability. */
+export function placeDisplayName(
+  englishName: string,
+  countryCode: string,
+  language: AppLanguage
+): string {
+  const name = englishName.trim();
+  if (!name) return name;
+  if (language === "en") return name;
+
+  const cacheKey = `${countryCode}:${normalizeKey(name)}`;
+  const cached = arPlaceCache.get(cacheKey);
+  if (cached) return cached;
+
+  const fromCities = citiesI18n.getName(countryCode, name, "ar");
+  if (fromCities) {
+    arPlaceCache.set(cacheKey, fromCities);
+    return fromCities;
+  }
+
+  const translated = citiesI18n.translate(name, "ar");
+  if (translated && translated !== name) {
+    arPlaceCache.set(cacheKey, translated);
+    return translated;
+  }
+
+  const localList = getCitiesByCountryCode(countryCode) || [];
+  const needle = normalizeKey(name);
+  const exact = localList.find((c) => normalizeKey(c.name) === needle);
+  if (exact?.nameAr) {
+    arPlaceCache.set(cacheKey, exact.nameAr);
+    return exact.nameAr;
+  }
+
+  const fuzzy = localList.find((c) => {
+    const n = normalizeKey(c.name);
+    return n.includes(needle) || needle.includes(n);
+  });
+  if (fuzzy?.nameAr) {
+    arPlaceCache.set(cacheKey, fuzzy.nameAr);
+    return fuzzy.nameAr;
+  }
+
+  arPlaceCache.set(cacheKey, name);
+  return name;
 }
 
 export function normalizeDialCode(raw: string | null | undefined): string {
-  const digits = String(raw || "").replace(/[^\d]/g, "");
-  return digits;
+  return String(raw || "").replace(/[^\d]/g, "");
 }
 
 export function formatDialCode(raw: string | null | undefined): string {
@@ -42,7 +115,6 @@ export function formatDialCode(raw: string | null | undefined): string {
   return digits ? `+${digits}` : "";
 }
 
-/** Build E.164-ish phone string for storage (max ~20 digits + plus). */
 export function composePhone(dialCode: string, nationalNumber: string): string {
   const dial = normalizeDialCode(dialCode);
   const national = String(nationalNumber || "").replace(/[^\d]/g, "");
@@ -50,7 +122,6 @@ export function composePhone(dialCode: string, nationalNumber: string): string {
   return `+${dial}${national}`;
 }
 
-/** Split a stored phone into dial code + national using known country phonecodes. */
 export function splitPhone(
   phone: string | null | undefined,
   preferredCountry?: string | null
@@ -78,7 +149,6 @@ export function splitPhone(
     }
   }
 
-  // Longest matching dial code wins.
   let best: { isoCode: string; dial: string } | null = null;
   for (const c of countries) {
     const dial = normalizeDialCode(c.phonecode);
@@ -115,39 +185,57 @@ export function getCountryOptions(language: AppLanguage): GeoOption[] {
       label,
       flag: c.flag,
       dialCode: normalizeDialCode(c.phonecode),
+      meta: dial,
       searchText: `${label} ${c.name} ${c.isoCode} ${dial}`.toLowerCase(),
     };
   });
 }
 
+/** Dial-code picker options with localized country names. */
 export function getDialOptions(language: AppLanguage): GeoOption[] {
-  // Deduplicate by iso (US/CA share +1 but keep both entries for flags).
-  return getCountryOptions(language).map((c) => ({
-    ...c,
-    label: `${c.flag ? `${c.flag} ` : ""}${formatDialCode(c.dialCode)} ${c.label}`,
-    searchText: `${c.searchText} ${formatDialCode(c.dialCode)}`.toLowerCase(),
-  }));
+  return getAllCountries().map((c) => {
+    const label = countryDisplayName(c.isoCode, language, c.name);
+    const dial = formatDialCode(c.phonecode);
+    return {
+      value: c.isoCode,
+      label,
+      flag: c.flag,
+      dialCode: normalizeDialCode(c.phonecode),
+      meta: dial,
+      searchText: `${label} ${c.name} ${c.isoCode} ${dial} ${normalizeDialCode(c.phonecode)}`.toLowerCase(),
+    };
+  });
 }
 
-export function getStateOptions(countryCode: string): GeoOption[] {
+export function getStateOptions(countryCode: string, language: AppLanguage = "en"): GeoOption[] {
   if (!countryCode) return [];
-  return State.getStatesOfCountry(countryCode).map((s) => ({
-    value: s.isoCode,
-    label: s.name,
-    searchText: `${s.name} ${s.isoCode}`.toLowerCase(),
-  }));
+  return State.getStatesOfCountry(countryCode).map((s) => {
+    const label = placeDisplayName(s.name, countryCode, language);
+    return {
+      value: s.isoCode,
+      label,
+      searchText: `${label} ${s.name} ${s.isoCode}`.toLowerCase(),
+    };
+  });
 }
 
-export function getCityOptions(countryCode: string, stateCode: string): GeoOption[] {
+export function getCityOptions(
+  countryCode: string,
+  stateCode: string,
+  language: AppLanguage = "en"
+): GeoOption[] {
   if (!countryCode) return [];
   const cities = stateCode
     ? City.getCitiesOfState(countryCode, stateCode) || []
     : City.getCitiesOfCountry(countryCode) || [];
-  return cities.map((city) => ({
-    value: city.name,
-    label: city.name,
-    searchText: city.name.toLowerCase(),
-  }));
+  return cities.map((city) => {
+    const label = placeDisplayName(city.name, countryCode, language);
+    return {
+      value: city.name,
+      label,
+      searchText: `${label} ${city.name}`.toLowerCase(),
+    };
+  });
 }
 
 export function getCountryByCode(code: string) {
