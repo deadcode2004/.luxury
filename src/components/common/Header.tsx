@@ -47,32 +47,6 @@ function CountBadge({
   );
 }
 
-function HeaderSearchTrigger({ inverted = false }: { inverted?: boolean }) {
-  const { language, dir } = useLanguage();
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        aria-label={language === "ar" ? "بحث" : "Search"}
-        aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
-        className={`transition-colors p-2 inline-flex items-center justify-center active:scale-95 rounded-lg ${
-          inverted ? "hover:text-gray-300" : "hover:text-primary"
-        } ${open ? (inverted ? "bg-white/15" : "bg-surface/70 text-primary") : ""}`}
-      >
-        <Search size={18} />
-      </button>
-      {open ? (
-        <Suspense fallback={null}>
-          <HeaderSearchPanel open={open} onOpenChange={setOpen} dir={dir} />
-        </Suspense>
-      ) : null}
-    </div>
-  );
-}
-
 export default function Header() {
   const { language, toggleLanguage, dir } = useLanguage();
   const { count: cartCount } = useCart();
@@ -81,6 +55,7 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
   const pathname = usePathname();
   const accountLabel = !ready || !isAuthenticated
@@ -97,7 +72,7 @@ export default function Header() {
   const accountDisplayName = displayPersonName(user, language, "");
 
   const isTransparentRoute = pathname === "/" || pathname === "/about";
-  const isTransparent = isTransparentRoute && !isScrolled;
+  const isTransparent = isTransparentRoute && !isScrolled && !isSearchOpen;
   const textColorClass = isTransparent ? "text-background" : "text-secondary";
   const hoverColorClass = isTransparent ? "hover:text-gray-300" : "hover:text-primary";
   const logoDotColorClass = isTransparent ? "text-background" : "text-primary";
@@ -123,15 +98,19 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
-    document.body.style.overflow = isMobileMenuOpen ? "hidden" : "unset";
+    document.body.style.overflow = isMobileMenuOpen || isSearchOpen ? "hidden" : "unset";
     return () => {
       document.body.style.overflow = "unset";
     };
-  }, [isMobileMenuOpen]);
+  }, [isMobileMenuOpen, isSearchOpen]);
 
   useEffect(() => {
     if (!isMobileMenuOpen) setIsAccountMenuOpen(false);
   }, [isMobileMenuOpen]);
+
+  useEffect(() => {
+    setIsSearchOpen(false);
+  }, [pathname]);
 
   const bagTotal = cartCount + wishCount;
   const menuBadgeLabel =
@@ -152,11 +131,12 @@ export default function Header() {
       <div className="fixed top-0 w-full z-40">
         <AnnouncementBar />
         <header
-          className={`w-full ${
+          className={cn(
+            "relative z-[45] w-full",
             isTransparent
               ? "bg-transparent py-5"
               : "bg-background/95 backdrop-blur-md shadow-soft py-3 border-b border-surface"
-          }`}
+          )}
           style={{ transition: "background-color 200ms ease, padding 200ms ease, box-shadow 200ms ease" }}
         >
         <div className="container mx-auto px-4 md:px-8 flex justify-between items-center">
@@ -169,7 +149,10 @@ export default function Header() {
                 hoverColorClass,
                 isTransparent ? "hover:bg-white/10" : "hover:bg-surface/60"
               )}
-              onClick={() => setIsMobileMenuOpen(true)}
+              onClick={() => {
+                setIsSearchOpen(false);
+                setIsMobileMenuOpen(true);
+              }}
               aria-label={bagTotal > 0 ? menuBadgeLabel : language === "ar" ? "فتح القائمة" : "Open menu"}
             >
               <Menu size={24} />
@@ -230,7 +213,31 @@ export default function Header() {
               <span>{language === "ar" ? "EN" : "AR"}</span>
             </button>
 
-            <HeaderSearchTrigger inverted={isTransparent} />
+            <button
+              type="button"
+              aria-label={
+                isSearchOpen
+                  ? language === "ar"
+                    ? "إغلاق البحث"
+                    : "Close search"
+                  : language === "ar"
+                    ? "بحث"
+                    : "Search"
+              }
+              aria-expanded={isSearchOpen}
+              aria-controls="header-search-panel"
+              onClick={() => setIsSearchOpen((v) => !v)}
+              onPointerEnter={() => {
+                void import("@/components/common/HeaderSearchPanel");
+              }}
+              className={cn(
+                "inline-flex items-center justify-center rounded-lg p-2 transition-colors active:scale-95",
+                hoverColorClass,
+                isSearchOpen && (isTransparent ? "bg-white/15" : "bg-surface/70 text-primary")
+              )}
+            >
+              {isSearchOpen ? <X size={18} /> : <Search size={18} />}
+            </button>
 
             <Link
               href="/favorites"
@@ -252,7 +259,11 @@ export default function Header() {
             />
           </div>
         </div>
-      </header>
+        </header>
+
+        <Suspense fallback={null}>
+          <HeaderSearchPanel open={isSearchOpen} onOpenChange={setIsSearchOpen} />
+        </Suspense>
       </div>
 
       <div

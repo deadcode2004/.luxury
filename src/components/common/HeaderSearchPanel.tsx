@@ -16,7 +16,6 @@ import { useRealtimeDomains } from "@/contexts/RealtimeContext";
 type HeaderSearchPanelProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  dir: "rtl" | "ltr";
 };
 
 function normalize(text: string) {
@@ -41,22 +40,21 @@ function searchProducts(
       );
       return hay.includes(q) || normalize(p.name[language]).includes(q);
     })
-    .slice(0, 6);
+    .slice(0, 8);
 }
 
-export default function HeaderSearchPanel({
-  open,
-  onOpenChange,
-  dir,
-}: HeaderSearchPanelProps) {
+/**
+ * Full-width search sheet that slides down from under the header.
+ */
+export default function HeaderSearchPanel({ open, onOpenChange }: HeaderSearchPanelProps) {
   const { language } = useLanguage();
   const { currency, convertFromEgp } = useCurrency();
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [catalog, setCatalog] = useState<Product[]>(() => getCachedCatalog());
   const inputRef = useRef<HTMLInputElement>(null);
-  const rootRef = useRef<HTMLDivElement>(null);
-  const panelId = useId();
+  const panelRef = useRef<HTMLDivElement>(null);
+  const listId = useId();
 
   const results = useMemo(
     () => searchProducts(catalog, query, language),
@@ -82,26 +80,20 @@ export default function HeaderSearchPanel({
   });
 
   useEffect(() => {
-    if (!open) return;
-    const t = window.setTimeout(() => inputRef.current?.focus(), 40);
-    const onPointer = (e: MouseEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) onOpenChange(false);
-    };
+    if (!open) {
+      setQuery("");
+      return;
+    }
+    const t = window.setTimeout(() => inputRef.current?.focus(), 180);
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onOpenChange(false);
     };
-    document.addEventListener("mousedown", onPointer);
     document.addEventListener("keydown", onKey);
     return () => {
       window.clearTimeout(t);
-      document.removeEventListener("mousedown", onPointer);
       document.removeEventListener("keydown", onKey);
     };
   }, [open, onOpenChange]);
-
-  useEffect(() => {
-    if (!open) setQuery("");
-  }, [open]);
 
   const goShop = () => {
     const q = query.trim();
@@ -110,139 +102,193 @@ export default function HeaderSearchPanel({
   };
 
   return (
-    <div
-      ref={rootRef}
-      id={panelId}
-      className={cn(
-        "absolute top-[calc(100%+0.75rem)] z-50 w-[min(92vw,26rem)] transition-all duration-200 ease-out",
-        dir === "rtl" ? "left-0" : "right-0",
-        open
-          ? "opacity-100 visible translate-y-0 pointer-events-auto"
-          : "opacity-0 invisible -translate-y-1 pointer-events-none"
-      )}
-    >
-      <div className="rounded-2xl border border-surface bg-background/95 backdrop-blur-xl shadow-floating overflow-hidden">
-        <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-surface/80">
-          <Link
-            href="/"
-            onClick={() => onOpenChange(false)}
-            className="shrink-0 text-sm font-bold tracking-widest uppercase text-secondary"
-          >
-            PARADISE<span className="text-primary">.</span>
-          </Link>
-          <div className="relative flex-1 min-w-0">
-            <Search
-              size={16}
-              className="absolute top-1/2 -translate-y-1/2 start-3 text-secondary/40 pointer-events-none"
-            />
-            <input
-              ref={inputRef}
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  if (results[0]) {
-                    onOpenChange(false);
-                    router.push(`/product/${results[0].id}`);
-                  } else {
-                    goShop();
-                  }
-                }
-              }}
-              placeholder={language === "ar" ? "ابحث عن منتج..." : "Search products..."}
-              className="w-full h-11 rounded-xl border border-surface bg-surface/40 ps-10 pe-10 text-sm text-secondary placeholder:text-secondary/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/15 transition-all"
-              autoComplete="off"
-              dir="auto"
-            />
-            {query ? (
-              <button
-                type="button"
-                aria-label={language === "ar" ? "مسح" : "Clear"}
-                onClick={() => {
-                  setQuery("");
-                  inputRef.current?.focus();
-                }}
-                className="absolute top-1/2 -translate-y-1/2 end-2 p-1.5 rounded-lg text-secondary/45 hover:text-secondary hover:bg-surface transition-colors inline-flex"
-              >
-                <X size={14} />
-              </button>
-            ) : null}
-          </div>
-        </div>
+    <>
+      {/* Page dimmer — closes on outside click; sits under the header chrome */}
+      <button
+        type="button"
+        aria-label={language === "ar" ? "إغلاق البحث" : "Close search"}
+        tabIndex={open ? 0 : -1}
+        className={cn(
+          "fixed inset-0 z-[35] bg-secondary/25 backdrop-blur-[2px] transition-opacity duration-200 ease-out",
+          open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        )}
+        onClick={() => onOpenChange(false)}
+      />
 
-        <div className="max-h-[min(60vh,22rem)] overflow-y-auto">
-          {!query.trim() ? (
-            <p className="px-4 py-6 text-sm text-secondary/50 text-center">
-              {language === "ar"
-                ? "ابدأ الكتابة لعرض اقتراحات فورية بالعربية أو الإنجليزية"
-                : "Start typing for instant Arabic & English suggestions"}
-            </p>
-          ) : results.length === 0 ? (
-            <div className="px-4 py-6 text-center">
-              <p className="text-sm text-secondary/60 mb-3">
-                {language === "ar" ? "لا توجد نتائج" : "No results"}
-              </p>
-              <button
-                type="button"
-                onClick={goShop}
-                className="text-sm font-bold text-primary hover:underline"
-              >
-                {language === "ar" ? "تصفح المتجر" : "Browse shop"}
-              </button>
-            </div>
-          ) : (
-            <ul className="p-2">
-              {results.map((product) => (
-                <li key={product.id}>
-                  <Link
-                    href={`/product/${product.id}`}
-                    onClick={() => onOpenChange(false)}
-                    className="flex items-center gap-3 rounded-xl p-2.5 hover:bg-surface/70 transition-colors group"
-                  >
-                    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-surface">
-                      <Image
-                        src={product.image}
-                        alt={product.name[language]}
-                        fill
-                        sizes="56px"
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="min-w-0 flex-1 text-start">
-                      <p className="text-sm font-bold text-secondary group-hover:text-primary transition-colors line-clamp-1">
-                        {product.name[language]}
-                      </p>
-                      <p className="text-[11px] text-secondary/45 mt-0.5 line-clamp-1">
-                        {product.brand[language]}
-                      </p>
-                      <p className="text-sm font-semibold text-secondary mt-1">
-                        {formatMoney(product.price, language, {
-                          currency,
-                          convertFromEgp,
-                        })}
-                      </p>
-                    </div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+      <div
+        className={cn(
+          "absolute inset-x-0 top-full z-[36] overflow-hidden",
+          "transition-[visibility] duration-200",
+          open ? "visible pointer-events-auto" : "invisible pointer-events-none"
+        )}
+        aria-hidden={!open}
+      >
+        <div
+          ref={panelRef}
+          id="header-search-panel"
+          role="dialog"
+          aria-modal="true"
+          aria-label={language === "ar" ? "بحث المنتجات" : "Product search"}
+          className={cn(
+            "w-full border-b border-surface/60 bg-background/95 shadow-floating backdrop-blur-xl",
+            "origin-top will-change-transform",
+            "transition-[transform,opacity] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
+            open
+              ? "translate-y-0 opacity-100 pointer-events-auto"
+              : "-translate-y-4 opacity-0 pointer-events-none"
           )}
-        </div>
+        >
+          <div className="container mx-auto px-4 md:px-8 py-5 md:py-6">
+            <div className="mx-auto w-full max-w-3xl">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="relative min-w-0 flex-1">
+                  <Search
+                    size={18}
+                    className="pointer-events-none absolute top-1/2 start-4 -translate-y-1/2 text-secondary/40"
+                  />
+                  <input
+                    ref={inputRef}
+                    type="search"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        if (results[0]) {
+                          onOpenChange(false);
+                          router.push(`/product/${results[0].id}`);
+                        } else {
+                          goShop();
+                        }
+                      }
+                    }}
+                    placeholder={
+                      language === "ar"
+                        ? "ابحث عن منتج، علامة، أو وصف..."
+                        : "Search products, brands, or descriptions..."
+                    }
+                    className={cn(
+                      "h-12 w-full rounded-2xl border border-surface/70 bg-surface/35 ps-12 pe-12",
+                      "text-[15px] font-medium text-secondary placeholder:text-secondary/40",
+                      "shadow-soft transition-all duration-150",
+                      "focus:border-primary/45 focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/15"
+                    )}
+                    autoComplete="off"
+                    dir="auto"
+                    aria-autocomplete="list"
+                    aria-controls={listId}
+                  />
+                  {query ? (
+                    <button
+                      type="button"
+                      aria-label={language === "ar" ? "مسح" : "Clear"}
+                      onClick={() => {
+                        setQuery("");
+                        inputRef.current?.focus();
+                      }}
+                      className="absolute top-1/2 end-2 inline-flex -translate-y-1/2 rounded-xl p-2 text-secondary/45 transition-colors hover:bg-surface hover:text-secondary"
+                    >
+                      <X size={16} />
+                    </button>
+                  ) : null}
+                </div>
 
-        {query.trim() && results.length > 0 ? (
-          <div className="border-t border-surface/80 px-3 py-2.5">
-            <button
-              type="button"
-              onClick={goShop}
-              className="w-full text-center text-xs font-bold text-primary hover:underline py-1"
-            >
-              {language === "ar" ? "عرض كل النتائج في المتجر" : "View all results in shop"}
-            </button>
+                <button
+                  type="button"
+                  onClick={() => onOpenChange(false)}
+                  aria-label={language === "ar" ? "إغلاق" : "Close"}
+                  className={cn(
+                    "inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-surface/70",
+                    "bg-background text-secondary/70 transition-colors",
+                    "hover:border-primary/30 hover:bg-primary/[0.06] hover:text-primary",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35",
+                    "active:scale-95"
+                  )}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div id={listId} className="mt-4" role="listbox">
+                {!query.trim() ? (
+                  <p className="px-1 py-3 text-center text-sm text-secondary/50">
+                    {language === "ar"
+                      ? "ابدأ الكتابة لعرض اقتراحات فورية بالعربية أو الإنجليزية"
+                      : "Start typing for instant Arabic & English suggestions"}
+                  </p>
+                ) : results.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-surface/70 bg-surface/20 px-4 py-8 text-center">
+                    <p className="text-sm text-secondary/60 mb-3">
+                      {language === "ar" ? "لا توجد نتائج مطابقة" : "No matching results"}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={goShop}
+                      className="text-sm font-bold text-primary hover:underline"
+                    >
+                      {language === "ar" ? "تصفح المتجر" : "Browse shop"}
+                    </button>
+                  </div>
+                ) : (
+                  <ul className="grid max-h-[min(52vh,26rem)] gap-1.5 overflow-y-auto overscroll-contain pe-0.5 sm:grid-cols-2">
+                    {results.map((product) => (
+                      <li key={product.id}>
+                        <Link
+                          href={`/product/${product.id}`}
+                          onClick={() => onOpenChange(false)}
+                          className={cn(
+                            "group flex items-center gap-3 rounded-2xl border border-transparent bg-background/70 p-2.5",
+                            "transition-colors duration-150 hover:border-primary/20 hover:bg-primary/[0.05]",
+                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                          )}
+                        >
+                          <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-surface">
+                            <Image
+                              src={product.image}
+                              alt={product.name[language]}
+                              fill
+                              sizes="56px"
+                              className="object-cover transition-transform duration-300 group-hover:scale-105"
+                            />
+                          </div>
+                          <div className="min-w-0 flex-1 text-start">
+                            <p className="line-clamp-1 text-sm font-bold text-secondary transition-colors group-hover:text-primary">
+                              {product.name[language]}
+                            </p>
+                            <p className="mt-0.5 line-clamp-1 text-[11px] text-secondary/45">
+                              {product.brand[language]}
+                            </p>
+                            <p className="mt-1 text-sm font-semibold text-secondary">
+                              {formatMoney(product.price, language, {
+                                currency,
+                                convertFromEgp,
+                              })}
+                            </p>
+                          </div>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {query.trim() && results.length > 0 ? (
+                  <div className="mt-3 flex justify-center border-t border-surface/50 pt-3">
+                    <button
+                      type="button"
+                      onClick={goShop}
+                      className="text-xs font-bold tracking-wide text-primary hover:underline"
+                    >
+                      {language === "ar"
+                        ? "عرض كل النتائج في المتجر"
+                        : "View all results in shop"}
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            </div>
           </div>
-        ) : null}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
