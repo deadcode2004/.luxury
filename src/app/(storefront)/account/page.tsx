@@ -13,13 +13,13 @@ import FormField from "@/components/ui/FormField";
 import StatusBadge from "@/components/ui/StatusBadge";
 import Badge from "@/components/ui/Badge";
 import SidebarNav from "@/components/layout/SidebarNav";
-import PageHeader from "@/components/layout/PageHeader";
 import Table, { TableRow, TableCell } from "@/components/ui/Table";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import Modal from "@/components/ui/Modal";
 import AuthModal from "@/components/auth/AuthModal";
 import AvatarUploader from "@/components/account/AvatarUploader";
 import { displayPersonName } from "@/lib/i18n/localeText";
+import { cn } from "@/lib/cn";
 
 type Tab = "orders" | "profile" | "addresses";
 
@@ -88,8 +88,36 @@ export default function AccountPage() {
 
   const welcomeName = useMemo(() => {
     if (!user) return language === "ar" ? "زائر" : "Guest";
-    return user.name || `${form.first_name} ${form.last_name}`.trim() || user.email;
+    return (
+      displayPersonName(user, language, "") ||
+      `${form.first_name} ${form.last_name}`.trim() ||
+      user.email
+    );
   }, [user, language, form.first_name, form.last_name]);
+
+  const [welcomePhase, setWelcomePhase] = useState<"hidden" | "enter" | "shown" | "leave">(
+    "hidden"
+  );
+
+  useEffect(() => {
+    if (!ready || !user) {
+      setWelcomePhase("hidden");
+      return;
+    }
+
+    setWelcomePhase("enter");
+    const enterId = window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => setWelcomePhase("shown"));
+    });
+    const leaveId = window.setTimeout(() => setWelcomePhase("leave"), 2600);
+    const hideId = window.setTimeout(() => setWelcomePhase("hidden"), 3200);
+
+    return () => {
+      window.cancelAnimationFrame(enterId);
+      window.clearTimeout(leaveId);
+      window.clearTimeout(hideId);
+    };
+  }, [ready, user?.id]);
 
   const saveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -178,14 +206,33 @@ export default function AccountPage() {
 
   return (
     <main className="flex-grow pt-32 pb-24 bg-background min-h-screen">
-      <div className="container mx-auto px-4 md:px-8">
-        <PageHeader
-          title={language === "ar" ? "حسابي" : "My Account"}
-          description={
-            language === "ar" ? `مرحباً بك، ${welcomeName}` : `Welcome back, ${welcomeName}`
-          }
-        />
+      {welcomePhase !== "hidden" ? (
+        <div
+          className="pointer-events-none fixed inset-x-0 top-[5.5rem] sm:top-28 z-[45] flex justify-center px-4"
+          aria-live="polite"
+        >
+          <div
+            className={cn(
+              "min-w-[min(100%,18rem)] rounded-2xl border border-white/15 bg-secondary/92 px-6 py-4 text-center text-background shadow-floating backdrop-blur-xl",
+              "transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform",
+              welcomePhase === "shown"
+                ? "translate-y-0 scale-100 opacity-100"
+                : welcomePhase === "leave"
+                  ? "-translate-y-3 scale-[0.97] opacity-0"
+                  : "translate-y-4 scale-95 opacity-0"
+            )}
+          >
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-background/55">
+              {language === "ar" ? "مرحباً بعودتك" : "Welcome back"}
+            </p>
+            <p className="mt-1.5 text-lg font-bold tracking-tight truncate max-w-[16rem] mx-auto">
+              {welcomeName}
+            </p>
+          </div>
+        </div>
+      ) : null}
 
+      <div className="container mx-auto px-4 md:px-8">
         <div className="flex flex-col lg:flex-row gap-12">
           <aside className="lg:w-1/4 shrink-0">
             <Card variant="panel" padding="md" className="sticky top-32">
