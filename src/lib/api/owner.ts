@@ -88,14 +88,47 @@ export type ApiBillingSnapshot = {
   is_guest?: boolean;
 };
 
+export type ApiOrderItem = {
+  id: number;
+  product_id: number;
+  product_code?: string;
+  product_name?: LocaleText | null;
+  product_image?: string | null;
+  unit_price: number;
+  original_unit_price?: number | null;
+  unit_discount?: number;
+  quantity: number;
+  line_discount?: number;
+  line_total: number;
+  has_discount?: boolean;
+};
+
+export type ApiOrderCoupon = {
+  id: number;
+  code: string;
+  type?: string;
+  value?: number;
+};
+
 export type ApiOrder = {
   id: number;
   number: string;
   status: string;
+  subtotal?: number;
+  items_subtotal_before_discount?: number;
+  items_discount_total?: number;
+  tax?: number;
+  shipping?: number;
+  cod_fee?: number;
+  discount?: number;
+  coupon_discount?: number;
   total: number;
   currency?: string;
   payment_method?: string;
+  coupon_id?: number | null;
+  coupon?: ApiOrderCoupon | null;
   customer?: ApiPersonName | null;
+  items?: ApiOrderItem[];
   items_count?: number;
   placed_at?: string | null;
   shipping_address?: ApiShippingAddress | null;
@@ -227,6 +260,10 @@ export async function fetchOwnerOrders(token: string, params: { search?: string;
   if (params.search) qs.set("search", params.search);
   if (params.status && params.status !== "all") qs.set("status", params.status);
   return apiRequest<ApiOrder[]>(`/owner/orders?${qs.toString()}`, { token, cache: "no-store" });
+}
+
+export async function fetchOwnerOrder(token: string, id: number) {
+  return apiRequest<ApiOrder>(`/owner/orders/${id}`, { token, cache: "no-store" });
 }
 
 export async function updateOwnerOrderStatus(token: string, id: number, status: string) {

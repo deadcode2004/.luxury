@@ -15,13 +15,17 @@ import FormField from "@/components/ui/FormField";
 import Select from "@/components/ui/Select";
 import {
   ApiRequestError,
+  fetchOwnerOrder,
   fetchOwnerOrders,
   updateOwnerOrderStatus,
   type ApiOrder,
 } from "@/lib/api/owner";
 import { displayPersonName } from "@/lib/i18n/localeText";
+import { formatMoney } from "@/lib/format/currency";
+import type { CurrencyCode } from "@/lib/format/currency";
 import { useAutoFetch } from "@/hooks/useAutoFetch";
 import { useRealtime } from "@/contexts/RealtimeContext";
+import OrderDetailsView from "@/components/admin/OrderDetailsView";
 
 const STATUSES = ["pending", "processing", "delivered", "cancelled"] as const;
 
@@ -44,6 +48,7 @@ export default function AdminOrders() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [filterOpen, setFilterOpen] = useState(false);
   const [viewOrder, setViewOrder] = useState<ApiOrder | null>(null);
+  const [viewLoading, setViewLoading] = useState(false);
   const [editOrder, setEditOrder] = useState<ApiOrder | null>(null);
   const [nextStatus, setNextStatus] = useState("pending");
   const [saving, setSaving] = useState(false);
@@ -78,6 +83,23 @@ export default function AdminOrders() {
   );
 
   useAutoFetch(load, { domains: ["orders", "dashboard"] });
+
+  const openOrderDetails = useCallback(
+    async (order: ApiOrder) => {
+      setViewOrder(order);
+      if (!token) return;
+      setViewLoading(true);
+      try {
+        const detailed = await fetchOwnerOrder(token, order.id);
+        setViewOrder(detailed);
+      } catch {
+        // Keep list payload as a fallback if the detail request fails.
+      } finally {
+        setViewLoading(false);
+      }
+    },
+    [token]
+  );
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -170,7 +192,11 @@ export default function AdminOrders() {
               <TableCell className="text-gray-500">{formatDate(order.placed_at)}</TableCell>
               <TableCell className="text-gray-500">{order.items_count ?? "—"}</TableCell>
               <TableCell className="font-bold text-secondary">
-                {Number(order.total).toLocaleString()} {order.currency || "EGP"}
+                {formatMoney(Number(order.total), language, {
+                  decimals: 2,
+                  currency: (order.currency || "EGP") as CurrencyCode,
+                  converted: true,
+                })}
               </TableCell>
               <TableCell>
                 <StatusBadge status={order.status} uppercase />
@@ -181,7 +207,7 @@ export default function AdminOrders() {
                     type="button"
                     className="text-gray-400 hover:text-primary active:scale-95 transition-all"
                     title={language === "ar" ? "عرض التفاصيل" : "View Details"}
-                    onClick={() => setViewOrder(order)}
+                    onClick={() => void openOrderDetails(order)}
                   >
                     <Eye size={18} />
                   </button>
@@ -237,108 +263,21 @@ export default function AdminOrders() {
 
       <Modal
         open={viewOrder != null}
-        onClose={() => setViewOrder(null)}
+        onClose={() => {
+          setViewOrder(null);
+          setViewLoading(false);
+        }}
         title={language === "ar" ? "تفاصيل الطلب" : "Order Details"}
+        size="xl"
       >
         {viewOrder && (
-          <div className="space-y-4 text-sm">
-            <div className="space-y-3">
-              <div className="flex justify-between gap-4">
-                <span className="text-gray-500 shrink-0">
-                  {language === "ar" ? "رقم الطلب" : "Order ID"}
-                </span>
-                <span className="font-bold text-end">{viewOrder.number}</span>
-              </div>
-              <div className="flex justify-between gap-4">
-                <span className="text-gray-500 shrink-0">
-                  {language === "ar" ? "العميل" : "Customer"}
-                </span>
-                <span className="text-end">
-                  {displayPersonName(viewOrder.customer, language, "") ||
-                    [viewOrder.billing_snapshot?.first_name, viewOrder.billing_snapshot?.last_name]
-                      .filter(Boolean)
-                      .join(" ") ||
-                    (viewOrder.billing_snapshot?.is_guest
-                      ? language === "ar"
-                        ? "زائر"
-                        : "Guest"
-                      : "—")}
-                </span>
-              </div>
-              {viewOrder.billing_snapshot?.phone ? (
-                <div className="flex justify-between gap-4">
-                  <span className="text-gray-500 shrink-0">
-                    {language === "ar" ? "الهاتف" : "Phone"}
-                  </span>
-                  <span className="font-medium dir-ltr text-end">
-                    {viewOrder.billing_snapshot.phone}
-                  </span>
-                </div>
-              ) : null}
-              {viewOrder.billing_snapshot?.email ? (
-                <div className="flex justify-between gap-4">
-                  <span className="text-gray-500 shrink-0">
-                    {language === "ar" ? "البريد" : "Email"}
-                  </span>
-                  <span className="text-end break-all">{viewOrder.billing_snapshot.email}</span>
-                </div>
-              ) : null}
-              <div className="flex justify-between gap-4">
-                <span className="text-gray-500 shrink-0">
-                  {language === "ar" ? "المنتجات" : "Items"}
-                </span>
-                <span>{viewOrder.items_count ?? "—"}</span>
-              </div>
-              <div className="flex justify-between items-center gap-4">
-                <span className="text-gray-500 shrink-0">
-                  {language === "ar" ? "الحالة" : "Status"}
-                </span>
-                <StatusBadge status={viewOrder.status} uppercase />
-              </div>
-              <div className="flex justify-between border-t border-gray-100 pt-3 gap-4">
-                <span className="text-gray-500 shrink-0">
-                  {language === "ar" ? "الإجمالي" : "Total"}
-                </span>
-                <span className="font-bold text-secondary">
-                  {Number(viewOrder.total).toLocaleString()} {viewOrder.currency || "EGP"}
-                </span>
-              </div>
-            </div>
-
-            {viewOrder.shipping_address ? (
-              <div className="rounded-xl border border-surface bg-background/60 p-4 space-y-2">
-                <h4 className="font-bold text-secondary">
-                  {language === "ar" ? "عنوان الشحن" : "Shipping address"}
-                </h4>
-                <p className="text-secondary leading-relaxed">
-                  {viewOrder.shipping_address.full_address || "—"}
-                </p>
-                <p className="text-gray-500">
-                  {[
-                    language === "ar"
-                      ? viewOrder.shipping_address.city_name_ar ||
-                        viewOrder.shipping_address.city
-                      : viewOrder.shipping_address.city_name_en ||
-                        viewOrder.shipping_address.city,
-                    language === "ar"
-                      ? viewOrder.shipping_address.state_name_ar ||
-                        viewOrder.shipping_address.state_name
-                      : viewOrder.shipping_address.state_name_en ||
-                        viewOrder.shipping_address.state_name,
-                    language === "ar"
-                      ? viewOrder.shipping_address.country_name_ar ||
-                        viewOrder.shipping_address.country_name ||
-                        viewOrder.shipping_address.country_code
-                      : viewOrder.shipping_address.country_name_en ||
-                        viewOrder.shipping_address.country_name ||
-                        viewOrder.shipping_address.country_code,
-                    viewOrder.shipping_address.zip_code,
-                  ]
-                    .filter(Boolean)
-                    .join(" · ") || "—"}
-                </p>
-              </div>
+          <div className="relative">
+            {viewLoading ? (
+              <p className="text-xs text-gray-400 mb-3">
+                {language === "ar" ? "جاري تحديث التفاصيل..." : "Refreshing details..."}
+              </p>
             ) : null}
+            <OrderDetailsView order={viewOrder} language={language} />
           </div>
         )}
       </Modal>
