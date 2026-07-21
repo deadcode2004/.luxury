@@ -139,7 +139,7 @@ export default function HeaderSearchPanel({ open, onOpenChange }: HeaderSearchPa
           )}
         >
           <div className="container mx-auto px-4 md:px-8 py-5 md:py-6">
-            <div className="mx-auto w-full max-w-3xl">
+            <div className="w-full">
               <div className="flex items-center gap-2 sm:gap-3">
                 <div className="relative min-w-0 flex-1">
                   <Search
