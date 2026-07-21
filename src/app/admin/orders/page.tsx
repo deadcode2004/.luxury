@@ -233,29 +233,81 @@ export default function AdminOrders() {
         title={language === "ar" ? "تفاصيل الطلب" : "Order Details"}
       >
         {viewOrder && (
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-500">{language === "ar" ? "رقم الطلب" : "Order ID"}</span>
-              <span className="font-bold">{viewOrder.number}</span>
+          <div className="space-y-4 text-sm">
+            <div className="space-y-3">
+              <div className="flex justify-between gap-4">
+                <span className="text-gray-500 shrink-0">
+                  {language === "ar" ? "رقم الطلب" : "Order ID"}
+                </span>
+                <span className="font-bold text-end">{viewOrder.number}</span>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span className="text-gray-500 shrink-0">
+                  {language === "ar" ? "العميل" : "Customer"}
+                </span>
+                <span className="text-end">{displayPersonName(viewOrder.customer, language)}</span>
+              </div>
+              {viewOrder.billing_snapshot?.phone ? (
+                <div className="flex justify-between gap-4">
+                  <span className="text-gray-500 shrink-0">
+                    {language === "ar" ? "الهاتف" : "Phone"}
+                  </span>
+                  <span className="font-medium dir-ltr text-end">
+                    {viewOrder.billing_snapshot.phone}
+                  </span>
+                </div>
+              ) : null}
+              {viewOrder.billing_snapshot?.email ? (
+                <div className="flex justify-between gap-4">
+                  <span className="text-gray-500 shrink-0">
+                    {language === "ar" ? "البريد" : "Email"}
+                  </span>
+                  <span className="text-end break-all">{viewOrder.billing_snapshot.email}</span>
+                </div>
+              ) : null}
+              <div className="flex justify-between gap-4">
+                <span className="text-gray-500 shrink-0">
+                  {language === "ar" ? "المنتجات" : "Items"}
+                </span>
+                <span>{viewOrder.items_count ?? "—"}</span>
+              </div>
+              <div className="flex justify-between items-center gap-4">
+                <span className="text-gray-500 shrink-0">
+                  {language === "ar" ? "الحالة" : "Status"}
+                </span>
+                <StatusBadge status={viewOrder.status} uppercase />
+              </div>
+              <div className="flex justify-between border-t border-gray-100 pt-3 gap-4">
+                <span className="text-gray-500 shrink-0">
+                  {language === "ar" ? "الإجمالي" : "Total"}
+                </span>
+                <span className="font-bold text-secondary">
+                  {Number(viewOrder.total).toLocaleString()} {viewOrder.currency || "EGP"}
+                </span>
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">{language === "ar" ? "العميل" : "Customer"}</span>
-              <span>{displayPersonName(viewOrder.customer, language)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">{language === "ar" ? "المنتجات" : "Items"}</span>
-              <span>{viewOrder.items_count ?? "—"}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-500">{language === "ar" ? "الحالة" : "Status"}</span>
-              <StatusBadge status={viewOrder.status} uppercase />
-            </div>
-            <div className="flex justify-between border-t border-gray-100 pt-3">
-              <span className="text-gray-500">{language === "ar" ? "الإجمالي" : "Total"}</span>
-              <span className="font-bold text-secondary">
-                {Number(viewOrder.total).toLocaleString()} {viewOrder.currency || "EGP"}
-              </span>
-            </div>
+
+            {viewOrder.shipping_address ? (
+              <div className="rounded-xl border border-surface bg-background/60 p-4 space-y-2">
+                <h4 className="font-bold text-secondary">
+                  {language === "ar" ? "عنوان الشحن" : "Shipping address"}
+                </h4>
+                <p className="text-secondary leading-relaxed">
+                  {viewOrder.shipping_address.full_address || "—"}
+                </p>
+                <p className="text-gray-500">
+                  {[
+                    viewOrder.shipping_address.city,
+                    viewOrder.shipping_address.state_name,
+                    viewOrder.shipping_address.country_name ||
+                      viewOrder.shipping_address.country_code,
+                    viewOrder.shipping_address.zip_code,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ") || "—"}
+                </p>
+              </div>
+            ) : null}
           </div>
         )}
       </Modal>

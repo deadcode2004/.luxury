@@ -33,7 +33,7 @@ type CartContextValue = {
   addItem: (productId: string, quantity?: number) => Promise<boolean>;
   setQuantity: (productId: string, quantity: number) => Promise<boolean>;
   removeItem: (productId: string) => Promise<boolean>;
-  clear: () => Promise<void>;
+  clear: (options?: { silent?: boolean }) => Promise<void>;
   lines: Array<Product & { quantity: number }>;
   totals: ReturnType<typeof calcOrderTotals>;
 };
@@ -250,9 +250,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     [language, toast]
   );
 
-  const clear = useCallback(async () => {
+  const clear = useCallback(async (options?: { silent?: boolean }) => {
     setItems([]);
-    toast(language === "ar" ? "تم تفريغ السلة" : "Cart cleared", "success");
+    if (!options?.silent) {
+      toast(language === "ar" ? "تم تفريغ السلة" : "Cart cleared", "success");
+    }
   }, [language, toast]);
 
   const lines = useMemo(

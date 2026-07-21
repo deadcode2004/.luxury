@@ -23,8 +23,14 @@ class CheckoutRequest extends FormRequest
             'email' => ['required', 'email', 'max:255'],
             'shipping_address' => ['required', 'array'],
             'shipping_address.full_address' => ['required', 'string', 'max:500'],
-            'shipping_address.city' => ['required', 'string', 'max:100'],
+            'shipping_address.city' => ['required', 'string', 'max:120'],
             'shipping_address.zip_code' => ['nullable', 'string', 'max:20'],
+            'shipping_address.country_code' => ['required', 'string', 'size:2'],
+            'shipping_address.country_name' => ['nullable', 'string', 'max:120'],
+            'shipping_address.state_code' => ['nullable', 'string', 'max:20'],
+            'shipping_address.state_name' => ['nullable', 'string', 'max:120'],
+            'shipping_address.phone_country_code' => ['nullable', 'string', 'size:2'],
+            'shipping_address.phone_dial_code' => ['nullable', 'string', 'max:8'],
         ];
     }
 }

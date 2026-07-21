@@ -47,6 +47,8 @@ class CheckoutStockTest extends TestCase
             'shipping_address' => [
                 'full_address' => 'Olaya St',
                 'city' => 'Riyadh',
+                'country_code' => 'SA',
+                'country_name' => 'Saudi Arabia',
             ],
         ]);
 
@@ -92,6 +94,8 @@ class CheckoutStockTest extends TestCase
             'shipping_address' => [
                 'full_address' => 'Olaya St',
                 'city' => 'Riyadh',
+                'country_code' => 'SA',
+                'country_name' => 'Saudi Arabia',
             ],
         ])->assertStatus(422)
             ->assertJsonPath('code', 'INSUFFICIENT_STOCK');

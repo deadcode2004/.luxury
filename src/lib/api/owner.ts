@@ -59,15 +59,37 @@ export type ApiPersonName = {
   email?: string | null;
 };
 
+export type ApiShippingAddress = {
+  full_address?: string;
+  city?: string;
+  zip_code?: string | null;
+  country_code?: string;
+  country_name?: string;
+  state_code?: string | null;
+  state_name?: string | null;
+  phone_country_code?: string | null;
+  phone_dial_code?: string | null;
+};
+
+export type ApiBillingSnapshot = {
+  first_name?: string;
+  last_name?: string;
+  phone?: string;
+  email?: string;
+};
+
 export type ApiOrder = {
   id: number;
   number: string;
   status: string;
   total: number;
   currency?: string;
+  payment_method?: string;
   customer?: ApiPersonName | null;
   items_count?: number;
   placed_at?: string | null;
+  shipping_address?: ApiShippingAddress | null;
+  billing_snapshot?: ApiBillingSnapshot | null;
 };
 
 export type DashboardData = {

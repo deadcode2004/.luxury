@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { CreditCard, Banknote, ShieldCheck, ShoppingBag } from "lucide-react";
 import { formatMoneyFixed } from "@/lib/format/currency";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -13,27 +14,67 @@ import { useToast } from "@/components/ui/Toast";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-import Select from "@/components/ui/Select";
 import FormField from "@/components/ui/FormField";
 import PageHeader from "@/components/layout/PageHeader";
 import EmptyState from "@/components/ui/EmptyState";
+import PhoneCountryField from "@/components/checkout/PhoneCountryField";
+import ShippingLocationFields from "@/components/checkout/ShippingLocationFields";
+import { apiRequest, ApiRequestError } from "@/lib/api/client";
+import {
+  composePhone,
+  countryDisplayName,
+  getCountryByCode,
+  getStateByCode,
+  getStateOptions,
+  getCityOptions,
+  splitPhone,
+} from "@/lib/geo/locations";
+
+type SavedAddress = {
+  id: number;
+  label?: string;
+  full_address?: string;
+  city?: string;
+  zip_code?: string | null;
+  is_default?: boolean;
+};
+
+const GEO_SESSION_KEY = "paradise_geo_country";
+
+function findStateForCity(countryCode: string, cityName: string) {
+  const needle = cityName.trim().toLowerCase();
+  if (!needle || !countryCode) return { stateCode: "", city: cityName };
+  for (const state of getStateOptions(countryCode)) {
+    const match = getCityOptions(countryCode, state.value).find(
+      (c) => c.value.toLowerCase() === needle
+    );
+    if (match) return { stateCode: state.value, city: match.value };
+  }
+  return { stateCode: "", city: cityName };
+}
 
 export default function CheckoutPage() {
   const { language } = useLanguage();
   const router = useRouter();
   const { toast } = useToast();
+  const { user, token, ready: authReady } = useAuth();
   const { lines, totals, clear } = useCart();
   const { currency, convertFromEgp } = useCurrency();
   const [paymentMethod, setPaymentMethod] = useState<"card" | "cod">("card");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const prefillsDone = useRef({ geo: false, profile: false, address: false });
+
   const [form, setForm] = useState({
     first_name: "",
     last_name: "",
-    phone: "",
+    phone_country: "SA",
+    phone_national: "",
     email: "",
     full_address: "",
-    city: language === "ar" ? "الرياض" : "Riyadh",
+    country_code: "SA",
+    state_code: "",
+    city: "",
     zip_code: "",
     card_number: "",
     expiry: "",
@@ -45,14 +86,147 @@ export default function CheckoutPage() {
     [paymentMethod, totals.total]
   );
 
+  /** Detect visitor country once (geo API / session cache). */
+  useEffect(() => {
+    if (prefillsDone.current.geo) return;
+    prefillsDone.current.geo = true;
+
+    let cancelled = false;
+    const applyCountry = (code: string) => {
+      const iso = code.toUpperCase();
+      if (!/^[A-Z]{2}$/.test(iso) || !getCountryByCode(iso)) return;
+      if (cancelled) return;
+      setForm((f) => {
+        // Only auto-fill if user hasn't started editing location/phone country.
+        if (f.country_code !== "SA" && f.country_code !== "") return f;
+        if (f.state_code || f.city || f.phone_national) {
+          return {
+            ...f,
+            country_code: f.country_code || iso,
+            phone_country: f.phone_country || iso,
+          };
+        }
+        return {
+          ...f,
+          country_code: iso,
+          phone_country: iso,
+          state_code: "",
+          city: "",
+        };
+      });
+    };
+
+    try {
+      const cached = sessionStorage.getItem(GEO_SESSION_KEY);
+      if (cached && /^[A-Z]{2}$/i.test(cached)) {
+        applyCountry(cached);
+        return () => {
+          cancelled = true;
+        };
+      }
+    } catch {
+      // ignore
+    }
+
+    void fetch("/api/geo", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((data: { country?: string }) => {
+        const code = String(data?.country || "").toUpperCase();
+        if (!/^[A-Z]{2}$/.test(code)) return;
+        try {
+          sessionStorage.setItem(GEO_SESSION_KEY, code);
+        } catch {
+          // ignore
+        }
+        applyCountry(code);
+      })
+      .catch(() => undefined);
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  /** Prefill from authenticated user profile. */
+  useEffect(() => {
+    if (!authReady || !user || prefillsDone.current.profile) return;
+    prefillsDone.current.profile = true;
+
+    const parts = (user.name || "").trim().split(/\s+/);
+    const phoneParts = splitPhone(user.phone, form.phone_country || form.country_code);
+
+    setForm((f) => ({
+      ...f,
+      first_name: f.first_name || user.first_name || parts[0] || "",
+      last_name: f.last_name || user.last_name || parts.slice(1).join(" ") || "",
+      email: f.email || user.email || "",
+      phone_country: f.phone_national ? f.phone_country : phoneParts.countryCode || f.phone_country,
+      phone_national: f.phone_national || phoneParts.nationalNumber,
+    }));
+  }, [authReady, user, form.phone_country, form.country_code]);
+
+  /** Prefill default saved address when logged in. */
+  useEffect(() => {
+    if (!authReady || !token || prefillsDone.current.address) return;
+    prefillsDone.current.address = true;
+
+    let cancelled = false;
+    void apiRequest<SavedAddress[]>("/account/addresses", { token, cache: "no-store" })
+      .then((list) => {
+        if (cancelled || !Array.isArray(list) || list.length === 0) return;
+        const preferred = list.find((a) => a.is_default) || list[0];
+        if (!preferred) return;
+        setForm((f) => {
+          if (f.full_address.trim()) return f;
+          const country = f.country_code || "SA";
+          const located = preferred.city
+            ? findStateForCity(country, preferred.city)
+            : { stateCode: f.state_code, city: f.city };
+          return {
+            ...f,
+            full_address: preferred.full_address || f.full_address,
+            zip_code: preferred.zip_code || f.zip_code,
+            state_code: located.stateCode || f.state_code,
+            city: located.city || f.city,
+          };
+        });
+      })
+      .catch(() => undefined);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authReady, token]);
+
+  const onCountryChange = (countryCode: string) => {
+    setForm((f) => ({
+      ...f,
+      country_code: countryCode,
+      state_code: "",
+      city: "",
+      // Keep phone dial in sync when user hasn't typed a number yet.
+      phone_country: f.phone_national.trim() ? f.phone_country : countryCode,
+    }));
+  };
+
+  const onStateChange = (stateCode: string) => {
+    setForm((f) => ({ ...f, state_code: stateCode, city: "" }));
+  };
+
   const validate = () => {
     const next: Record<string, string> = {};
     if (!form.first_name.trim()) next.first_name = language === "ar" ? "مطلوب" : "Required";
     if (!form.last_name.trim()) next.last_name = language === "ar" ? "مطلوب" : "Required";
-    if (!form.phone.trim()) next.phone = language === "ar" ? "مطلوب" : "Required";
+    if (!form.phone_national.trim()) next.phone = language === "ar" ? "مطلوب" : "Required";
     if (!form.email.trim() || !form.email.includes("@")) {
       next.email = language === "ar" ? "بريد غير صالح" : "Invalid email";
     }
+    if (!form.country_code) next.country = language === "ar" ? "مطلوب" : "Required";
+    const states = getStateOptions(form.country_code);
+    if (states.length > 0 && !form.state_code) {
+      next.state = language === "ar" ? "مطلوب" : "Required";
+    }
+    if (!form.city.trim()) next.city = language === "ar" ? "مطلوب" : "Required";
     if (!form.full_address.trim()) next.full_address = language === "ar" ? "مطلوب" : "Required";
     if (paymentMethod === "card") {
       if (form.card_number.replace(/\s/g, "").length < 12) {
@@ -73,18 +247,83 @@ export default function CheckoutPage() {
       );
       return;
     }
+    if (!token) {
+      toast(language === "ar" ? "سجّل الدخول لإتمام الطلب" : "Sign in to place your order", "warning");
+      return;
+    }
+
+    const phoneCountry = getCountryByCode(form.phone_country);
+    const shipCountry = getCountryByCode(form.country_code);
+    const shipState = form.state_code
+      ? getStateByCode(form.country_code, form.state_code)
+      : null;
+    const phone = composePhone(phoneCountry?.phonecode || "", form.phone_national);
+
     setLoading(true);
     try {
-      await new Promise((r) => setTimeout(r, 700));
-      await clear();
+      // Sync local cart → server so checkout stock validation uses the same items.
+      try {
+        await apiRequest("/cart", { method: "DELETE", token, cache: "no-store" });
+        for (const line of lines) {
+          const productId = Number(line.id);
+          if (!Number.isFinite(productId) || productId <= 0) continue;
+          await apiRequest("/cart/items", {
+            method: "POST",
+            token,
+            body: { product_id: productId, quantity: line.quantity },
+            cache: "no-store",
+          });
+        }
+      } catch (syncErr) {
+        toast(
+          syncErr instanceof ApiRequestError
+            ? syncErr.message
+            : language === "ar"
+              ? "تعذر مزامنة السلة قبل الدفع"
+              : "Could not sync cart before checkout",
+          "danger"
+        );
+        return;
+      }
+
+      await apiRequest("/checkout", {
+        method: "POST",
+        token,
+        body: {
+          payment_method: paymentMethod,
+          first_name: form.first_name.trim(),
+          last_name: form.last_name.trim(),
+          phone,
+          email: form.email.trim(),
+          shipping_address: {
+            full_address: form.full_address.trim(),
+            country_code: form.country_code,
+            country_name:
+              countryDisplayName(form.country_code, "en", shipCountry?.name) ||
+              shipCountry?.name ||
+              form.country_code,
+            state_code: form.state_code || null,
+            state_name: shipState?.name || null,
+            city: form.city.trim(),
+            zip_code: form.zip_code.trim() || null,
+            phone_country_code: form.phone_country,
+            phone_dial_code: phoneCountry ? `+${phoneCountry.phonecode}` : null,
+          },
+        },
+      });
+      await clear({ silent: true });
       toast(
         language === "ar" ? "تم تأكيد الطلب بنجاح" : "Order placed successfully",
         "success"
       );
-      router.push("/account");
-    } catch {
+      router.push("/account?tab=orders");
+    } catch (err) {
       toast(
-        language === "ar" ? "حدث خطأ أثناء إنشاء الطلب" : "Failed to place order",
+        err instanceof ApiRequestError
+          ? err.message
+          : language === "ar"
+            ? "حدث خطأ أثناء إنشاء الطلب"
+            : "Failed to place order",
         "danger"
       );
     } finally {
@@ -106,7 +345,9 @@ export default function CheckoutPage() {
             }
             action={
               <Link href="/shop">
-                <Button variant="secondary">{language === "ar" ? "تسوق الآن" : "Shop now"}</Button>
+                <Button variant="secondary">
+                  {language === "ar" ? "تسوق الآن" : "Shop now"}
+                </Button>
               </Link>
             }
           />
@@ -138,35 +379,75 @@ export default function CheckoutPage() {
               </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField label={language === "ar" ? "الاسم الأول" : "First Name"} error={errors.first_name}>
+                <FormField
+                  label={language === "ar" ? "الاسم الأول" : "First Name"}
+                  error={errors.first_name}
+                >
                   <Input
                     value={form.first_name}
                     onChange={(e) => setForm((f) => ({ ...f, first_name: e.target.value }))}
                     className={errors.first_name ? "border-red-300" : ""}
+                    autoComplete="given-name"
                   />
                 </FormField>
-                <FormField label={language === "ar" ? "اسم العائلة" : "Last Name"} error={errors.last_name}>
+                <FormField
+                  label={language === "ar" ? "اسم العائلة" : "Last Name"}
+                  error={errors.last_name}
+                >
                   <Input
                     value={form.last_name}
                     onChange={(e) => setForm((f) => ({ ...f, last_name: e.target.value }))}
                     className={errors.last_name ? "border-red-300" : ""}
+                    autoComplete="family-name"
                   />
                 </FormField>
-                <FormField label={language === "ar" ? "رقم الهاتف" : "Phone Number"} error={errors.phone}>
-                  <Input
-                    value={form.phone}
-                    onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-                    className={`text-start dir-ltr ${errors.phone ? "border-red-300" : ""}`}
+
+                <FormField
+                  className="md:col-span-2"
+                  label={language === "ar" ? "رقم الهاتف" : "Phone Number"}
+                  error={errors.phone}
+                >
+                  <PhoneCountryField
+                    countryCode={form.phone_country}
+                    nationalNumber={form.phone_national}
+                    onCountryChange={(code) =>
+                      setForm((f) => ({ ...f, phone_country: code }))
+                    }
+                    onNationalChange={(national) =>
+                      setForm((f) => ({ ...f, phone_national: national }))
+                    }
+                    error={Boolean(errors.phone)}
                   />
                 </FormField>
-                <FormField label={language === "ar" ? "البريد الإلكتروني" : "Email"} error={errors.email}>
+
+                <FormField
+                  className="md:col-span-2"
+                  label={language === "ar" ? "البريد الإلكتروني" : "Email"}
+                  error={errors.email}
+                >
                   <Input
                     type="email"
                     value={form.email}
                     onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                     className={errors.email ? "border-red-300" : ""}
+                    autoComplete="email"
                   />
                 </FormField>
+
+                <ShippingLocationFields
+                  countryCode={form.country_code}
+                  stateCode={form.state_code}
+                  city={form.city}
+                  onCountryChange={onCountryChange}
+                  onStateChange={onStateChange}
+                  onCityChange={(city) => setForm((f) => ({ ...f, city }))}
+                  errors={{
+                    country: errors.country,
+                    state: errors.state,
+                    city: errors.city,
+                  }}
+                />
+
                 <FormField
                   className="md:col-span-2"
                   label={language === "ar" ? "العنوان بالكامل" : "Full Address"}
@@ -176,22 +457,24 @@ export default function CheckoutPage() {
                     value={form.full_address}
                     onChange={(e) => setForm((f) => ({ ...f, full_address: e.target.value }))}
                     className={errors.full_address ? "border-red-300" : ""}
+                    autoComplete="street-address"
+                    placeholder={
+                      language === "ar"
+                        ? "الشارع، رقم المبنى، علامة مميزة..."
+                        : "Street, building number, landmark..."
+                    }
                   />
                 </FormField>
-                <FormField label={language === "ar" ? "المدينة" : "City"}>
-                  <Select
-                    value={form.city}
-                    onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
-                  >
-                    <option>{language === "ar" ? "الرياض" : "Riyadh"}</option>
-                    <option>{language === "ar" ? "جدة" : "Jeddah"}</option>
-                    <option>{language === "ar" ? "الدمام" : "Dammam"}</option>
-                  </Select>
-                </FormField>
-                <FormField label={language === "ar" ? "الرمز البريدي" : "Zip Code"}>
+
+                <FormField
+                  className="md:col-span-2"
+                  label={language === "ar" ? "الرمز البريدي" : "Zip / Postal Code"}
+                >
                   <Input
                     value={form.zip_code}
                     onChange={(e) => setForm((f) => ({ ...f, zip_code: e.target.value }))}
+                    autoComplete="postal-code"
+                    className="max-w-xs text-start dir-ltr"
                   />
                 </FormField>
               </div>
@@ -206,26 +489,28 @@ export default function CheckoutPage() {
               </h2>
 
               <div className="flex flex-col gap-4">
-                {([
-                  {
-                    id: "card" as const,
-                    title: language === "ar" ? "البطاقة الائتمانية" : "Credit Card",
-                    desc:
-                      language === "ar"
-                        ? "دفع آمن بواسطة مدى، فيزا، ماستركارد"
-                        : "Secure payment via Mada, Visa, Mastercard",
-                    icon: CreditCard,
-                  },
-                  {
-                    id: "cod" as const,
-                    title: language === "ar" ? "الدفع عند الاستلام" : "Cash on Delivery",
-                    desc:
-                      language === "ar"
-                        ? `رسوم إضافية ${formatMoneyFixed(15, language, 0, { currency, convertFromEgp })}`
-                        : `Additional fee ${formatMoneyFixed(15, language, 0, { currency, convertFromEgp })}`,
-                    icon: Banknote,
-                  },
-                ]).map((method) => (
+                {(
+                  [
+                    {
+                      id: "card" as const,
+                      title: language === "ar" ? "البطاقة الائتمانية" : "Credit Card",
+                      desc:
+                        language === "ar"
+                          ? "دفع آمن بواسطة مدى، فيزا، ماستركارد"
+                          : "Secure payment via Mada, Visa, Mastercard",
+                      icon: CreditCard,
+                    },
+                    {
+                      id: "cod" as const,
+                      title: language === "ar" ? "الدفع عند الاستلام" : "Cash on Delivery",
+                      desc:
+                        language === "ar"
+                          ? `رسوم إضافية ${formatMoneyFixed(15, language, 0, { currency, convertFromEgp })}`
+                          : `Additional fee ${formatMoneyFixed(15, language, 0, { currency, convertFromEgp })}`,
+                      icon: Banknote,
+                    },
+                  ] as const
+                ).map((method) => (
                   <button
                     key={method.id}
                     type="button"
@@ -272,7 +557,10 @@ export default function CheckoutPage() {
                       className={errors.card_number ? "border-red-300" : ""}
                     />
                   </FormField>
-                  <FormField label={language === "ar" ? "تاريخ الانتهاء" : "Expiry"} error={errors.expiry}>
+                  <FormField
+                    label={language === "ar" ? "تاريخ الانتهاء" : "Expiry"}
+                    error={errors.expiry}
+                  >
                     <Input
                       value={form.expiry}
                       onChange={(e) => setForm((f) => ({ ...f, expiry: e.target.value }))}
@@ -317,7 +605,10 @@ export default function CheckoutPage() {
                       </span>
                     </div>
                     <span className="font-bold text-secondary">
-                      {formatMoneyFixed(item.price * item.quantity, language, 0, { currency, convertFromEgp })}
+                      {formatMoneyFixed(item.price * item.quantity, language, 0, {
+                        currency,
+                        convertFromEgp,
+                      })}
                     </span>
                   </div>
                 ))}
