@@ -5,26 +5,11 @@ import { useRouter } from "next/navigation";
 import { apiRequest, ApiRequestError } from "@/lib/api/client";
 import { readStorage, removeStorage, writeStorage } from "@/lib/storage";
 import { clearAuthCookies, setAuthCookies } from "@/lib/auth/session";
+import { normalizeAuthUser, type AuthUser } from "@/lib/auth/user";
 import { useToast } from "@/components/ui/Toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-export type AuthUser = {
-  id: number;
-  name: string;
-  name_i18n?: { ar?: string; en?: string } | null;
-  first_name?: string;
-  first_name_i18n?: { ar?: string; en?: string } | null;
-  last_name?: string;
-  last_name_i18n?: { ar?: string; en?: string } | null;
-  email: string;
-  phone?: string | null;
-  avatar?: string | null;
-  role: "owner" | "user";
-  is_active?: boolean;
-  notify_orders?: boolean;
-  notify_stock?: boolean;
-  notify_marketing?: boolean;
-};
+export type { AuthUser };
 
 type AuthContextValue = {
   user: AuthUser | null;
@@ -33,6 +18,7 @@ type AuthContextValue = {
   loading: boolean;
   isAuthenticated: boolean;
   isOwner: boolean;
+  isUser: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   register: (payload: {
     first_name: string;
@@ -76,27 +62,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const savedToken = readStorage<string | null>(TOKEN_KEY, null);
-    const savedUser = readStorage<AuthUser | null>(USER_KEY, null);
-    setToken(savedToken);
-    setUser(savedUser);
-    if (savedToken && savedUser) {
-      setAuthCookies(savedUser.role);
-    } else {
-      clearAuthCookies();
-    }
-    setReady(true);
-  }, []);
-
-  const persist = useCallback((nextToken: string, nextUser: AuthUser) => {
-    setToken(nextToken);
-    setUser(nextUser);
-    writeStorage(TOKEN_KEY, nextToken);
-    writeStorage(USER_KEY, nextUser);
-    setAuthCookies(nextUser.role);
-  }, []);
-
   const clear = useCallback(() => {
     setToken(null);
     setUser(null);
@@ -104,6 +69,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     removeStorage(USER_KEY);
     clearAuthCookies();
   }, []);
+
+  const persist = useCallback((nextToken: string, nextUser: AuthUser) => {
+    const normalized = normalizeAuthUser(nextUser);
+    if (!normalized) {
+      clear();
+      return;
+    }
+    setToken(nextToken);
+    setUser(normalized);
+    writeStorage(TOKEN_KEY, nextToken);
+    writeStorage(USER_KEY, normalized);
+    setAuthCookies(normalized.role);
+  }, [clear]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function boot() {
+      const savedToken = readStorage<string | null>(TOKEN_KEY, null);
+      const savedUser = normalizeAuthUser(readStorage<unknown>(USER_KEY, null));
+
+      // Never treat a role/user blob without a token as signed-in.
+      if (!savedToken || !savedUser) {
+        clear();
+        if (!cancelled) setReady(true);
+        return;
+      }
+
+      setToken(savedToken);
+      setUser(savedUser);
+      setAuthCookies(savedUser.role);
+      if (!cancelled) setReady(true);
+
+      // Re-validate against the API so expired/stale sessions cannot unlock menus.
+      try {
+        const me = normalizeAuthUser(await apiRequest<AuthUser>("/auth/me", { token: savedToken }));
+        if (cancelled) return;
+        if (!me) {
+          clear();
+          return;
+        }
+        setUser(me);
+        writeStorage(USER_KEY, me);
+        setAuthCookies(me.role);
+      } catch {
+        if (!cancelled) clear();
+      }
+    }
+
+    void boot();
+    return () => {
+      cancelled = true;
+    };
+  }, [clear]);
 
   const login = useCallback(
     async (email: string, password: string) => {
@@ -193,7 +212,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshProfile = useCallback(async () => {
     if (!token) return;
     try {
-      const data = await apiRequest<AuthUser>("/auth/me", { token });
+      const data = normalizeAuthUser(await apiRequest<AuthUser>("/auth/me", { token }));
+      if (!data) {
+        clear();
+        return;
+      }
       setUser(data);
       writeStorage(USER_KEY, data);
       setAuthCookies(data.role);
@@ -212,11 +235,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!token) return false;
       setLoading(true);
       try {
-        const data = await apiRequest<AuthUser>("/account/profile", {
-          method: "PUT",
-          token,
-          body: payload,
-        });
+        const data = normalizeAuthUser(
+          await apiRequest<AuthUser>("/account/profile", {
+            method: "PUT",
+            token,
+            body: payload,
+          })
+        );
+        if (!data) {
+          clear();
+          return false;
+        }
         setUser(data);
         writeStorage(USER_KEY, data);
         setAuthCookies(data.role);
@@ -239,7 +268,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
       }
     },
-    [language, toast, token]
+    [clear, language, toast, token]
   );
 
   const changePassword = useCallback(
@@ -286,11 +315,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }) => {
       if (!token) return false;
       try {
-        const data = await apiRequest<AuthUser>("/account/notifications", {
-          method: "PUT",
-          token,
-          body: payload,
-        });
+        const data = normalizeAuthUser(
+          await apiRequest<AuthUser>("/account/notifications", {
+            method: "PUT",
+            token,
+            body: payload,
+          })
+        );
+        if (!data) {
+          clear();
+          return false;
+        }
         setUser(data);
         writeStorage(USER_KEY, data);
         setAuthCookies(data.role);
@@ -307,17 +342,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return false;
       }
     },
-    [language, toast, token]
+    [clear, language, toast, token]
   );
+
+  const isAuthenticated = Boolean(token && user && (user.role === "owner" || user.role === "user"));
+  const isOwner = isAuthenticated && user?.role === "owner";
+  const isUser = isAuthenticated && user?.role === "user";
 
   const value = useMemo(
     () => ({
-      user,
-      token,
+      user: isAuthenticated ? user : null,
+      token: isAuthenticated ? token : null,
       ready,
       loading,
-      isAuthenticated: Boolean(token && user),
-      isOwner: user?.role === "owner",
+      isAuthenticated,
+      isOwner,
+      isUser,
       login,
       register,
       logout,
@@ -331,6 +371,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       token,
       ready,
       loading,
+      isAuthenticated,
+      isOwner,
+      isUser,
       login,
       register,
       logout,

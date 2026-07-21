@@ -11,10 +11,7 @@ import {
   Menu,
   X,
   Globe,
-  LayoutDashboard,
   ChevronDown,
-  LogOut,
-  LogIn,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCart } from "@/contexts/CartContext";
@@ -23,6 +20,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import CurrencySwitcher from "@/components/common/CurrencySwitcher";
 import AnnouncementBar from "@/components/common/AnnouncementBar";
+import AccountMenuLinks from "@/components/common/AccountMenuLinks";
 
 const HeaderSearchPanel = lazy(() => import("@/components/common/HeaderSearchPanel"));
 
@@ -75,7 +73,7 @@ export default function Header() {
   const { language, toggleLanguage, dir } = useLanguage();
   const { count: cartCount } = useCart();
   const { count: wishCount } = useWishlist();
-  const { user, logout, loading: authLoading, isOwner } = useAuth();
+  const { logout, loading: authLoading, isAuthenticated, isOwner } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
@@ -216,55 +214,10 @@ export default function Header() {
               >
                 <div className="bg-background/95 backdrop-blur-xl border border-surface rounded-2xl shadow-floating overflow-hidden transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 ease-out">
                   <div className="p-2">
-                    {user ? (
-                      <>
-                        <div className="px-4 py-2 text-xs text-gray-400 truncate">
-                          {user.name || user.email}
-                        </div>
-                        <Link
-                          href="/account"
-                          className="flex items-center gap-3 px-4 py-3 text-sm text-secondary/80 hover:bg-surface/50 hover:text-primary transition-all rounded-xl font-medium"
-                        >
-                          <User size={16} className="shrink-0" />
-                          {language === "ar" ? "حسابي الشخصي" : "My Account"}
-                        </Link>
-                        {isOwner && (
-                          <Link
-                            href="/admin"
-                            className="flex items-center gap-3 px-4 py-3 text-sm text-secondary/80 hover:bg-surface/50 hover:text-primary transition-all rounded-xl font-bold"
-                          >
-                            <LayoutDashboard size={16} className="shrink-0" />
-                            {language === "ar" ? "لوحة الإدارة" : "Admin Dashboard"}
-                          </Link>
-                        )}
-                        <button
-                          type="button"
-                          disabled={authLoading}
-                          onClick={() => setConfirmLogout(true)}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50 transition-all rounded-xl font-bold disabled:opacity-50"
-                        >
-                          <LogOut size={16} className="shrink-0" />
-                          {language === "ar" ? "تسجيل الخروج" : "Sign Out"}
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <Link
-                          href="/login"
-                          className="w-full flex items-center gap-3 px-4 py-3 text-sm text-secondary/80 hover:bg-surface/50 hover:text-primary transition-all rounded-xl font-bold"
-                        >
-                          <LogIn size={16} className="shrink-0" />
-                          {language === "ar" ? "تسجيل الدخول" : "Sign In"}
-                        </Link>
-                        <Link
-                          href="/register"
-                          className="flex items-center gap-3 px-4 py-3 text-sm text-secondary/80 hover:bg-surface/50 hover:text-primary transition-all rounded-xl font-medium"
-                        >
-                          <User size={16} className="shrink-0" />
-                          {language === "ar" ? "إنشاء حساب" : "Create Account"}
-                        </Link>
-                      </>
-                    )}
+                    <AccountMenuLinks
+                      variant="desktop"
+                      onLogout={() => setConfirmLogout(true)}
+                    />
                   </div>
                 </div>
               </div>
@@ -350,7 +303,19 @@ export default function Header() {
                   <div className="w-10 h-10 rounded-full bg-surface/50 border border-surface flex items-center justify-center text-secondary">
                     <User size={18} />
                   </div>
-                  <span>{language === "ar" ? "حسابي الشخصي" : "My Account"}</span>
+                  <span>
+                    {!isAuthenticated
+                      ? language === "ar"
+                        ? "الحساب"
+                        : "Account"
+                      : isOwner
+                        ? language === "ar"
+                          ? "حساب المالك"
+                          : "Owner Account"
+                        : language === "ar"
+                          ? "حسابي"
+                          : "My Account"}
+                  </span>
                 </div>
                 <ChevronDown
                   size={18}
@@ -366,45 +331,14 @@ export default function Header() {
                 }`}
               >
                 <div className="flex flex-col space-y-1 py-2 px-12 border-l-2 border-transparent rtl:border-r-2 rtl:border-l-0 rtl:border-r-surface ltr:border-l-surface mx-4">
-                  {user ? (
-                    <>
-                      <Link
-                        href="/account"
-                        className="text-sm text-secondary/70 hover:text-primary py-2 transition-colors"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        {language === "ar" ? "الملف الشخصي" : "Profile"}
-                      </Link>
-                      {isOwner && (
-                        <Link
-                          href="/admin"
-                          className="text-sm font-bold text-secondary/70 hover:text-primary py-2 transition-colors inline-flex items-center gap-2"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          <LayoutDashboard size={14} className="shrink-0" />
-                          {language === "ar" ? "لوحة الإدارة" : "Admin Dashboard"}
-                        </Link>
-                      )}
-                      <button
-                        type="button"
-                        className="text-sm text-red-500 py-2 text-start font-bold"
-                        onClick={() => {
-                          setIsMobileMenuOpen(false);
-                          setConfirmLogout(true);
-                        }}
-                      >
-                        {language === "ar" ? "تسجيل الخروج" : "Sign Out"}
-                      </button>
-                    </>
-                  ) : (
-                    <Link
-                      href="/login"
-                      className="text-sm text-primary py-2 text-start font-bold"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      {language === "ar" ? "تسجيل الدخول" : "Sign In"}
-                    </Link>
-                  )}
+                  <AccountMenuLinks
+                    variant="mobile"
+                    onNavigate={() => setIsMobileMenuOpen(false)}
+                    onLogout={() => {
+                      setIsMobileMenuOpen(false);
+                      setConfirmLogout(true);
+                    }}
+                  />
                 </div>
               </div>
             </div>

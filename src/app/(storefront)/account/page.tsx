@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/Toast";
@@ -41,8 +42,16 @@ export default function AccountPage() {
   const { language } = useLanguage();
   const { user, loading: authLoading, updateProfile, logout, ready } = useAuth();
   const { toast } = useToast();
+  const searchParams = useSearchParams();
 
   const [activeTab, setActiveTab] = useState<Tab>("orders");
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "profile" || tab === "orders" || tab === "addresses") {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
   const [authOpen, setAuthOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
