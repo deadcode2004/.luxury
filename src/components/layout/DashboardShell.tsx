@@ -206,6 +206,63 @@ export default function DashboardShell({
 
         <div
           className={cn(
+            "border-b border-gray-800 shrink-0 transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+            desktopCollapsed ? "px-2 py-4" : "px-4 py-5"
+          )}
+        >
+          <div
+            className={cn(
+              "group/profile relative flex items-center",
+              desktopCollapsed ? "justify-center" : "gap-3"
+            )}
+          >
+            <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-primary/20 ring-2 ring-primary/25 flex items-center justify-center text-primary font-bold">
+              {user?.avatar ? (
+                <Image
+                  key={user.avatar}
+                  src={user.avatar}
+                  alt=""
+                  fill
+                  sizes="44px"
+                  className="object-cover"
+                  unoptimized
+                />
+              ) : (
+                <span className="text-sm">
+                  {(userName || "A").trim().charAt(0).toUpperCase()}
+                </span>
+              )}
+            </div>
+
+            <div
+              className={cn(
+                "min-w-0 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                desktopCollapsed ? "sr-only w-0 opacity-0" : "opacity-100"
+              )}
+            >
+              <p className="truncate text-sm font-bold text-white leading-tight">{userName}</p>
+              <p className="mt-0.5 truncate text-xs text-gray-400">{userRole}</p>
+            </div>
+
+            {desktopCollapsed ? (
+              <span
+                role="tooltip"
+                className={cn(
+                  "pointer-events-none absolute top-1/2 z-[60] -translate-y-1/2 whitespace-nowrap rounded-lg px-2.5 py-1.5",
+                  "bg-white text-secondary text-xs font-semibold shadow-floating",
+                  "opacity-0 scale-95 transition-all duration-200 ease-out",
+                  "group-hover/profile:opacity-100 group-hover/profile:scale-100",
+                  "start-full ms-3"
+                )}
+              >
+                {userName}
+              </span>
+            ) : null}
+          </div>
+        </div>
+
+        <div
+          className={cn(
             "flex-1 overflow-y-auto overflow-x-hidden py-6 transition-[padding] duration-300",
             desktopCollapsed ? "px-2" : "px-4"
           )}
