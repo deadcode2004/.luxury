@@ -28,7 +28,7 @@ class OrderController extends Controller
     public function show(Request $request, Order $order): JsonResponse
     {
         $this->authorize('view', $order);
-        $order->load(['items', 'user']);
+        $order->load(['items.product', 'user', 'coupon']);
 
         return ApiResponse::success(OrderResource::make($order));
     }

@@ -105,15 +105,26 @@ class OrderService
 
             foreach ($cartLines as $item) {
                 $product = $products[$item['product_id']];
+                $unitPrice = round((float) $product->price, 2);
+                $quantity = (int) $item['quantity'];
+                $oldPrice = $product->old_price !== null ? round((float) $product->old_price, 2) : null;
+                $hasDiscount = $oldPrice !== null && $oldPrice > $unitPrice;
+                $originalUnitPrice = $hasDiscount ? $oldPrice : $unitPrice;
+                $unitDiscount = $hasDiscount ? round($originalUnitPrice - $unitPrice, 2) : 0.0;
+                $lineDiscount = round($unitDiscount * $quantity, 2);
 
                 OrderItem::query()->create([
                     'order_id' => $order->id,
                     'product_id' => $product->id,
                     'product_code' => $product->code,
                     'product_name' => $product->name,
-                    'unit_price' => $product->price,
-                    'quantity' => $item['quantity'],
-                    'line_total' => round(((float) $product->price) * $item['quantity'], 2),
+                    'product_image' => $product->image,
+                    'unit_price' => $unitPrice,
+                    'original_unit_price' => $originalUnitPrice,
+                    'unit_discount' => $unitDiscount,
+                    'quantity' => $quantity,
+                    'line_discount' => $lineDiscount,
+                    'line_total' => round($unitPrice * $quantity, 2),
                 ]);
 
                 $affected = Product::query()
@@ -191,7 +202,7 @@ class OrderService
 
     public function listAll(array $filters = []): LengthAwarePaginator
     {
-        $query = Order::query()->with(['user', 'items']);
+        $query = Order::query()->with(['user', 'items.product', 'coupon']);
 
         if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
@@ -220,7 +231,7 @@ class OrderService
     public function updateStatus(Order $order, OrderStatus $status): Order
     {
         $order->update(['status' => $status]);
-        $fresh = $order->fresh(['items', 'user']);
+        $fresh = $order->fresh(['items', 'user', 'coupon']);
         $fresh = $this->withLocalizedCustomer($fresh);
         $this->realtime->ordersChanged('status_updated', [
             'id' => $fresh->id,

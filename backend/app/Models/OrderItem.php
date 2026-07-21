@@ -12,8 +12,12 @@ class OrderItem extends Model
         'product_id',
         'product_code',
         'product_name',
+        'product_image',
         'unit_price',
+        'original_unit_price',
+        'unit_discount',
         'quantity',
+        'line_discount',
         'line_total',
     ];
 
@@ -22,6 +26,9 @@ class OrderItem extends Model
         return [
             'product_name' => 'array',
             'unit_price' => 'decimal:2',
+            'original_unit_price' => 'decimal:2',
+            'unit_discount' => 'decimal:2',
+            'line_discount' => 'decimal:2',
             'line_total' => 'decimal:2',
             'quantity' => 'integer',
         ];
