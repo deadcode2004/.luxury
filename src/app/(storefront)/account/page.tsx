@@ -394,7 +394,7 @@ export default function AccountPage() {
         </div>
       ) : null}
 
-      <div className="max-w-5xl">
+      <div className="max-w-6xl">
             {activeTab === "orders" && (
               <Card variant="panel" padding="lg">
                 <h2 className="text-2xl font-bold text-secondary mb-6 pb-4 border-b border-gray-100">
@@ -437,17 +437,13 @@ export default function AccountPage() {
             )}
 
             {activeTab === "profile" && (
-              <div className="flex flex-col gap-8">
-                <Card
-                  variant="panel"
-                  padding="md"
-                  className="flex flex-col sm:flex-row justify-between items-center gap-4"
-                >
-                  <div>
-                    <h2 className="text-xl font-bold text-secondary mb-1">
+              <div className="flex flex-col gap-4 sm:gap-6 w-full min-w-0">
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 w-full min-w-0">
+                  <div className="min-w-0">
+                    <h2 className="text-xl sm:text-2xl font-bold text-secondary tracking-tight">
                       {language === "ar" ? "إعدادات الحساب" : "Account Settings"}
                     </h2>
-                    <p className="text-gray-500 text-sm">
+                    <p className="text-sm text-gray-500 mt-1">
                       {language === "ar"
                         ? "إدارة بياناتك الشخصية والأمان والتفضيلات"
                         : "Manage your personal details, security, and preferences"}
@@ -457,7 +453,7 @@ export default function AccountPage() {
                     <Button
                       variant="secondary"
                       size="md"
-                      className="w-full sm:w-auto"
+                      className="w-full sm:w-auto shrink-0"
                       loading={saving || authLoading}
                       disabled={saving}
                       onClick={() =>
@@ -468,11 +464,11 @@ export default function AccountPage() {
                       {language === "ar" ? "حفظ الإعدادات" : "Save Settings"}
                     </Button>
                   ) : null}
-                </Card>
+                </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                  <div className="lg:col-span-1">
-                    <Card variant="panel" padding="sm">
+                <section className="w-full min-w-0 rounded-2xl sm:rounded-3xl border border-surface bg-white/70 overflow-hidden">
+                  <div className="grid grid-cols-1 lg:grid-cols-12 lg:items-stretch w-full min-w-0">
+                    <aside className="lg:col-span-4 min-w-0 w-full border-b lg:border-b-0 lg:border-e border-surface bg-background/50 p-3 sm:p-4">
                       <SidebarNav
                         variant="light"
                         activeKey={settingsSection}
@@ -517,30 +513,24 @@ export default function AccountPage() {
                           },
                         ]}
                       />
-                    </Card>
-                  </div>
+                    </aside>
 
-                  <div className="lg:col-span-2">
-                    <Card
-                      variant="panel"
-                      padding={settingsSection === "personal" ? "none" : "lg"}
-                      className={settingsSection === "personal" ? "overflow-hidden" : undefined}
-                    >
+                    <div className="lg:col-span-8 min-w-0 w-full flex flex-col">
                       {settingsSection === "personal" && (
                         <>
                           {!user && ready ? (
-                            <div className="mx-6 mt-6 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-secondary">
+                            <div className="mx-5 sm:mx-6 mt-5 sm:mt-6 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-secondary">
                               {language === "ar"
                                 ? "أنت تتصفح كزائر. سجّل الدخول لحفظ بياناتك."
                                 : "You're browsing as a guest. Sign in to save your profile."}
                             </div>
                           ) : null}
                           {user ? (
-                            <div className="bg-gray-50 p-6 border-b border-gray-100">
+                            <div className="bg-background/60 p-5 sm:p-6 border-b border-surface/70">
                               <AvatarUploader fallbackLabel={welcomeName} />
                             </div>
                           ) : null}
-                          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="p-5 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                             <FormField
                               label={language === "ar" ? "الاسم الأول" : "First Name"}
                               error={errors.first_name}
@@ -612,7 +602,7 @@ export default function AccountPage() {
                       )}
 
                       {settingsSection === "security" && (
-                        <div className="flex flex-col gap-8 max-w-xl">
+                        <div className="p-5 sm:p-6 flex flex-col gap-8 max-w-xl">
                           <div className="flex items-start gap-3">
                             <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                               <ShieldCheck size={20} />
@@ -694,7 +684,7 @@ export default function AccountPage() {
                       )}
 
                       {settingsSection === "notifications" && (
-                        <div className="space-y-4">
+                        <div className="p-5 sm:p-6 space-y-4">
                           {[
                             {
                               key: "notify_orders" as const,
@@ -718,7 +708,7 @@ export default function AccountPage() {
                           ].map((item) => (
                             <label
                               key={item.key}
-                              className="flex items-center justify-between gap-4 rounded-xl border border-gray-100 px-4 py-3 hover:border-primary/40 transition-colors cursor-pointer"
+                              className="flex items-center justify-between gap-4 rounded-xl border border-surface px-4 py-3 hover:border-primary/40 transition-colors cursor-pointer"
                             >
                               <span className="font-medium text-secondary">{item.label}</span>
                               <input
@@ -735,7 +725,7 @@ export default function AccountPage() {
                       )}
 
                       {settingsSection === "language" && (
-                        <div className="flex flex-col gap-6 max-w-xl">
+                        <div className="p-5 sm:p-6 flex flex-col gap-6 max-w-xl">
                           <FormField label={language === "ar" ? "لغة الموقع" : "Site language"}>
                             <Select
                               className="h-12"
@@ -793,9 +783,9 @@ export default function AccountPage() {
                           </FormField>
                         </div>
                       )}
-                    </Card>
+                    </div>
                   </div>
-                </div>
+                </section>
               </div>
             )}
 
