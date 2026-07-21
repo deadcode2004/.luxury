@@ -147,6 +147,7 @@ export default function DashboardShell({
                 <div className="relative w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold overflow-hidden ring-2 ring-primary/10">
                   {user?.avatar ? (
                     <Image
+                      key={user.avatar}
                       src={user.avatar}
                       alt=""
                       fill

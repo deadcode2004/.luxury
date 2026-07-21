@@ -2,7 +2,7 @@
 
 import React, { useEffect, useId, useRef, useState } from "react";
 import Image from "next/image";
-import { Camera, Check, Loader2, Trash2, UserRound, X } from "lucide-react";
+import { Camera, Loader2, Trash2, UserRound } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/cn";
@@ -29,7 +29,7 @@ export default function AvatarUploader({
   onPendingChange,
 }: AvatarUploaderProps) {
   const { language } = useLanguage();
-  const { user, loading, uploadAvatar, removeAvatar } = useAuth();
+  const { user, uploadAvatar, removeAvatar } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
   const inputId = useId();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -80,12 +80,31 @@ export default function AvatarUploader({
 
     setBusy(true);
     try {
-      const compressed = await compressAvatarImage(file);
+      let readyFile = file;
+      try {
+        readyFile = await compressAvatarImage(file);
+      } catch {
+        // Fall back to the original file if canvas compression fails.
+        readyFile = file;
+      }
+
       if (previewUrl) URL.revokeObjectURL(previewUrl);
-      const nextPreview = URL.createObjectURL(compressed);
+      const nextPreview = URL.createObjectURL(readyFile);
       setPreviewUrl(nextPreview);
-      setPendingFile(compressed);
-      onPendingChange?.(compressed);
+      setPendingFile(readyFile);
+      onPendingChange?.(readyFile);
+
+      if (deferUpload) {
+        return;
+      }
+
+      const ok = await uploadAvatar(readyFile);
+      if (ok) {
+        URL.revokeObjectURL(nextPreview);
+        setPreviewUrl(null);
+        setPendingFile(null);
+        onPendingChange?.(null);
+      }
     } catch {
       setError(validationMessage("load"));
     } finally {
@@ -94,20 +113,13 @@ export default function AvatarUploader({
     }
   };
 
-  const savePending = async () => {
-    if (!pendingFile) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const ok = await uploadAvatar(pendingFile);
-      if (ok) clearPending();
-    } finally {
-      setBusy(false);
-    }
-  };
-
   const onRemoveSaved = async () => {
     setError(null);
+    if (pendingFile || previewUrl) {
+      clearPending();
+      if (!savedAvatar) return;
+    }
+    if (!savedAvatar) return;
     setBusy(true);
     try {
       await removeAvatar();
@@ -118,7 +130,7 @@ export default function AvatarUploader({
 
   const dim = size === "lg" ? "h-24 w-24" : "h-16 w-16";
   const badge = size === "lg" ? "h-8 w-8" : "h-7 w-7";
-  const isWorking = busy || loading;
+  const isWorking = busy;
 
   return (
     <div className={cn("flex flex-col sm:flex-row sm:items-center gap-4", className)}>
@@ -202,47 +214,29 @@ export default function AvatarUploader({
           <Camera size={size === "lg" ? 14 : 12} />
         </button>
 
-        {pendingFile && !deferUpload ? (
-          <button
-            type="button"
-            disabled={isWorking}
-            onClick={() => void savePending()}
-            aria-label={language === "ar" ? "حفظ الصورة" : "Save photo"}
-            title={language === "ar" ? "حفظ الصورة" : "Save photo"}
-            className={cn(
-              "absolute -top-0.5 -end-0.5 z-10 inline-flex items-center justify-center rounded-full",
-              "border-2 border-background bg-primary text-background shadow-soft",
-              "transition-transform hover:scale-105 active:scale-95 disabled:opacity-50",
-              badge
-            )}
-          >
-            <Check size={size === "lg" ? 14 : 12} />
-          </button>
-        ) : null}
-
-        {pendingFile ? (
-          <button
-            type="button"
-            disabled={isWorking}
-            onClick={clearPending}
-            aria-label={language === "ar" ? "إلغاء المعاينة" : "Discard preview"}
-            title={language === "ar" ? "إلغاء المعاينة" : "Discard preview"}
-            className={cn(
-              "absolute -top-0.5 -start-0.5 z-10 inline-flex items-center justify-center rounded-full",
-              "border-2 border-background bg-background text-secondary/70 shadow-soft",
-              "transition-transform hover:scale-105 hover:text-secondary active:scale-95 disabled:opacity-50",
-              badge
-            )}
-          >
-            <X size={size === "lg" ? 14 : 12} />
-          </button>
-        ) : savedAvatar ? (
+        {(savedAvatar || (deferUpload && pendingFile)) && !isWorking ? (
           <button
             type="button"
             disabled={isWorking}
             onClick={() => void onRemoveSaved()}
-            aria-label={language === "ar" ? "حذف الصورة" : "Remove photo"}
-            title={language === "ar" ? "حذف الصورة" : "Remove photo"}
+            aria-label={
+              deferUpload && pendingFile
+                ? language === "ar"
+                  ? "إلغاء المعاينة"
+                  : "Discard preview"
+                : language === "ar"
+                  ? "حذف الصورة"
+                  : "Remove photo"
+            }
+            title={
+              deferUpload && pendingFile
+                ? language === "ar"
+                  ? "إلغاء المعاينة"
+                  : "Discard preview"
+                : language === "ar"
+                  ? "حذف الصورة"
+                  : "Remove photo"
+            }
             className={cn(
               "absolute -top-0.5 -start-0.5 z-10 inline-flex items-center justify-center rounded-full",
               "border-2 border-background bg-background text-red-600 shadow-soft",
@@ -261,18 +255,14 @@ export default function AvatarUploader({
         </p>
         <p className="text-xs text-secondary/50 leading-relaxed">
           {language === "ar"
-            ? "JPEG أو PNG أو WebP — حتى 5 ميجابايت. يتم ضغط الصورة تلقائياً."
-            : "JPEG, PNG, or WebP — up to 5 MB. Images are compressed automatically."}
+            ? "اضغط أيقونة الكاميرا لرفع الصورة. JPEG أو PNG أو WebP — حتى 5 ميجابايت."
+            : "Tap the camera icon to upload. JPEG, PNG, or WebP — up to 5 MB."}
         </p>
-        {pendingFile ? (
+        {deferUpload && pendingFile ? (
           <p className="text-xs font-medium text-primary pt-1">
-            {deferUpload
-              ? language === "ar"
-                ? "ستُرفع الصورة بعد إنشاء الحساب."
-                : "Photo will upload after account creation."
-              : language === "ar"
-                ? "معاينة جاهزة — اضغط ✓ للحفظ."
-                : "Preview ready — tap ✓ to save."}
+            {language === "ar"
+              ? "ستُحفظ الصورة بعد إنشاء الحساب."
+              : "Photo will be saved after account creation."}
           </p>
         ) : null}
         {error ? <p className="text-xs text-red-500 pt-1">{error}</p> : null}
