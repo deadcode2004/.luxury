@@ -11,6 +11,14 @@ class RegisterRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $phone = $this->input('phone');
+        if ($phone === null || (is_string($phone) && trim($phone) === '')) {
+            $this->merge(['phone' => null]);
+        }
+    }
+
     public function rules(): array
     {
         return [
@@ -19,6 +27,14 @@ class RegisterRequest extends FormRequest
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'phone' => ['nullable', 'string', 'max:30', 'unique:users,phone'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'email.unique' => 'This email is already registered.',
+            'phone.unique' => 'This phone number is already registered.',
         ];
     }
 }

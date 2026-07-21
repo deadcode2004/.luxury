@@ -51,7 +51,7 @@ export default function RegisterPage() {
     setErrors(next);
     if (Object.keys(next).length) return;
 
-    const ok = await register({
+    const result = await register({
       first_name: form.first_name.trim(),
       last_name: form.last_name.trim(),
       email: form.email.trim(),
@@ -59,7 +59,13 @@ export default function RegisterPage() {
       password: form.password,
       password_confirmation: form.password_confirmation,
     });
-    if (ok) router.replace("/account");
+    if (result.ok) {
+      router.replace("/account");
+      return;
+    }
+    if (result.fieldErrors && Object.keys(result.fieldErrors).length) {
+      setErrors(result.fieldErrors);
+    }
   };
 
   return (
@@ -81,6 +87,7 @@ export default function RegisterPage() {
               value={form.first_name}
               onChange={(e) => setForm((f) => ({ ...f, first_name: e.target.value }))}
               autoComplete="given-name"
+              aria-invalid={Boolean(errors.first_name)}
             />
           </FormField>
           <FormField
@@ -91,6 +98,7 @@ export default function RegisterPage() {
               value={form.last_name}
               onChange={(e) => setForm((f) => ({ ...f, last_name: e.target.value }))}
               autoComplete="family-name"
+              aria-invalid={Boolean(errors.last_name)}
             />
           </FormField>
         </div>
@@ -101,15 +109,17 @@ export default function RegisterPage() {
             onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
             className="text-start dir-ltr"
             autoComplete="email"
+            aria-invalid={Boolean(errors.email)}
           />
         </FormField>
-        <FormField label={language === "ar" ? "رقم الهاتف" : "Phone Number"}>
+        <FormField label={language === "ar" ? "رقم الهاتف" : "Phone Number"} error={errors.phone}>
           <Input
             type="tel"
             value={form.phone}
             onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
             className="text-start dir-ltr"
             autoComplete="tel"
+            aria-invalid={Boolean(errors.phone)}
           />
         </FormField>
         <FormField label={language === "ar" ? "كلمة المرور" : "Password"} error={errors.password}>
@@ -118,6 +128,7 @@ export default function RegisterPage() {
             value={form.password}
             onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
             autoComplete="new-password"
+            aria-invalid={Boolean(errors.password)}
           />
           <PasswordStrength password={form.password} />
         </FormField>
@@ -132,6 +143,7 @@ export default function RegisterPage() {
               setForm((f) => ({ ...f, password_confirmation: e.target.value }))
             }
             autoComplete="new-password"
+            aria-invalid={Boolean(errors.password_confirmation)}
           />
         </FormField>
         <Button type="submit" variant="secondary" fullWidth loading={loading}>

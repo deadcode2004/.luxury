@@ -6,10 +6,15 @@ import { apiRequest, ApiRequestError } from "@/lib/api/client";
 import { readStorage, removeStorage, writeStorage } from "@/lib/storage";
 import { clearAuthCookies, setAuthCookies } from "@/lib/auth/session";
 import { normalizeAuthUser, type AuthUser } from "@/lib/auth/user";
+import { fieldErrorsFromUnknown } from "@/lib/auth/validationErrors";
 import { useToast } from "@/components/ui/Toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export type { AuthUser };
+
+export type AuthActionResult =
+  | { ok: true }
+  | { ok: false; fieldErrors?: Record<string, string>; message?: string };
 
 type AuthContextValue = {
   user: AuthUser | null;
@@ -27,7 +32,7 @@ type AuthContextValue = {
     phone?: string;
     password: string;
     password_confirmation: string;
-  }) => Promise<boolean>;
+  }) => Promise<AuthActionResult>;
   logout: (redirectTo?: string) => Promise<void>;
   refreshProfile: () => Promise<void>;
   updateProfile: (payload: {
@@ -162,7 +167,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       phone?: string;
       password: string;
       password_confirmation: string;
-    }) => {
+    }): Promise<AuthActionResult> => {
       setLoading(true);
       try {
         const data = await apiRequest<{ user: AuthUser; token: string }>("/auth/register", {
@@ -174,16 +179,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           language === "ar" ? "✔ تم إنشاء الحساب بنجاح" : "✔ Account created successfully",
           "success"
         );
-        return true;
+        return { ok: true };
       } catch (error) {
+        const fieldErrors = fieldErrorsFromUnknown(error, language);
         const message =
-          error instanceof ApiRequestError
+          Object.values(fieldErrors)[0] ||
+          (error instanceof ApiRequestError
             ? error.message
             : language === "ar"
               ? "فشل إنشاء الحساب"
-              : "Registration failed";
+              : "Registration failed");
         toast(message, "danger");
-        return false;
+        return { ok: false, fieldErrors, message };
       } finally {
         setLoading(false);
       }

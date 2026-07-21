@@ -59,19 +59,28 @@ export default function AuthModal({ open, onClose, initialMode = "login" }: Auth
     e.preventDefault();
     if (!validate()) return;
 
-    const ok =
-      mode === "login"
-        ? await login(form.email, form.password)
-        : await register({
-            first_name: form.first_name,
-            last_name: form.last_name,
-            email: form.email,
-            phone: form.phone || undefined,
-            password: form.password,
-            password_confirmation: form.password_confirmation,
-          });
+    if (mode === "login") {
+      const ok = await login(form.email, form.password);
+      if (ok) onClose();
+      return;
+    }
 
-    if (ok) onClose();
+    const result = await register({
+      first_name: form.first_name,
+      last_name: form.last_name,
+      email: form.email,
+      phone: form.phone.trim() || undefined,
+      password: form.password,
+      password_confirmation: form.password_confirmation,
+    });
+
+    if (result.ok) {
+      onClose();
+      return;
+    }
+    if (result.fieldErrors && Object.keys(result.fieldErrors).length) {
+      setErrors(result.fieldErrors);
+    }
   };
 
   return (
@@ -121,11 +130,12 @@ export default function AuthModal({ open, onClose, initialMode = "login" }: Auth
         </FormField>
 
         {mode === "register" && (
-          <FormField label={language === "ar" ? "رقم الهاتف" : "Phone"}>
+          <FormField label={language === "ar" ? "رقم الهاتف" : "Phone"} error={errors.phone}>
             <Input
               value={form.phone}
               onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-              className="dir-ltr text-start"
+              className={`dir-ltr text-start ${errors.phone ? "border-red-300" : ""}`}
+              aria-invalid={Boolean(errors.phone)}
             />
           </FormField>
         )}
