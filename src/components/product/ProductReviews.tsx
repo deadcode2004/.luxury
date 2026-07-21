@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
-import { Star } from "lucide-react";
+import { ChevronLeft, ChevronRight, Quote, Star } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/Toast";
@@ -47,6 +47,8 @@ export default function ProductReviews({
   const [authorName, setAuthorName] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [cardsToShow, setCardsToShow] = useState(1);
 
   const load = useCallback(async () => {
     try {
@@ -67,6 +69,21 @@ export default function ProductReviews({
   useRealtimeDomains(["products"], () => {
     void load();
   });
+
+  useEffect(() => {
+    const updateCardsToShow = () => {
+      if (window.innerWidth >= 1024) setCardsToShow(3);
+      else if (window.innerWidth >= 768) setCardsToShow(2);
+      else setCardsToShow(1);
+    };
+    updateCardsToShow();
+    window.addEventListener("resize", updateCardsToShow);
+    return () => window.removeEventListener("resize", updateCardsToShow);
+  }, []);
+
+  useEffect(() => {
+    setCurrentIndex(0);
+  }, [reviews.length, cardsToShow, productId]);
 
   const openAdd = useCallback(() => {
     setRating(5);
@@ -120,6 +137,7 @@ export default function ProductReviews({
         token
       );
       setReviews((prev) => [created, ...prev.filter((r) => r.id !== created.id)]);
+      setCurrentIndex(0);
       signalLocal(["products", "dashboard"]);
       onStatsChange?.();
       setModalOpen(false);
@@ -140,6 +158,15 @@ export default function ProductReviews({
   const displayStars = hoverRating || rating;
   const loggedInName = displayPersonName(user, language, "");
   const hasUploadedAvatar = Boolean(user?.avatar?.trim());
+  const totalDots = Math.max(1, reviews.length - cardsToShow + 1);
+
+  const next = () => {
+    setCurrentIndex((prev) => (prev >= totalDots - 1 ? 0 : prev + 1));
+  };
+
+  const prev = () => {
+    setCurrentIndex((prev) => (prev <= 0 ? totalDots - 1 : prev - 1));
+  };
 
   return (
     <section id="product-reviews" className="border-t border-gray-100 pt-16 scroll-mt-28">
@@ -179,59 +206,115 @@ export default function ProductReviews({
           </Button>
         </div>
       ) : (
-        <ul className="space-y-5 max-w-3xl mx-auto">
-          {reviews.map((review) => {
-            const author = pickLocale(review.author, language) || "—";
-            const text =
-              pickLocale(review.comment, language) ||
-              review.comment?.ar ||
-              review.comment?.en ||
-              "";
-            const avatar = review.author_avatar || reviewerAvatarUrl(author);
-            return (
-              <li
-                key={review.id}
-                className="bg-white border border-surface/60 rounded-2xl p-5 md:p-6"
+        <div className="relative">
+          <div className="overflow-hidden">
+            <div
+              className="flex transition-transform duration-500 ease-out"
+              style={{
+                transform: `translateX(${
+                  language === "ar"
+                    ? currentIndex * (100 / cardsToShow)
+                    : -(currentIndex * (100 / cardsToShow))
+                }%)`,
+              }}
+            >
+              {reviews.map((review) => {
+                const author = pickLocale(review.author, language) || "—";
+                const text =
+                  pickLocale(review.comment, language) ||
+                  review.comment?.ar ||
+                  review.comment?.en ||
+                  "";
+                const avatar = review.author_avatar || reviewerAvatarUrl(author);
+                return (
+                  <div
+                    key={review.id}
+                    className="px-2 sm:px-3 shrink-0"
+                    style={{ width: `${100 / cardsToShow}%` }}
+                  >
+                    <article className="bg-white border border-surface/60 rounded-2xl p-5 md:p-6 h-full flex flex-col relative group shadow-sm hover:shadow-md transition-shadow duration-300">
+                      <Quote
+                        size={26}
+                        className="text-primary/10 absolute top-5 end-5 group-hover:text-primary/20 transition-colors"
+                      />
+                      <div className="flex text-accent mb-4 relative z-10">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                          <Star
+                            key={i}
+                            size={14}
+                            fill={i <= review.rating ? "currentColor" : "none"}
+                            className={i <= review.rating ? "text-accent" : "text-gray-300"}
+                          />
+                        ))}
+                      </div>
+                      <p className="text-secondary/80 text-sm md:text-base leading-relaxed italic relative z-10 flex-1 min-h-[4.5rem]">
+                        &ldquo;{text}&rdquo;
+                      </p>
+                      <div className="flex items-center gap-3 mt-5 pt-4 border-t border-surface/50">
+                        <div className="relative w-10 h-10 rounded-full overflow-hidden bg-secondary shrink-0">
+                          <Image
+                            src={avatar}
+                            alt={author}
+                            fill
+                            className="object-cover"
+                            sizes="40px"
+                            unoptimized
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-bold text-secondary text-sm truncate">{author}</p>
+                          {review.created_at ? (
+                            <p className="text-[11px] text-gray-400 mt-0.5">
+                              {new Date(review.created_at).toLocaleDateString(
+                                language === "ar" ? "ar-EG" : "en-GB"
+                              )}
+                            </p>
+                          ) : null}
+                        </div>
+                      </div>
+                    </article>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {totalDots > 1 ? (
+            <>
+              <button
+                type="button"
+                onClick={language === "ar" ? next : prev}
+                className="absolute top-1/2 -translate-y-1/2 -start-1 sm:-start-3 md:-start-5 w-10 h-10 bg-white shadow-lg rounded-full flex items-center justify-center text-secondary hover:text-primary transition-colors z-20 border border-gray-100"
+                aria-label={language === "ar" ? "السابق" : "Previous"}
               >
-                <div className="flex items-start justify-between gap-4 mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="relative w-10 h-10 rounded-full overflow-hidden bg-secondary shrink-0">
-                      <Image
-                        src={avatar}
-                        alt={author}
-                        fill
-                        className="object-cover"
-                        sizes="40px"
-                        unoptimized
-                      />
-                    </div>
-                    <div>
-                      <p className="font-bold text-secondary text-sm">{author}</p>
-                      {review.created_at && (
-                        <p className="text-[11px] text-gray-400 mt-0.5">
-                          {new Date(review.created_at).toLocaleDateString(
-                            language === "ar" ? "ar-EG" : "en-GB"
-                          )}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex text-accent shrink-0">
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <Star
-                        key={i}
-                        size={14}
-                        fill={i <= review.rating ? "currentColor" : "none"}
-                        className={i <= review.rating ? "text-accent" : "text-gray-300"}
-                      />
-                    ))}
-                  </div>
-                </div>
-                <p className="text-secondary/80 text-sm md:text-base leading-relaxed">{text}</p>
-              </li>
-            );
-          })}
-        </ul>
+                {language === "ar" ? <ChevronRight size={22} /> : <ChevronLeft size={22} />}
+              </button>
+              <button
+                type="button"
+                onClick={language === "ar" ? prev : next}
+                className="absolute top-1/2 -translate-y-1/2 -end-1 sm:-end-3 md:-end-5 w-10 h-10 bg-white shadow-lg rounded-full flex items-center justify-center text-secondary hover:text-primary transition-colors z-20 border border-gray-100"
+                aria-label={language === "ar" ? "التالي" : "Next"}
+              >
+                {language === "ar" ? <ChevronLeft size={22} /> : <ChevronRight size={22} />}
+              </button>
+              <div className="flex justify-center mt-8 gap-2">
+                {Array.from({ length: totalDots }).map((_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setCurrentIndex(i)}
+                    className={`h-2.5 rounded-full transition-all duration-300 ${
+                      i === currentIndex ? "bg-primary w-8" : "bg-gray-300 hover:bg-gray-400 w-2.5"
+                    }`}
+                    aria-label={
+                      language === "ar" ? `الشريحة ${i + 1}` : `Go to slide ${i + 1}`
+                    }
+                  />
+                ))}
+              </div>
+            </>
+          ) : null}
+        </div>
       )}
 
       <Modal
