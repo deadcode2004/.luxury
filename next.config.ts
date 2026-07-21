@@ -10,6 +10,7 @@ import {
  * Shared Next config for Local + Vercel.
  * API calls use same-origin `/api/v1/*` and are rewritten to Laravel via API_PROXY_ORIGIN.
  */
+/** Must match `.env.local` → API_PROXY_ORIGIN (canonical local port: 8000). */
 const apiProxyOrigin = (
   process.env.API_PROXY_ORIGIN ||
   process.env.NEXT_PUBLIC_API_ORIGIN ||

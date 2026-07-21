@@ -14,26 +14,29 @@ Both environments must use the **same bundler** and the **same API path**:
 
 See full audit: [`docs/ENVIRONMENT_PARITY_REPORT.md`](./docs/ENVIRONMENT_PARITY_REPORT.md)
 
-### Frontend setup
+### Local development (recommended)
+
+`.env.local` → `API_PROXY_ORIGIN` is the **single source of truth** for the Laravel port
+(default `http://127.0.0.1:8000`). Do not flip between 8000/8001 manually.
 
 ```bash
 cp .env.example .env.local
+cp backend/.env.example backend/.env
 npm install
-npm run dev
+cd backend && composer install && php artisan key:generate && php artisan migrate --seed && php artisan storage:link && cd ..
+
+# Start BOTH (safe — does not cross-kill processes)
+npm run dev:all
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+- Storefront: [http://localhost:3000](http://localhost:3000)
+- Laravel API: [http://127.0.0.1:8000](http://127.0.0.1:8000)
 
-### Backend setup
+Or in two terminals (either side never kills the other):
 
 ```bash
-cd backend
-cp .env.example .env
-composer install
-php artisan key:generate
-php artisan migrate --seed
-php artisan storage:link
-php artisan serve --host=127.0.0.1 --port=8000
+npm run dev:laravel   # ONLY Laravel (multi-worker PHP server)
+npm run dev:next      # ONLY Next.js
 ```
 
 Seeded accounts:
@@ -55,8 +58,12 @@ Seeded accounts:
 ### Scripts
 
 ```bash
-npm run dev     # webpack dev server
-npm run build   # webpack production build (same as Vercel)
-npm run start   # serve production build
+npm run dev:all       # Laravel + Next together (recommended)
+npm run dev:laravel   # Laravel only (never touches Next)
+npm run dev:next      # Next only (never touches Laravel)
+npm run dev           # Next only (raw)
+npm run build         # webpack production build (same as Vercel)
+npm run start         # serve production build — do NOT run beside `dev`
 npm run lint
 ```
+

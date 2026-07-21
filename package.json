@@ -5,8 +5,12 @@
   "scripts": {
     "dev": "next dev --webpack",
     "dev:clean": "rm -rf .next && next dev --webpack",
-    "dev:stack": "bash scripts/dev.sh",
-    "dev:stack:clean": "CLEAN=1 bash scripts/dev.sh",
+    "dev:laravel": "bash scripts/dev-laravel.sh",
+    "dev:next": "bash scripts/dev-next.sh",
+    "dev:all": "bash scripts/dev-all.sh",
+    "dev:all:clean": "CLEAN=1 bash scripts/dev-all.sh",
+    "dev:stack": "bash scripts/dev-all.sh",
+    "dev:stack:clean": "CLEAN=1 bash scripts/dev-all.sh",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "next lint"
@@ -23,6 +27,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "concurrently": "^9.2.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "tailwindcss": "^4",

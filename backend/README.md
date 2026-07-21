@@ -37,7 +37,9 @@ php artisan key:generate
 # Ensure PostgreSQL DB + Redis are running
 php artisan migrate --seed
 php artisan storage:link
-php artisan serve --host=0.0.0.0 --port=8000
+# Prefer from repo root (multi-worker, keeps Next untouched):
+#   npm run dev:laravel
+PHP_CLI_SERVER_WORKERS=4 php artisan serve --host=127.0.0.1 --port=8000
 ```
 
 ### Default seeded accounts
