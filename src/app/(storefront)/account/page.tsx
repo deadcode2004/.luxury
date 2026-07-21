@@ -20,6 +20,7 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import Modal from "@/components/ui/Modal";
 import AuthModal from "@/components/auth/AuthModal";
 import AvatarUploader from "@/components/account/AvatarUploader";
+import { LocaleInput } from "@/components/admin/LocaleField";
 import { displayPersonName } from "@/lib/i18n/localeText";
 import { cn } from "@/lib/cn";
 import type { AppLanguage } from "@/lib/i18n/language";
@@ -95,8 +96,10 @@ export default function AccountPage() {
   const [region, setRegion] = useState("EG");
 
   const [form, setForm] = useState({
-    first_name: "",
-    last_name: "",
+    first_name_ar: "",
+    first_name_en: "",
+    last_name_ar: "",
+    last_name_en: "",
     email: "",
     phone: "",
     current_password: "",
@@ -121,8 +124,10 @@ export default function AccountPage() {
     const parts = (user.name || "").trim().split(/\s+/);
     setForm((f) => ({
       ...f,
-      first_name: user.first_name || parts[0] || "",
-      last_name: user.last_name || parts.slice(1).join(" ") || "",
+      first_name_ar: user.first_name_i18n?.ar || user.first_name || parts[0] || "",
+      first_name_en: user.first_name_i18n?.en || "",
+      last_name_ar: user.last_name_i18n?.ar || user.last_name || parts.slice(1).join(" ") || "",
+      last_name_en: user.last_name_i18n?.en || "",
       email: user.email || "",
       phone: user.phone || "",
       notify_orders: user.notify_orders ?? true,
@@ -135,10 +140,10 @@ export default function AccountPage() {
     if (!user) return language === "ar" ? "زائر" : "Guest";
     return (
       displayPersonName(user, language, "") ||
-      `${form.first_name} ${form.last_name}`.trim() ||
+      `${form.first_name_ar} ${form.last_name_ar}`.trim() ||
       user.email
     );
-  }, [user, language, form.first_name, form.last_name]);
+  }, [user, language, form.first_name_ar, form.last_name_ar]);
 
   const [welcomePhase, setWelcomePhase] = useState<"hidden" | "enter" | "shown" | "leave">(
     "hidden"
@@ -184,10 +189,10 @@ export default function AccountPage() {
 
   const savePersonal = async () => {
     const next: Record<string, string> = {};
-    if (!form.first_name.trim()) {
+    if (!form.first_name_ar.trim()) {
       next.first_name = language === "ar" ? "الاسم الأول مطلوب" : "First name is required";
     }
-    if (!form.last_name.trim()) {
+    if (!form.last_name_ar.trim()) {
       next.last_name = language === "ar" ? "اسم العائلة مطلوب" : "Last name is required";
     }
     if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
@@ -200,8 +205,8 @@ export default function AccountPage() {
     setSaving(true);
     try {
       await updateProfile({
-        first_name: form.first_name.trim(),
-        last_name: form.last_name.trim(),
+        first_name: form.first_name_ar.trim(),
+        last_name: form.last_name_ar.trim(),
         email: form.email.trim(),
         phone: form.phone.trim() || undefined,
       });
@@ -394,7 +399,7 @@ export default function AccountPage() {
         </div>
       ) : null}
 
-      <div className="max-w-6xl">
+      <div className="w-full min-w-0">
             {activeTab === "orders" && (
               <Card variant="panel" padding="lg">
                 <h2 className="text-2xl font-bold text-secondary mb-6 pb-4 border-b border-gray-100">
@@ -532,15 +537,24 @@ export default function AccountPage() {
                             </div>
                           ) : null}
                           <div className="p-5 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <p className="md:col-span-2 text-xs text-secondary/50 leading-relaxed">
+                              {language === "ar"
+                                ? "أدخل الاسم بالعربية؛ عند التبديل للإنجليزية يظهر الاسم المترجم تلقائياً."
+                                : "Enter the Arabic name; switch the site to English to see the auto-translated name."}
+                            </p>
                             <FormField
                               label={language === "ar" ? "الاسم الأول" : "First Name"}
                               error={errors.first_name}
                             >
-                              <Input
-                                type="text"
-                                value={form.first_name}
-                                onChange={(e) =>
-                                  setForm((f) => ({ ...f, first_name: e.target.value }))
+                              <LocaleInput
+                                ar={form.first_name_ar}
+                                en={form.first_name_en}
+                                onArChange={(ar) =>
+                                  setForm((f) => ({
+                                    ...f,
+                                    first_name_ar: ar,
+                                    first_name_en: "",
+                                  }))
                                 }
                                 aria-invalid={Boolean(errors.first_name)}
                               />
@@ -549,11 +563,15 @@ export default function AccountPage() {
                               label={language === "ar" ? "اسم العائلة" : "Last Name"}
                               error={errors.last_name}
                             >
-                              <Input
-                                type="text"
-                                value={form.last_name}
-                                onChange={(e) =>
-                                  setForm((f) => ({ ...f, last_name: e.target.value }))
+                              <LocaleInput
+                                ar={form.last_name_ar}
+                                en={form.last_name_en}
+                                onArChange={(ar) =>
+                                  setForm((f) => ({
+                                    ...f,
+                                    last_name_ar: ar,
+                                    last_name_en: "",
+                                  }))
                                 }
                                 aria-invalid={Boolean(errors.last_name)}
                               />
