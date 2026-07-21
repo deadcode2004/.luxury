@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useLayoutEffect, lazy, Suspense } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   Search,
@@ -20,7 +21,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import CurrencySwitcher from "@/components/common/CurrencySwitcher";
 import AnnouncementBar from "@/components/common/AnnouncementBar";
-import AccountMenuLinks from "@/components/common/AccountMenuLinks";
+import AccountMenu from "@/components/common/AccountMenu";
+import AccountMenuPanel from "@/components/common/AccountMenuPanel";
+import { displayPersonName } from "@/lib/i18n/localeText";
+import { cn } from "@/lib/cn";
 
 const HeaderSearchPanel = lazy(() => import("@/components/common/HeaderSearchPanel"));
 
@@ -73,12 +77,24 @@ export default function Header() {
   const { language, toggleLanguage, dir } = useLanguage();
   const { count: cartCount } = useCart();
   const { count: wishCount } = useWishlist();
-  const { logout, loading: authLoading, isAuthenticated, isOwner } = useAuth();
+  const { user, logout, loading: authLoading, isAuthenticated, isOwner, ready } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
   const pathname = usePathname();
+  const accountLabel = !ready || !isAuthenticated
+    ? language === "ar"
+      ? "الحساب"
+      : "Account"
+    : isOwner
+      ? language === "ar"
+        ? "حساب المالك"
+        : "Owner Account"
+      : language === "ar"
+        ? "حسابي"
+        : "My Account";
+  const accountDisplayName = displayPersonName(user, language, "");
 
   const isTransparentRoute = pathname === "/" || pathname === "/about";
   const isTransparent = isTransparentRoute && !isScrolled;
@@ -111,6 +127,10 @@ export default function Header() {
     return () => {
       document.body.style.overflow = "unset";
     };
+  }, [isMobileMenuOpen]);
+
+  useEffect(() => {
+    if (!isMobileMenuOpen) setIsAccountMenuOpen(false);
   }, [isMobileMenuOpen]);
 
   const navLinks = [
@@ -198,30 +218,10 @@ export default function Header() {
               <ShoppingBag size={18} />
               <CountBadge count={cartCount} isTransparent={isTransparent} />
             </Link>
-            <div className="relative group hidden lg:flex h-full items-center">
-              <button
-                type="button"
-                className={`transition-colors inline-flex items-center justify-center p-2 active:scale-95 ${hoverColorClass}`}
-                aria-label={language === "ar" ? "الحساب" : "Account"}
-              >
-                <User size={18} />
-              </button>
-
-              <div
-                className={`absolute top-[100%] w-56 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 ${
-                  dir === "rtl" ? "left-0" : "right-0"
-                }`}
-              >
-                <div className="bg-background/95 backdrop-blur-xl border border-surface rounded-2xl shadow-floating overflow-hidden transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 ease-out">
-                  <div className="p-2">
-                    <AccountMenuLinks
-                      variant="desktop"
-                      onLogout={() => setConfirmLogout(true)}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
+            <AccountMenu
+              inverted={isTransparent}
+              onLogoutRequest={() => setConfirmLogout(true)}
+            />
           </div>
         </div>
       </header>
@@ -296,49 +296,67 @@ export default function Header() {
             <div className="flex flex-col">
               <button
                 type="button"
-                onClick={() => setIsAccountMenuOpen(!isAccountMenuOpen)}
-                className="flex items-center justify-between p-3 rounded-xl text-secondary/80 hover:bg-surface/50 hover:text-primary transition-all text-sm font-medium w-full text-start"
+                onClick={() => setIsAccountMenuOpen((v) => !v)}
+                aria-expanded={isAccountMenuOpen}
+                aria-controls="mobile-account-panel"
+                className={cn(
+                  "flex w-full items-center justify-between rounded-2xl border border-surface/50 bg-background p-3 text-start text-sm font-semibold text-secondary transition-all",
+                  "hover:border-primary/30 hover:bg-primary/[0.04] hover:text-primary",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35",
+                  "active:scale-[0.99]",
+                  isAccountMenuOpen && "border-primary/25 bg-primary/[0.05] text-primary"
+                )}
               >
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-surface/50 border border-surface flex items-center justify-center text-secondary">
-                    <User size={18} />
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-primary/15 to-accent/25 ring-2 ring-accent/25">
+                    {ready && isAuthenticated && user?.avatar ? (
+                      <Image src={user.avatar} alt="" fill sizes="44px" className="object-cover" />
+                    ) : ready && isAuthenticated && user ? (
+                      <span className="text-sm font-bold">
+                        {(accountDisplayName || user.email).slice(0, 1).toUpperCase()}
+                      </span>
+                    ) : (
+                      <User size={18} className="text-secondary/70" />
+                    )}
                   </div>
-                  <span>
-                    {!isAuthenticated
-                      ? language === "ar"
-                        ? "الحساب"
-                        : "Account"
-                      : isOwner
-                        ? language === "ar"
-                          ? "حساب المالك"
-                          : "Owner Account"
-                        : language === "ar"
-                          ? "حسابي"
-                          : "My Account"}
-                  </span>
+                  <div className="min-w-0">
+                    <span className="block truncate">{accountLabel}</span>
+                    {ready && isAuthenticated && user ? (
+                      <span className="mt-0.5 block truncate text-[11px] font-medium text-secondary/45">
+                        {accountDisplayName || user.email}
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
                 <ChevronDown
                   size={18}
-                  className={`transition-transform duration-300 ${
-                    isAccountMenuOpen ? "rotate-180" : "rotate-0"
-                  } text-secondary/50`}
+                  className={cn(
+                    "shrink-0 text-secondary/45 transition-transform duration-200 ease-out",
+                    isAccountMenuOpen && "rotate-180 text-primary"
+                  )}
                 />
               </button>
 
               <div
-                className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                  isAccountMenuOpen ? "max-h-56 opacity-100 mt-1" : "max-h-0 opacity-0"
-                }`}
+                id="mobile-account-panel"
+                className={cn(
+                  "grid transition-[grid-template-rows,opacity,margin] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                  isAccountMenuOpen
+                    ? "mt-2 grid-rows-[1fr] opacity-100"
+                    : "mt-0 grid-rows-[0fr] opacity-0"
+                )}
               >
-                <div className="flex flex-col space-y-1 py-2 px-12 border-l-2 border-transparent rtl:border-r-2 rtl:border-l-0 rtl:border-r-surface ltr:border-l-surface mx-4">
-                  <AccountMenuLinks
-                    variant="mobile"
-                    onNavigate={() => setIsMobileMenuOpen(false)}
-                    onLogout={() => {
-                      setIsMobileMenuOpen(false);
-                      setConfirmLogout(true);
-                    }}
-                  />
+                <div className="overflow-hidden">
+                  <div className="rounded-2xl border border-surface/50 bg-background/90 p-2 shadow-soft">
+                    <AccountMenuPanel
+                      compact
+                      onNavigate={() => setIsMobileMenuOpen(false)}
+                      onLogout={() => {
+                        setIsMobileMenuOpen(false);
+                        setConfirmLogout(true);
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
