@@ -19,7 +19,7 @@ import {
   submitProductReview,
   type ApiReview,
 } from "@/lib/api/reviews";
-import { pickLocale } from "@/lib/i18n/localeText";
+import { pickLocale, displayPersonName } from "@/lib/i18n/localeText";
 
 type ProductReviewsProps = {
   productId: string;
@@ -138,8 +138,8 @@ export default function ProductReviews({
   };
 
   const displayStars = hoverRating || rating;
-  const loggedInName = user?.name || [user?.first_name, user?.last_name].filter(Boolean).join(" ") || "";
-  const loggedInAvatar = reviewerAvatarUrl(loggedInName || "User", user?.avatar);
+  const loggedInName = displayPersonName(user, language, "");
+  const hasUploadedAvatar = Boolean(user?.avatar?.trim());
 
   return (
     <section id="product-reviews" className="border-t border-gray-100 pt-16 scroll-mt-28">
@@ -243,21 +243,29 @@ export default function ProductReviews({
         <form className="flex flex-col gap-5" onSubmit={onSubmit}>
           {isAuthenticated && user ? (
             <div className="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
-              <div className="relative w-12 h-12 rounded-full overflow-hidden bg-secondary shrink-0">
-                <Image
-                  src={loggedInAvatar}
-                  alt={loggedInName}
-                  fill
-                  className="object-cover"
-                  sizes="48px"
-                  unoptimized
-                />
+              <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-primary/15 to-accent/25 ring-2 ring-accent/25 shrink-0">
+                {hasUploadedAvatar ? (
+                  <Image
+                    src={user.avatar!}
+                    alt={loggedInName || "User"}
+                    fill
+                    className="object-cover"
+                    sizes="48px"
+                    unoptimized
+                  />
+                ) : (
+                  <span className="flex h-full w-full items-center justify-center text-sm font-bold text-secondary">
+                    {(loggedInName || user.email || "?").trim().charAt(0).toUpperCase()}
+                  </span>
+                )}
               </div>
               <div className="min-w-0">
                 <p className="text-xs text-gray-500">
                   {language === "ar" ? "التقييم باسم" : "Reviewing as"}
                 </p>
-                <p className="font-bold text-secondary truncate">{loggedInName}</p>
+                <p className="font-bold text-secondary truncate">
+                  {loggedInName || user.email}
+                </p>
               </div>
             </div>
           ) : (

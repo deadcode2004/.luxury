@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Star, Quote, ChevronLeft, ChevronRight } from "lucide-react";
+import Image from "next/image";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useRealtimeDomains } from "@/contexts/RealtimeContext";
 import { fetchPublicReviews, type ApiReview } from "@/lib/api/reviews";
@@ -114,8 +115,19 @@ export default function Reviews() {
                       </p>
 
                       <div className="flex items-center mt-auto">
-                        <div className="w-10 h-10 bg-secondary text-background rounded-full flex items-center justify-center font-bold text-sm me-3 shadow-md">
-                          {author.charAt(0)}
+                        <div className="relative w-10 h-10 bg-secondary text-background rounded-full overflow-hidden flex items-center justify-center font-bold text-sm me-3 shadow-md shrink-0">
+                          {review.author_avatar ? (
+                            <Image
+                              src={review.author_avatar}
+                              alt={author}
+                              fill
+                              sizes="40px"
+                              className="object-cover"
+                              unoptimized
+                            />
+                          ) : (
+                            author.charAt(0)
+                          )}
                         </div>
                         <div>
                           <h4 className="font-bold text-secondary text-xs md:text-sm">{author}</h4>

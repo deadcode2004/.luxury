@@ -349,7 +349,7 @@ export default function Header() {
                 <div className="flex min-w-0 items-center gap-3">
                   <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-primary/15 to-accent/25 ring-2 ring-accent/25">
                     {ready && isAuthenticated && user?.avatar ? (
-                      <Image src={user.avatar} alt="" fill sizes="44px" className="object-cover" />
+                      <Image src={user.avatar} alt="" fill sizes="44px" className="object-cover" unoptimized />
                     ) : ready && isAuthenticated && user ? (
                       <span className="text-sm font-bold">
                         {(accountDisplayName || user.email).slice(0, 1).toUpperCase()}

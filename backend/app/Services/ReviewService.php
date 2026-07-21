@@ -15,6 +15,7 @@ class ReviewService
     public function __construct(
         private readonly ProductTranslationService $translator,
         private readonly RealtimeHub $realtime,
+        private readonly UserNameLocaleService $names,
     ) {}
 
     public function listForProduct(Product $product, int $limit = 50): Collection
@@ -137,6 +138,12 @@ class ReviewService
     private function resolveAuthorLocales(?User $user, mixed $authorName): array
     {
         if ($user) {
+            $user = $this->names->ensureLocales($user);
+            $fromProfile = $this->localesFromUserProfile($user);
+            if ($fromProfile !== null) {
+                return $fromProfile;
+            }
+
             $name = trim((string) ($user->name ?: trim(($user->first_name ?? '').' '.($user->last_name ?? ''))));
             if ($name !== '') {
                 return $this->translator->bilingualFromText($name);
@@ -149,6 +156,40 @@ class ReviewService
         }
 
         return ['ar' => 'زائر', 'en' => 'Guest'];
+    }
+
+    /**
+     * Prefer stored bilingual profile names so English UI shows the translated name.
+     *
+     * @return array{ar: string, en: string}|null
+     */
+    private function localesFromUserProfile(User $user): ?array
+    {
+        $nameI18n = is_array($user->name_i18n) ? $user->name_i18n : [];
+        $ar = trim((string) ($nameI18n['ar'] ?? ''));
+        $en = trim((string) ($nameI18n['en'] ?? ''));
+
+        if ($ar === '' && $en === '') {
+            $first = is_array($user->first_name_i18n) ? $user->first_name_i18n : [];
+            $last = is_array($user->last_name_i18n) ? $user->last_name_i18n : [];
+            $ar = trim(trim((string) ($first['ar'] ?? '')).' '.trim((string) ($last['ar'] ?? '')));
+            $en = trim(trim((string) ($first['en'] ?? '')).' '.trim((string) ($last['en'] ?? '')));
+        }
+
+        if ($ar === '' && $en === '') {
+            return null;
+        }
+
+        if ($ar !== '' && $en !== '') {
+            return ['ar' => $ar, 'en' => $en];
+        }
+
+        $source = $ar !== '' ? $ar : $en;
+
+        return $this->translator->bilingualFromText($source, [
+            'ar' => $ar,
+            'en' => $en,
+        ]);
     }
 
     /**

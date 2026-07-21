@@ -32,13 +32,9 @@ class ProductReviewsTest extends TestCase
     {
         $this->mock(ProductTranslationService::class, function ($mock) {
             $mock->shouldReceive('bilingualFromText')
-                ->twice()
+                ->once()
                 ->andReturnUsing(function (string $text) {
-                    if ($text === 'منتج ممتاز جداً') {
-                        return ['ar' => 'منتج ممتاز جداً', 'en' => 'Excellent product'];
-                    }
-
-                    return ['ar' => 'سارة علي', 'en' => 'Sara Ali'];
+                    return ['ar' => 'منتج ممتاز جداً', 'en' => 'Excellent product'];
                 });
         });
 
@@ -47,6 +43,10 @@ class ProductReviewsTest extends TestCase
             'name' => 'سارة علي',
             'first_name' => 'سارة',
             'last_name' => 'علي',
+            'name_i18n' => ['ar' => 'سارة علي', 'en' => 'Sara Ali'],
+            'first_name_i18n' => ['ar' => 'سارة', 'en' => 'Sara'],
+            'last_name_i18n' => ['ar' => 'علي', 'en' => 'Ali'],
+            'avatar' => '/storage/uploads/avatars/1/photo.jpg',
         ]);
 
         $response = $this->actingAs($user, 'sanctum')->postJson('/api/v1/reviews', [
@@ -60,7 +60,8 @@ class ProductReviewsTest extends TestCase
             ->assertJsonPath('data.comment.ar', 'منتج ممتاز جداً')
             ->assertJsonPath('data.comment.en', 'Excellent product')
             ->assertJsonPath('data.author.ar', 'سارة علي')
-            ->assertJsonPath('data.author.en', 'Sara Ali');
+            ->assertJsonPath('data.author.en', 'Sara Ali')
+            ->assertJsonPath('data.author_avatar', '/storage/uploads/avatars/1/photo.jpg');
 
         $this->assertDatabaseHas('reviews', [
             'product_id' => $product->id,

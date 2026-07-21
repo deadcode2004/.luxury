@@ -166,7 +166,7 @@ export default function AccountMenu({ inverted = false, onLogoutRequest }: Accou
         {ready && isAuthenticated && user ? (
           <span className="relative h-7 w-7 overflow-hidden rounded-full ring-1 ring-accent/40">
             {user.avatar ? (
-              <Image src={user.avatar} alt="" fill sizes="28px" className="object-cover" />
+              <Image src={user.avatar} alt="" fill sizes="28px" className="object-cover" unoptimized />
             ) : (
               <span className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/20 to-accent/30 text-[10px] font-bold text-secondary">
                 {(displayName || user.email).slice(0, 1).toUpperCase()}

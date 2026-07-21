@@ -46,7 +46,7 @@ function UserAvatar({
         className="relative shrink-0 overflow-hidden rounded-full ring-2 ring-accent/35 shadow-soft"
         style={{ width: size, height: size }}
       >
-        <Image src={avatar} alt="" fill sizes={`${size}px`} className="object-cover" />
+        <Image src={avatar} alt="" fill sizes={`${size}px`} className="object-cover" unoptimized />
       </span>
     );
   }
