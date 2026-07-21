@@ -17,18 +17,20 @@ import Input from "@/components/ui/Input";
 import FormField from "@/components/ui/FormField";
 import PageHeader from "@/components/layout/PageHeader";
 import EmptyState from "@/components/ui/EmptyState";
-import PhoneCountryField from "@/components/checkout/PhoneCountryField";
+import PhoneCountryField, {
+  phoneCountryIso,
+  validateCheckoutPhone,
+} from "@/components/checkout/PhoneCountryField";
 import ShippingLocationFields from "@/components/checkout/ShippingLocationFields";
 import { apiRequest, ApiRequestError } from "@/lib/api/client";
 import {
-  composePhone,
   countryDisplayName,
   getCountryByCode,
   getStateByCode,
   getStateOptions,
   getCityOptions,
-  splitPhone,
 } from "@/lib/geo/locations";
+import { parsePhoneNumberFromString } from "libphonenumber-js";
 
 type SavedAddress = {
   id: number;
@@ -68,8 +70,8 @@ export default function CheckoutPage() {
   const [form, setForm] = useState({
     first_name: "",
     last_name: "",
+    phone: "",
     phone_country: "SA",
-    phone_national: "",
     email: "",
     full_address: "",
     country_code: "SA",
@@ -97,13 +99,13 @@ export default function CheckoutPage() {
       if (!/^[A-Z]{2}$/.test(iso) || !getCountryByCode(iso)) return;
       if (cancelled) return;
       setForm((f) => {
-        // Only auto-fill if user hasn't started editing location/phone country.
+        // Only auto-fill if user hasn't started editing location/phone.
         if (f.country_code !== "SA" && f.country_code !== "") return f;
-        if (f.state_code || f.city || f.phone_national) {
+        if (f.state_code || f.city || f.phone.length > 4) {
           return {
             ...f,
             country_code: f.country_code || iso,
-            phone_country: f.phone_country || iso,
+            phone_country: f.phone.length > 4 ? f.phone_country : iso,
           };
         }
         return {
@@ -153,15 +155,17 @@ export default function CheckoutPage() {
     prefillsDone.current.profile = true;
 
     const parts = (user.name || "").trim().split(/\s+/);
-    const phoneParts = splitPhone(user.phone, form.phone_country || form.country_code);
+    const parsedPhone = parsePhoneNumberFromString(user.phone || "");
+    const phoneE164 = parsedPhone?.number || "";
+    const phoneIso = (parsedPhone?.country || form.phone_country || form.country_code || "SA").toUpperCase();
 
     setForm((f) => ({
       ...f,
       first_name: f.first_name || user.first_name || parts[0] || "",
       last_name: f.last_name || user.last_name || parts.slice(1).join(" ") || "",
       email: f.email || user.email || "",
-      phone_country: f.phone_national ? f.phone_country : phoneParts.countryCode || f.phone_country,
-      phone_national: f.phone_national || phoneParts.nationalNumber,
+      phone: f.phone.length > 4 ? f.phone : phoneE164 || f.phone,
+      phone_country: f.phone.length > 4 ? f.phone_country : phoneIso,
     }));
   }, [authReady, user, form.phone_country, form.country_code]);
 
@@ -204,8 +208,8 @@ export default function CheckoutPage() {
       country_code: countryCode,
       state_code: "",
       city: "",
-      // Keep phone dial in sync when user hasn't typed a number yet.
-      phone_country: f.phone_national.trim() ? f.phone_country : countryCode,
+      // Keep phone dial in sync when user hasn't typed a real number yet.
+      phone_country: f.phone.length > 4 ? f.phone_country : countryCode,
     }));
   };
 
@@ -217,7 +221,8 @@ export default function CheckoutPage() {
     const next: Record<string, string> = {};
     if (!form.first_name.trim()) next.first_name = language === "ar" ? "مطلوب" : "Required";
     if (!form.last_name.trim()) next.last_name = language === "ar" ? "مطلوب" : "Required";
-    if (!form.phone_national.trim()) next.phone = language === "ar" ? "مطلوب" : "Required";
+    const phoneError = validateCheckoutPhone(form.phone, language);
+    if (phoneError) next.phone = phoneError;
     if (!form.email.trim() || !form.email.includes("@")) {
       next.email = language === "ar" ? "بريد غير صالح" : "Invalid email";
     }
@@ -252,12 +257,13 @@ export default function CheckoutPage() {
       return;
     }
 
-    const phoneCountry = getCountryByCode(form.phone_country);
+    const phoneCountryIso2 = phoneCountryIso(form.phone, form.phone_country);
+    const phoneCountry = getCountryByCode(phoneCountryIso2);
     const shipCountry = getCountryByCode(form.country_code);
     const shipState = form.state_code
       ? getStateByCode(form.country_code, form.state_code)
       : null;
-    const phone = composePhone(phoneCountry?.phonecode || "", form.phone_national);
+    const phone = form.phone.trim();
 
     setLoading(true);
     try {
@@ -306,7 +312,7 @@ export default function CheckoutPage() {
             state_name: shipState?.name || null,
             city: form.city.trim(),
             zip_code: form.zip_code.trim() || null,
-            phone_country_code: form.phone_country,
+            phone_country_code: phoneCountryIso2,
             phone_dial_code: phoneCountry ? `+${phoneCountry.phonecode}` : null,
           },
         },
@@ -408,14 +414,38 @@ export default function CheckoutPage() {
                   error={errors.phone}
                 >
                   <PhoneCountryField
-                    countryCode={form.phone_country}
-                    nationalNumber={form.phone_national}
-                    onCountryChange={(code) =>
-                      setForm((f) => ({ ...f, phone_country: code }))
-                    }
-                    onNationalChange={(national) =>
-                      setForm((f) => ({ ...f, phone_national: national }))
-                    }
+                    value={form.phone}
+                    defaultCountry={form.phone_country}
+                    onChange={(phone, countryIso2) => {
+                      setForm((f) => ({
+                        ...f,
+                        phone,
+                        phone_country: countryIso2,
+                      }));
+                      setErrors((e) => {
+                        if (!e.phone) return e;
+                        const msg = validateCheckoutPhone(phone, language);
+                        if (msg) return { ...e, phone: msg };
+                        const next = { ...e };
+                        delete next.phone;
+                        return next;
+                      });
+                    }}
+                    onBlur={() => {
+                      setForm((current) => {
+                        const msg = validateCheckoutPhone(current.phone, language);
+                        setErrors((e) => {
+                          if (!msg) {
+                            if (!e.phone) return e;
+                            const next = { ...e };
+                            delete next.phone;
+                            return next;
+                          }
+                          return { ...e, phone: msg };
+                        });
+                        return current;
+                      });
+                    }}
                     error={Boolean(errors.phone)}
                   />
                 </FormField>
