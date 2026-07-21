@@ -17,6 +17,7 @@ type SidebarNavProps = {
   items: SidebarNavItem[];
   activeKey?: string;
   variant?: "dark" | "light";
+  collapsed?: boolean;
   onNavigate?: () => void;
   className?: string;
 };
@@ -25,6 +26,7 @@ export default function SidebarNav({
   items,
   activeKey,
   variant = "dark",
+  collapsed = false,
   onNavigate,
   className,
 }: SidebarNavProps) {
@@ -33,7 +35,8 @@ export default function SidebarNav({
       {items.map((item) => {
         const isActive = activeKey === item.key;
         const classes = cn(
-          "flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-start w-full",
+          "group/nav relative flex items-center rounded-xl transition-all font-medium text-start w-full",
+          collapsed ? "justify-center px-0 py-3" : "gap-3 px-4 py-3",
           item.danger &&
             (variant === "dark"
               ? "text-red-400 hover:text-red-300 hover:bg-red-400/10"
@@ -50,24 +53,68 @@ export default function SidebarNav({
               : "text-gray-500 hover:bg-gray-50 hover:text-secondary")
         );
 
+        const content = (
+          <>
+            <span className="inline-flex shrink-0 items-center justify-center [&_svg]:shrink-0">
+              {item.icon}
+            </span>
+            <span
+              className={cn(
+                "truncate transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                collapsed ? "sr-only w-0 opacity-0" : "opacity-100"
+              )}
+            >
+              {item.label}
+            </span>
+            {collapsed ? (
+              <span
+                role="tooltip"
+                className={cn(
+                  "pointer-events-none absolute top-1/2 z-[60] -translate-y-1/2 whitespace-nowrap rounded-lg px-2.5 py-1.5",
+                  "text-xs font-semibold shadow-floating opacity-0 scale-95",
+                  "transition-all duration-200 ease-out",
+                  "group-hover/nav:opacity-100 group-hover/nav:scale-100",
+                  "start-full ms-3",
+                  variant === "dark"
+                    ? "bg-white text-secondary"
+                    : "bg-secondary text-background"
+                )}
+              >
+                {item.label}
+              </span>
+            ) : null}
+          </>
+        );
+
         if (item.href) {
           return (
             <Link
               key={item.key}
               href={item.href}
               className={classes}
-              onClick={onNavigate}
+              title={collapsed && typeof item.label === "string" ? item.label : undefined}
+              onClick={() => {
+                item.onClick?.();
+                onNavigate?.();
+              }}
             >
-              {item.icon}
-              {item.label}
+              {content}
             </Link>
           );
         }
 
         return (
-          <button key={item.key} type="button" className={classes} onClick={item.onClick}>
-            {item.icon}
-            {item.label}
+          <button
+            key={item.key}
+            type="button"
+            className={classes}
+            title={collapsed && typeof item.label === "string" ? item.label : undefined}
+            onClick={() => {
+              item.onClick?.();
+              onNavigate?.();
+            }}
+          >
+            {content}
           </button>
         );
       })}

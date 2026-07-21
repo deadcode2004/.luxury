@@ -14,8 +14,9 @@ export default function StorefrontShell({
 }) {
   const pathname = usePathname();
   const isAuth = AUTH_PATHS.has(pathname);
+  const isAccountDashboard = pathname === "/account" || pathname.startsWith("/account/");
 
-  if (isAuth) {
+  if (isAuth || isAccountDashboard) {
     return <>{children}</>;
   }
 

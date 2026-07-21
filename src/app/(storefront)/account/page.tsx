@@ -5,14 +5,14 @@ import { useSearchParams } from "next/navigation";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/Toast";
-import { Package, UserCircle, MapPin, LogOut, LogIn } from "lucide-react";
+import { Package, UserCircle, MapPin } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import FormField from "@/components/ui/FormField";
 import StatusBadge from "@/components/ui/StatusBadge";
 import Badge from "@/components/ui/Badge";
-import SidebarNav from "@/components/layout/SidebarNav";
+import DashboardShell from "@/components/layout/DashboardShell";
 import Table, { TableRow, TableCell } from "@/components/ui/Table";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import Modal from "@/components/ui/Modal";
@@ -216,10 +216,47 @@ export default function AccountPage() {
   };
 
   return (
-    <main className="flex-grow pt-32 pb-24 bg-background min-h-screen">
+    <DashboardShell
+      links={[
+        {
+          key: "orders",
+          name: { ar: "طلباتي", en: "My Orders" },
+          icon: <Package size={20} />,
+          onClick: () => setActiveTab("orders"),
+        },
+        {
+          key: "profile",
+          name: { ar: "إعدادات الحساب", en: "Profile Settings" },
+          icon: <UserCircle size={20} />,
+          onClick: () => setActiveTab("profile"),
+        },
+        {
+          key: "addresses",
+          name: { ar: "العناوين المحفوظة", en: "Saved Addresses" },
+          icon: <MapPin size={20} />,
+          onClick: () => setActiveTab("addresses"),
+        },
+      ]}
+      activeKey={activeTab}
+      brandHref="/account"
+      brandLabel={
+        <>
+          ACCOUNT<span className="text-primary">.</span>
+        </>
+      }
+      userName={welcomeName}
+      userRole={language === "ar" ? "مستخدم" : "User"}
+      settingsHref="/account?tab=profile"
+      logoutHref="/login"
+      logoutLabel={{ ar: "تسجيل الخروج", en: "Log Out" }}
+      loginLabel={{ ar: "تسجيل الدخول", en: "Sign In" }}
+      showLogin={!user}
+      onLogin={() => setAuthOpen(true)}
+      onLogout={() => setConfirmLogout(true)}
+    >
       {welcomePhase !== "hidden" ? (
         <div
-          className="pointer-events-none fixed inset-x-0 top-[5.5rem] sm:top-28 z-[45] flex justify-center px-4"
+          className="pointer-events-none fixed inset-x-0 top-24 z-[45] flex justify-center px-4"
           aria-live="polite"
         >
           <div
@@ -243,58 +280,7 @@ export default function AccountPage() {
         </div>
       ) : null}
 
-      <div className="container mx-auto px-4 md:px-8">
-        <div className="flex flex-col lg:flex-row gap-12">
-          <aside className="lg:w-1/4 shrink-0">
-            <Card variant="panel" padding="md" className="sticky top-32">
-              <SidebarNav
-                variant="light"
-                activeKey={activeTab}
-                items={[
-                  {
-                    key: "orders",
-                    label: language === "ar" ? "طلباتي" : "My Orders",
-                    icon: <Package size={20} />,
-                    onClick: () => setActiveTab("orders"),
-                  },
-                  {
-                    key: "profile",
-                    label: language === "ar" ? "إعدادات الحساب" : "Profile Settings",
-                    icon: <UserCircle size={20} />,
-                    onClick: () => setActiveTab("profile"),
-                  },
-                  {
-                    key: "addresses",
-                    label: language === "ar" ? "العناوين المحفوظة" : "Saved Addresses",
-                    icon: <MapPin size={20} />,
-                    onClick: () => setActiveTab("addresses"),
-                  },
-                ]}
-              />
-              <div className="h-px bg-gray-100 my-2" />
-              <SidebarNav
-                variant="light"
-                items={[
-                  user
-                    ? {
-                        key: "logout",
-                        label: language === "ar" ? "تسجيل الخروج" : "Log Out",
-                        icon: <LogOut size={20} />,
-                        danger: true,
-                        onClick: () => setConfirmLogout(true),
-                      }
-                    : {
-                        key: "login",
-                        label: language === "ar" ? "تسجيل الدخول" : "Sign In",
-                        icon: <LogIn size={20} />,
-                        onClick: () => setAuthOpen(true),
-                      },
-                ]}
-              />
-            </Card>
-          </aside>
-
-          <div className="lg:w-3/4">
+      <div className="max-w-5xl">
             {activeTab === "orders" && (
               <Card variant="panel" padding="lg">
                 <h2 className="text-2xl font-bold text-secondary mb-6 pb-4 border-b border-gray-100">
@@ -494,8 +480,6 @@ export default function AccountPage() {
                 </div>
               </Card>
             )}
-          </div>
-        </div>
       </div>
 
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
@@ -631,6 +615,6 @@ export default function AccountPage() {
           </div>
         )}
       </Modal>
-    </main>
+    </DashboardShell>
   );
 }
