@@ -1,41 +1,99 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Star, Minus, Plus, Heart, ShoppingBag, Share2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { useToast } from "@/components/ui/Toast";
 import { Product } from "@/data/mock";
+import { formatMoney } from "@/lib/format/currency";
+import Button from "@/components/ui/Button";
 
 interface ProductInfoProps {
   product: Product;
+  onWriteReview?: () => void;
 }
 
-export default function ProductInfo({ product }: ProductInfoProps) {
+export default function ProductInfo({ product, onWriteReview }: ProductInfoProps) {
   const { language } = useLanguage();
+  const router = useRouter();
+  const { addItem } = useCart();
+  const { has, toggle } = useWishlist();
+  const { currency, convertFromEgp } = useCurrency();
+  const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [cartLoading, setCartLoading] = useState(false);
+  const [buyLoading, setBuyLoading] = useState(false);
+  const wished = has(product.id);
+  const stock = product.stock ?? 0;
+  const outOfStock = stock <= 0;
 
   const decreaseQuantity = () => setQuantity((prev) => Math.max(1, prev - 1));
-  const increaseQuantity = () => setQuantity((prev) => prev + 1);
+  const increaseQuantity = () =>
+    setQuantity((prev) => Math.min(stock > 0 ? stock : prev, prev + 1));
+
+  const onAdd = async () => {
+    setCartLoading(true);
+    try {
+      await addItem(product.id, quantity);
+    } finally {
+      setCartLoading(false);
+    }
+  };
+
+  const onBuyNow = async () => {
+    setBuyLoading(true);
+    try {
+      const ok = await addItem(product.id, quantity);
+      if (ok) router.push("/checkout");
+    } finally {
+      setBuyLoading(false);
+    }
+  };
+
+  const onShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast(language === "ar" ? "تم نسخ رابط المنتج" : "Product link copied", "success");
+    } catch {
+      toast(language === "ar" ? "تعذر النسخ" : "Could not copy", "danger");
+    }
+  };
 
   return (
     <div className="flex flex-col h-full">
-      {/* Brand & Share */}
       <div className="flex justify-between items-center mb-4">
         <span className="text-sm font-bold tracking-widest uppercase text-primary">
           {product.brand[language]}
         </span>
-        <button className="text-gray-400 hover:text-primary transition-colors">
+        <button
+          type="button"
+          onClick={() => void onShare()}
+          className="text-gray-400 hover:text-primary transition-colors active:scale-95"
+        >
           <Share2 size={20} />
         </button>
       </div>
 
-      {/* Title */}
       <h1 className="text-3xl md:text-4xl font-bold font-sans text-secondary mb-4 leading-tight">
         {product.name[language]}
       </h1>
 
-      {/* Rating & Reviews */}
-      <div className="flex items-center gap-4 mb-6">
+      <button
+        type="button"
+        onClick={() => {
+          onWriteReview?.();
+          document.getElementById("product-reviews")?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }}
+        className="flex items-center gap-4 mb-6 text-start group"
+        title={language === "ar" ? "أضف تقييمك" : "Write a review"}
+      >
         <div className="flex text-accent">
           {[...Array(5)].map((_, i) => (
             <Star
@@ -46,81 +104,124 @@ export default function ProductInfo({ product }: ProductInfoProps) {
             />
           ))}
         </div>
-        <span className="text-sm text-gray-500 font-medium">
+        <span className="text-sm text-gray-500 font-medium group-hover:text-primary transition-colors underline-offset-4 group-hover:underline">
           {product.rating} ({product.reviews} {language === "ar" ? "تقييم" : "Reviews"})
+          <span className="ms-2 text-primary font-bold no-underline">
+            {language === "ar" ? "· أضف تقييم" : "· Add review"}
+          </span>
         </span>
-      </div>
+      </button>
 
-      {/* Price */}
       <div className="flex items-end gap-4 mb-8">
         <span className="text-3xl font-bold text-secondary">
-          {product.price} {language === "ar" ? "ر.س" : "SAR"}
+          {formatMoney(product.price, language, { currency, convertFromEgp })}
         </span>
         {product.oldPrice && (
           <span className="text-xl text-gray-400 line-through mb-1">
-            {product.oldPrice} {language === "ar" ? "ر.س" : "SAR"}
+            {formatMoney(product.oldPrice, language, { currency, convertFromEgp })}
           </span>
         )}
       </div>
+      {stock > 0 && stock <= 15 && (
+        <p className="text-sm text-amber-600 font-medium mb-4">
+          {language === "ar" ? `متبقي ${stock} فقط` : `Only ${stock} left`}
+        </p>
+      )}
 
-      {/* Short Description */}
       {product.description && (
         <p className="text-gray-600 text-base leading-loose mb-10 pb-10 border-b border-gray-100">
           {product.description[language]}
         </p>
       )}
 
-      {/* Add to Cart Actions */}
       <div className="mt-auto">
         <div className="flex items-center gap-4 mb-6">
           <div className="flex items-center bg-surface border border-gray-100 rounded-lg h-14 px-2">
             <button
+              type="button"
               onClick={decreaseQuantity}
-              className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-primary hover:bg-background rounded-md transition-all"
+              className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-primary hover:bg-background rounded-md transition-all active:scale-95"
             >
               <Minus size={18} />
             </button>
-            <span className="w-12 text-center font-bold text-secondary text-lg">
-              {quantity}
-            </span>
+            <span className="w-12 text-center font-bold text-secondary text-lg">{quantity}</span>
             <button
+              type="button"
               onClick={increaseQuantity}
-              className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-primary hover:bg-background rounded-md transition-all"
+              disabled={outOfStock || quantity >= stock}
+              className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-primary hover:bg-background rounded-md transition-all active:scale-95 disabled:opacity-40"
             >
               <Plus size={18} />
             </button>
           </div>
 
-          <button className="flex-1 bg-secondary text-white h-14 rounded-lg flex items-center justify-center gap-2 font-bold hover:bg-secondary/90 transition-all shadow-md">
+          <Button
+            variant="secondary"
+            size="lg"
+            className="flex-1 rounded-lg"
+            loading={cartLoading}
+            disabled={outOfStock}
+            onClick={() => void onAdd()}
+          >
             <ShoppingBag size={20} />
-            {language === "ar" ? "إضافة للسلة" : "Add to Cart"}
-          </button>
+            {outOfStock
+              ? language === "ar"
+                ? "غير متوفر"
+                : "Out of Stock"
+              : language === "ar"
+                ? "إضافة للسلة"
+                : "Add to Cart"}
+          </Button>
 
           <button
-            onClick={() => setIsFavorite(!isFavorite)}
-            className={`w-14 h-14 rounded-lg flex items-center justify-center border transition-all ${
-              isFavorite
-                ? "bg-[#8FA89A]/10 border-[#8FA89A] text-[#8FA89A]"
-                : "bg-surface border-gray-100 text-gray-400 hover:border-[#8FA89A] hover:text-[#8FA89A]"
+            type="button"
+            onClick={() => void toggle(product.id)}
+            className={`hidden lg:flex w-14 h-14 rounded-lg items-center justify-center border transition-all active:scale-95 ${
+              wished
+                ? "bg-wishlist/10 border-wishlist text-wishlist"
+                : "bg-surface border-gray-100 text-gray-400 hover:border-wishlist hover:text-wishlist"
             }`}
+            aria-label={
+              wished
+                ? language === "ar"
+                  ? "إزالة من المفضلة"
+                  : "Remove from wishlist"
+                : language === "ar"
+                  ? "إضافة للمفضلة"
+                  : "Add to wishlist"
+            }
           >
-            <Heart size={24} fill={isFavorite ? "currentColor" : "none"} />
+            <Heart size={24} fill={wished ? "currentColor" : "none"} />
           </button>
         </div>
 
-        {/* Buy Now Button */}
-        <button className="w-full bg-primary text-background font-bold h-14 rounded-lg flex items-center justify-center hover:bg-primary-hover transition-all shadow-glow">
+        <Button
+          variant="primary"
+          size="lg"
+          fullWidth
+          className="rounded-lg"
+          loading={buyLoading}
+          disabled={outOfStock}
+          onClick={() => void onBuyNow()}
+        >
           {language === "ar" ? "شراء الآن" : "Buy It Now"}
-        </button>
+        </Button>
 
-        {/* Perks */}
         <div className="mt-8 grid grid-cols-2 gap-4">
           <div className="flex items-center gap-3 text-sm text-gray-600">
-            <div className="w-2 h-2 rounded-full bg-green-500"></div>
-            {language === "ar" ? "متوفر في المخزون" : "In Stock"}
+            <div
+              className={`w-2 h-2 rounded-full ${outOfStock ? "bg-red-500" : "bg-green-500"}`}
+            />
+            {outOfStock
+              ? language === "ar"
+                ? "غير متوفر"
+                : "Out of Stock"
+              : language === "ar"
+                ? `متوفر (${stock})`
+                : `In Stock (${stock})`}
           </div>
           <div className="flex items-center gap-3 text-sm text-gray-600">
-            <div className="w-2 h-2 rounded-full bg-primary"></div>
+            <div className="w-2 h-2 rounded-full bg-primary" />
             {language === "ar" ? "توصيل مجاني" : "Free Shipping"}
           </div>
         </div>

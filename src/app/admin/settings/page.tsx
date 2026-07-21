@@ -1,95 +1,539 @@
 "use client";
 
-import React from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Save, User, Lock, Bell, Globe } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/components/ui/Toast";
+import { Save, User, Lock, Bell, Globe, ShieldCheck } from "lucide-react";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
+import FormField from "@/components/ui/FormField";
+import SidebarNav from "@/components/layout/SidebarNav";
+import { ApiRequestError, apiRequest } from "@/lib/api/client";
+import type { AppLanguage } from "@/lib/i18n/language";
+import { useAutoFetch } from "@/hooks/useAutoFetch";
+import { LocaleInput } from "@/components/admin/LocaleField";
+import AvatarUploader from "@/components/account/AvatarUploader";
+import { pickLocale } from "@/lib/i18n/localeText";
+
+type Section = "personal" | "security" | "notifications" | "language";
+
+type LocaleName = { ar?: string; en?: string } | null | undefined;
+
+type AccountSettingsPayload = {
+  user: {
+    id: number;
+    name: string;
+    name_i18n?: LocaleName;
+    first_name?: string | null;
+    first_name_i18n?: LocaleName;
+    last_name?: string | null;
+    last_name_i18n?: LocaleName;
+    email: string;
+    phone?: string | null;
+    avatar?: string | null;
+    role: "owner" | "user";
+    is_active?: boolean;
+    notify_orders?: boolean;
+    notify_stock?: boolean;
+    notify_marketing?: boolean;
+  };
+  timezone: string;
+  timezone_label: string;
+};
 
 export default function AdminSettings() {
-  const { language } = useLanguage();
+  const { language, setLanguage } = useLanguage();
+  const {
+    token,
+    user,
+    ready,
+    loading: authLoading,
+    updateProfile,
+    changePassword,
+    updateNotifications,
+    refreshProfile,
+  } = useAuth();
+  const { toast } = useToast();
+  const [section, setSection] = useState<Section>("personal");
+  const [saving, setSaving] = useState(false);
+  const [loadingSettings, setLoadingSettings] = useState(false);
+  const [hasFetched, setHasFetched] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [timezoneLabel, setTimezoneLabel] = useState("UTC");
+  const [form, setForm] = useState({
+    first_name_ar: "",
+    first_name_en: "",
+    last_name_ar: "",
+    last_name_en: "",
+    email: "",
+    phone: "",
+    current_password: "",
+    new_password: "",
+    confirm_password: "",
+    notify_orders: true,
+    notify_stock: true,
+    notify_marketing: false,
+  });
+
+  const applyUser = useCallback(
+    (u: AccountSettingsPayload["user"] | null | undefined) => {
+      if (!u) return;
+      const firstAr = u.first_name_i18n?.ar || u.first_name || "";
+      const firstEn = u.first_name_i18n?.en || "";
+      const lastAr = u.last_name_i18n?.ar || u.last_name || "";
+      const lastEn = u.last_name_i18n?.en || "";
+      setForm((f) => ({
+        ...f,
+        first_name_ar: firstAr,
+        first_name_en: firstEn,
+        last_name_ar: lastAr,
+        last_name_en: lastEn,
+        email: u.email || "",
+        phone: u.phone || "",
+        notify_orders: u.notify_orders ?? true,
+        notify_stock: u.notify_stock ?? true,
+        notify_marketing: u.notify_marketing ?? false,
+      }));
+    },
+    []
+  );
+
+  const loadSettings = useCallback(
+    async (options?: { silent?: boolean }) => {
+      if (!token) return;
+      if (!options?.silent) setLoadingSettings(true);
+      try {
+        const data = await apiRequest<AccountSettingsPayload>("/account/settings", {
+          token,
+          cache: "no-store",
+        });
+        applyUser(data.user);
+        setTimezoneLabel(data.timezone_label || data.timezone || "UTC");
+      } catch (err) {
+        // Fallback to auth user if settings endpoint fails.
+        if (user) applyUser(user);
+        if (!options?.silent) {
+          toast(
+            err instanceof ApiRequestError
+              ? err.message
+              : language === "ar"
+                ? "تعذر تحميل الإعدادات"
+                : "Failed to load settings",
+            "danger"
+          );
+        }
+      } finally {
+        if (!options?.silent) setLoadingSettings(false);
+        setHasFetched(true);
+      }
+    },
+    [token, user, applyUser, language, toast]
+  );
+
+  useAutoFetch(loadSettings);
+
+  useEffect(() => {
+    if (ready && user && !hasFetched) {
+      applyUser(user);
+    }
+  }, [ready, user, hasFetched, applyUser]);
+
+  const validate = () => {
+    const next: Record<string, string> = {};
+    if (section === "personal") {
+      if (!form.first_name_ar.trim()) {
+        next.first_name = language === "ar" ? "مطلوب" : "Required";
+      }
+      if (!form.last_name_ar.trim()) {
+        next.last_name = language === "ar" ? "مطلوب" : "Required";
+      }
+      if (!form.email.includes("@")) {
+        next.email = language === "ar" ? "بريد غير صالح" : "Invalid email";
+      }
+    }
+    if (section === "security") {
+      if (!form.current_password) {
+        next.current_password = language === "ar" ? "مطلوب" : "Required";
+      }
+      if (form.new_password.length < 8) {
+        next.new_password = language === "ar" ? "8 أحرف على الأقل" : "Min 8 characters";
+      }
+      if (form.new_password !== form.confirm_password) {
+        next.confirm_password =
+          language === "ar" ? "غير متطابقة" : "Passwords do not match";
+      }
+    }
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
+  const save = async () => {
+    if (section === "language" || section === "notifications") return;
+    if (!validate()) {
+      toast(
+        language === "ar" ? "يرجى تصحيح الحقول" : "Please fix the highlighted fields",
+        "warning"
+      );
+      return;
+    }
+
+    setSaving(true);
+    try {
+      if (section === "personal") {
+        const ok = await updateProfile({
+          // Arabic is the editable source (same pattern as CMS/products).
+          first_name: form.first_name_ar.trim(),
+          last_name: form.last_name_ar.trim(),
+          email: form.email.trim(),
+          phone: form.phone.trim() || undefined,
+        });
+        if (ok) {
+          await refreshProfile();
+          await loadSettings({ silent: true });
+        }
+      }
+
+      if (section === "security") {
+        const ok = await changePassword({
+          current_password: form.current_password,
+          password: form.new_password,
+          password_confirmation: form.confirm_password,
+        });
+        if (ok) {
+          setForm((f) => ({
+            ...f,
+            current_password: "",
+            new_password: "",
+            confirm_password: "",
+          }));
+          setErrors({});
+        }
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleNotification = async (
+    key: "notify_orders" | "notify_stock" | "notify_marketing",
+    value: boolean
+  ) => {
+    const previous = form[key];
+    setForm((f) => ({ ...f, [key]: value }));
+    const ok = await updateNotifications({ [key]: value });
+    if (!ok) {
+      setForm((f) => ({ ...f, [key]: previous }));
+      return;
+    }
+    toast(
+      value
+        ? language === "ar"
+          ? "✔ تم التفعيل"
+          : "✔ Enabled"
+        : language === "ar"
+          ? "تم الإيقاف"
+          : "Disabled",
+      value ? "success" : "info"
+    );
+  };
+
+  const displayFirst =
+    pickLocale(
+      { ar: form.first_name_ar, en: form.first_name_en },
+      language,
+      form.first_name_ar || form.first_name_en
+    ) || "";
+  const displayLast =
+    pickLocale(
+      { ar: form.last_name_ar, en: form.last_name_en },
+      language,
+      form.last_name_ar || form.last_name_en
+    ) || "";
+  const showSave = section === "personal" || section === "security";
+
+  const navItems = [
+    {
+      key: "personal",
+      label: language === "ar" ? "المعلومات الشخصية" : "Personal Information",
+      icon: <User size={18} />,
+      onClick: () => setSection("personal"),
+    },
+    {
+      key: "security",
+      label: language === "ar" ? "الأمان وكلمة المرور" : "Security & Password",
+      icon: <Lock size={18} />,
+      onClick: () => setSection("security"),
+    },
+    {
+      key: "notifications",
+      label: language === "ar" ? "الإشعارات" : "Notifications",
+      icon: <Bell size={18} />,
+      onClick: () => setSection("notifications"),
+    },
+    {
+      key: "language",
+      label: language === "ar" ? "اللغة والمنطقة" : "Language & Region",
+      icon: <Globe size={18} />,
+      onClick: () => setSection("language"),
+    },
+  ];
 
   return (
-    <div className="flex flex-col gap-8">
-      
-      {/* Header */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-secondary mb-1">
+    <div className="flex flex-col gap-4 sm:gap-6 w-full min-w-0">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 w-full min-w-0">
+        <div className="min-w-0">
+          <h2 className="text-xl sm:text-2xl font-bold text-secondary tracking-tight">
             {language === "ar" ? "إعدادات الحساب" : "Account Settings"}
           </h2>
-          <p className="text-gray-500 text-sm">
-            {language === "ar" ? "إدارة تفضيلات حسابك الشخصي والأمان" : "Manage your personal account preferences and security"}
+          <p className="text-sm text-gray-500 mt-1">
+            {language === "ar"
+              ? "إدارة تفضيلات حسابك الشخصي والأمان"
+              : "Manage your personal account preferences and security"}
           </p>
         </div>
-        <button className="flex items-center gap-2 px-6 py-3 bg-secondary text-white rounded-xl text-sm font-bold hover:bg-primary hover:text-secondary transition-all w-full sm:w-auto justify-center shadow-md">
-          <Save size={18} />
-          {language === "ar" ? "حفظ الإعدادات" : "Save Settings"}
-        </button>
+        {showSave ? (
+          <Button
+            variant="secondary"
+            size="md"
+            className="w-full sm:w-auto shrink-0"
+            loading={saving || authLoading}
+            disabled={loadingSettings}
+            onClick={() => void save()}
+          >
+            <Save size={18} />
+            {language === "ar" ? "حفظ الإعدادات" : "Save Settings"}
+          </Button>
+        ) : null}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Settings Navigation (Sidebar) */}
-        <div className="lg:col-span-1">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex flex-col gap-2">
-            <button className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary font-bold text-start transition-colors">
-              <User size={18} />
-              {language === "ar" ? "المعلومات الشخصية" : "Personal Information"}
-            </button>
-            <button className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-secondary font-medium text-start transition-colors">
-              <Lock size={18} />
-              {language === "ar" ? "الأمان وكلمة المرور" : "Security & Password"}
-            </button>
-            <button className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-secondary font-medium text-start transition-colors">
-              <Bell size={18} />
-              {language === "ar" ? "الإشعارات" : "Notifications"}
-            </button>
-            <button className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-secondary font-medium text-start transition-colors">
-              <Globe size={18} />
-              {language === "ar" ? "اللغة والمنطقة" : "Language & Region"}
-            </button>
+      <section className="w-full min-w-0 rounded-2xl sm:rounded-3xl border border-surface bg-white/70 overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-12 lg:items-stretch w-full min-w-0">
+          <aside className="lg:col-span-4 min-w-0 w-full border-b lg:border-b-0 lg:border-e border-surface bg-background/50 p-3 sm:p-4">
+            <SidebarNav variant="light" divided activeKey={section} items={navItems} />
+          </aside>
+
+          <div className="lg:col-span-8 min-w-0 w-full flex flex-col">
+            {loadingSettings && !hasFetched ? (
+              <p className="text-sm text-gray-400 p-5 sm:p-6">
+                {language === "ar" ? "جاري التحميل..." : "Loading..."}
+              </p>
+            ) : null}
+
+            {section === "personal" && (
+              <>
+                <div className="bg-background/60 p-5 sm:p-6 border-b border-surface/70">
+                  <AvatarUploader
+                    fallbackLabel={`${displayFirst} ${displayLast}`.trim() || user?.email || "O"}
+                  />
+                </div>
+
+                <div className="p-5 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <p className="md:col-span-2 text-xs text-secondary/50 leading-relaxed">
+                    {language === "ar"
+                      ? "أدخل الاسم بالعربية؛ عند التبديل للإنجليزية يظهر الاسم المترجم تلقائياً. البريد والهاتف يظهران في صفحة التواصل بعد الحفظ."
+                      : "Enter the Arabic name; switch the dashboard to English to see the auto-translated name. Email and phone appear on the contact page after saving."}
+                  </p>
+                  <FormField
+                    label={language === "ar" ? "الاسم الأول" : "First Name"}
+                    error={errors.first_name}
+                  >
+                    <LocaleInput
+                      ar={form.first_name_ar}
+                      en={form.first_name_en}
+                      onArChange={(ar) =>
+                        setForm((f) => ({ ...f, first_name_ar: ar, first_name_en: "" }))
+                      }
+                      className="h-12"
+                    />
+                  </FormField>
+                  <FormField
+                    label={language === "ar" ? "اسم العائلة" : "Last Name"}
+                    error={errors.last_name}
+                  >
+                    <LocaleInput
+                      ar={form.last_name_ar}
+                      en={form.last_name_en}
+                      onArChange={(ar) =>
+                        setForm((f) => ({ ...f, last_name_ar: ar, last_name_en: "" }))
+                      }
+                      className="h-12"
+                    />
+                  </FormField>
+                  <FormField
+                    className="md:col-span-2"
+                    label={language === "ar" ? "البريد الإلكتروني" : "Email Address"}
+                    error={errors.email}
+                  >
+                    <Input
+                      type="email"
+                      value={form.email}
+                      onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                      className="h-12 text-start dir-ltr"
+                    />
+                  </FormField>
+                  <FormField
+                    className="md:col-span-2"
+                    label={language === "ar" ? "رقم الهاتف" : "Phone Number"}
+                  >
+                    <Input
+                      type="tel"
+                      value={form.phone}
+                      onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                      className="h-12 text-start dir-ltr"
+                    />
+                  </FormField>
+                </div>
+              </>
+            )}
+
+            {section === "security" && (
+              <div className="p-5 sm:p-6 flex flex-col gap-8 max-w-xl">
+                <div className="flex items-start gap-3">
+                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <ShieldCheck size={20} />
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-secondary">
+                      {language === "ar" ? "حالة الحساب" : "Account status"}
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {user?.is_active === false
+                        ? language === "ar"
+                          ? "الحساب غير نشط"
+                          : "Account is inactive"
+                        : language === "ar"
+                          ? "الحساب نشط ومحمي بكلمة مرور"
+                          : "Account is active and password-protected"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-6">
+                  <div>
+                    <h3 className="font-bold text-secondary mb-1">
+                      {language === "ar" ? "تغيير كلمة المرور" : "Change password"}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {language === "ar"
+                        ? "أدخل كلمة المرور الحالية ثم كلمة المرور الجديدة."
+                        : "Enter your current password, then the new password."}
+                    </p>
+                  </div>
+                  <FormField
+                    label={language === "ar" ? "كلمة المرور الحالية" : "Current Password"}
+                    error={errors.current_password}
+                  >
+                    <Input
+                      type="password"
+                      autoComplete="current-password"
+                      value={form.current_password}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, current_password: e.target.value }))
+                      }
+                    />
+                  </FormField>
+                  <FormField
+                    label={language === "ar" ? "كلمة المرور الجديدة" : "New Password"}
+                    error={errors.new_password}
+                  >
+                    <Input
+                      type="password"
+                      autoComplete="new-password"
+                      value={form.new_password}
+                      onChange={(e) => setForm((f) => ({ ...f, new_password: e.target.value }))}
+                    />
+                  </FormField>
+                  <FormField
+                    label={language === "ar" ? "تأكيد كلمة المرور" : "Confirm Password"}
+                    error={errors.confirm_password}
+                  >
+                    <Input
+                      type="password"
+                      autoComplete="new-password"
+                      value={form.confirm_password}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, confirm_password: e.target.value }))
+                      }
+                    />
+                  </FormField>
+                </div>
+              </div>
+            )}
+
+            {section === "notifications" && (
+              <div className="p-5 sm:p-6 space-y-4">
+                {[
+                  {
+                    key: "notify_orders" as const,
+                    label: language === "ar" ? "تنبيهات الطلبات الجديدة" : "New order alerts",
+                  },
+                  {
+                    key: "notify_stock" as const,
+                    label: language === "ar" ? "تنبيهات نفاد المخزون" : "Low stock alerts",
+                  },
+                  {
+                    key: "notify_marketing" as const,
+                    label: language === "ar" ? "رسائل تسويقية" : "Marketing emails",
+                  },
+                ].map((item) => (
+                  <label
+                    key={item.key}
+                    className="flex items-center justify-between gap-4 rounded-xl border border-surface px-4 py-3 hover:border-primary/40 transition-colors cursor-pointer"
+                  >
+                    <span className="font-medium text-secondary">{item.label}</span>
+                    <input
+                      type="checkbox"
+                      checked={form[item.key]}
+                      onChange={(e) => void toggleNotification(item.key, e.target.checked)}
+                      className="h-5 w-5 accent-[var(--color-primary,#c9a96e)]"
+                    />
+                  </label>
+                ))}
+              </div>
+            )}
+
+            {section === "language" && (
+              <div className="p-5 sm:p-6 flex flex-col gap-6 max-w-xl">
+                <FormField label={language === "ar" ? "لغة لوحة التحكم" : "Dashboard language"}>
+                  <Select
+                    className="h-12"
+                    value={language}
+                    onChange={(e) => {
+                      const next = e.target.value as AppLanguage;
+                      setLanguage(next);
+                      toast(
+                        next === "ar"
+                          ? "✔ تم تغيير لغة اللوحة إلى العربية"
+                          : "✔ Dashboard language set to English",
+                        "success"
+                      );
+                    }}
+                  >
+                    <option value="ar">العربية</option>
+                    <option value="en">English</option>
+                  </Select>
+                </FormField>
+
+                <FormField label={language === "ar" ? "المنطقة الزمنية" : "Timezone"}>
+                  <Input
+                    className="h-12 text-start dir-ltr"
+                    value={timezoneLabel}
+                    readOnly
+                    disabled
+                  />
+                  <p className="mt-1.5 text-xs text-gray-400">
+                    {language === "ar"
+                      ? "تُجلب تلقائياً من إعدادات السيرفر ولا يمكن تعديلها من هنا."
+                      : "Fetched automatically from server settings and cannot be changed here."}
+                  </p>
+                </FormField>
+              </div>
+            )}
           </div>
         </div>
-
-        {/* Main Settings Area */}
-        <div className="lg:col-span-2 flex flex-col gap-6">
-          
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="bg-gray-50 p-6 border-b border-gray-100 flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-2xl">
-                A
-              </div>
-              <div>
-                <h3 className="font-bold text-secondary text-lg">Admin User</h3>
-                <p className="text-sm text-gray-500">Store Manager</p>
-              </div>
-              <button className="ms-auto px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors">
-                {language === "ar" ? "تغيير الصورة" : "Change Avatar"}
-              </button>
-            </div>
-            
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-bold text-gray-600">{language === "ar" ? "الاسم الأول" : "First Name"}</label>
-                <input type="text" defaultValue="Admin" className="w-full bg-gray-50 border border-gray-200 rounded-lg h-12 px-4 focus:outline-none focus:border-primary transition-colors" />
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-bold text-gray-600">{language === "ar" ? "اسم العائلة" : "Last Name"}</label>
-                <input type="text" defaultValue="User" className="w-full bg-gray-50 border border-gray-200 rounded-lg h-12 px-4 focus:outline-none focus:border-primary transition-colors" />
-              </div>
-              <div className="flex flex-col gap-2 md:col-span-2">
-                <label className="text-sm font-bold text-gray-600">{language === "ar" ? "البريد الإلكتروني" : "Email Address"}</label>
-                <input type="email" defaultValue="admin@paradise-store.com" className="w-full bg-gray-50 border border-gray-200 rounded-lg h-12 px-4 focus:outline-none focus:border-primary transition-colors text-start dir-ltr" />
-              </div>
-              <div className="flex flex-col gap-2 md:col-span-2">
-                <label className="text-sm font-bold text-gray-600">{language === "ar" ? "رقم الهاتف" : "Phone Number"}</label>
-                <input type="tel" defaultValue="+966 50 123 4567" className="w-full bg-gray-50 border border-gray-200 rounded-lg h-12 px-4 focus:outline-none focus:border-primary transition-colors text-start dir-ltr" />
-              </div>
-            </div>
-          </div>
-          
-        </div>
-
-      </div>
+      </section>
     </div>
   );
 }
