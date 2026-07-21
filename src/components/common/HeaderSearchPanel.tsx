@@ -192,21 +192,6 @@ export default function HeaderSearchPanel({ open, onOpenChange }: HeaderSearchPa
                     </button>
                   ) : null}
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => onOpenChange(false)}
-                  aria-label={language === "ar" ? "إغلاق" : "Close"}
-                  className={cn(
-                    "inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-surface/70",
-                    "bg-background text-secondary/70 transition-colors",
-                    "hover:border-primary/30 hover:bg-primary/[0.06] hover:text-primary",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35",
-                    "active:scale-95"
-                  )}
-                >
-                  <X size={18} />
-                </button>
               </div>
 
               <div id={listId} className="mt-4" role="listbox">
