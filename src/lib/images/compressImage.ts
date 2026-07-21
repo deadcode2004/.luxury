@@ -5,9 +5,9 @@
 
 export const AVATAR_MAX_INPUT_BYTES = 5 * 1024 * 1024;
 export const AVATAR_MAX_OUTPUT_EDGE = 512;
-export const AVATAR_ACCEPT = "image/jpeg,image/png,image/webp,image/gif";
+export const AVATAR_ACCEPT = "image/jpeg,image/png,image/webp";
 
-const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 export type AvatarValidationError = "type" | "size" | "load";
 
@@ -58,7 +58,7 @@ export async function compressAvatarImage(
   ctx.fillRect(0, 0, width, height);
   ctx.drawImage(img, 0, 0, width, height);
 
-  const preferPng = file.type === "image/png" || file.type === "image/gif";
+  const preferPng = file.type === "image/png";
   const mime = preferPng ? "image/png" : "image/jpeg";
   const blob = await new Promise<Blob | null>((resolve) =>
     canvas.toBlob((b) => resolve(b), mime, preferPng ? undefined : quality)

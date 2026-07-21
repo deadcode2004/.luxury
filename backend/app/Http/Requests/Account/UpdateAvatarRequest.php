@@ -19,7 +19,7 @@ class UpdateAvatarRequest extends FormRequest
                 'required',
                 'file',
                 'image',
-                'mimes:jpeg,jpg,png,webp,gif',
+                'mimes:jpeg,jpg,png,webp',
                 'max:'.AvatarService::MAX_KILOBYTES,
             ],
         ];
@@ -30,7 +30,7 @@ class UpdateAvatarRequest extends FormRequest
         return [
             'avatar.required' => 'An image file is required.',
             'avatar.image' => 'The file must be an image.',
-            'avatar.mimes' => 'Only JPEG, PNG, WebP, and GIF images are allowed.',
+            'avatar.mimes' => 'Only JPEG, PNG, and WebP images are allowed.',
             'avatar.max' => 'The image may not be greater than 5 MB.',
         ];
     }

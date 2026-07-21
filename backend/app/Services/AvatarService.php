@@ -16,7 +16,6 @@ class AvatarService
         'image/jpeg',
         'image/png',
         'image/webp',
-        'image/gif',
     ];
 
     /**
@@ -25,7 +24,7 @@ class AvatarService
     public function store(User $user, UploadedFile $file): User
     {
         $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'jpg');
-        if (! in_array($extension, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true)) {
+        if (! in_array($extension, ['jpg', 'jpeg', 'png', 'webp'], true)) {
             $extension = 'jpg';
         }
 
