@@ -19,6 +19,7 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import Modal from "@/components/ui/Modal";
 import AuthModal from "@/components/auth/AuthModal";
 import AvatarUploader from "@/components/account/AvatarUploader";
+import { displayPersonName } from "@/lib/i18n/localeText";
 
 type Tab = "orders" | "profile" | "addresses";
 
