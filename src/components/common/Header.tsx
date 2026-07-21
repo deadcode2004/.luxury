@@ -133,6 +133,12 @@ export default function Header() {
     if (!isMobileMenuOpen) setIsAccountMenuOpen(false);
   }, [isMobileMenuOpen]);
 
+  const bagTotal = cartCount + wishCount;
+  const menuBadgeLabel =
+    language === "ar"
+      ? `القائمة، ${bagTotal} عناصر في السلة والمفضلة`
+      : `Menu, ${bagTotal} items in cart and wishlist`;
+
   const navLinks = [
     { name: { ar: "الرئيسية", en: "Home" }, href: "/" },
     { name: { ar: "تسوق", en: "Shop" }, href: "/shop" },
@@ -154,14 +160,36 @@ export default function Header() {
           style={{ transition: "background-color 200ms ease, padding 200ms ease, box-shadow 200ms ease" }}
         >
         <div className="container mx-auto px-4 md:px-8 flex justify-between items-center">
-          <button
-            type="button"
-            className={`lg:hidden transition-colors p-2 -ms-2 active:scale-95 ${textColorClass} ${hoverColorClass}`}
-            onClick={() => setIsMobileMenuOpen(true)}
-            aria-label={language === "ar" ? "فتح القائمة" : "Open menu"}
-          >
-            <Menu size={24} />
-          </button>
+          <div className="relative lg:hidden -ms-2">
+            <button
+              type="button"
+              className={cn(
+                "relative inline-flex items-center justify-center rounded-xl p-2 transition-colors active:scale-95",
+                textColorClass,
+                hoverColorClass,
+                isTransparent ? "hover:bg-white/10" : "hover:bg-surface/60"
+              )}
+              onClick={() => setIsMobileMenuOpen(true)}
+              aria-label={bagTotal > 0 ? menuBadgeLabel : language === "ar" ? "فتح القائمة" : "Open menu"}
+            >
+              <Menu size={24} />
+            </button>
+            {bagTotal > 0 ? (
+              <span
+                aria-hidden
+                className={cn(
+                  "pointer-events-none absolute -top-0.5 z-10 flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1",
+                  "text-[10px] font-bold leading-none shadow-soft ring-2",
+                  dir === "rtl" ? "-start-0.5" : "-end-0.5",
+                  isTransparent
+                    ? "bg-background text-secondary ring-background/80"
+                    : "bg-primary text-background ring-background"
+                )}
+              >
+                {bagTotal > 99 ? "99+" : bagTotal}
+              </span>
+            ) : null}
+          </div>
 
           <Link
             href="/"
