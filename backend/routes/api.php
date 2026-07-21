@@ -59,6 +59,8 @@ Route::prefix('v1')->group(function () {
 
         Route::get('account/profile', [ProfileController::class, 'show']);
         Route::put('account/profile', [ProfileController::class, 'update']);
+        Route::post('account/avatar', [ProfileController::class, 'updateAvatar'])->middleware('throttle:20,1');
+        Route::delete('account/avatar', [ProfileController::class, 'destroyAvatar'])->middleware('throttle:20,1');
         Route::get('account/settings', [ProfileController::class, 'settings']);
         Route::put('account/password', [ProfileController::class, 'updatePassword']);
         Route::put('account/notifications', [ProfileController::class, 'updateNotifications']);

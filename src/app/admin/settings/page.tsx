@@ -15,6 +15,7 @@ import { ApiRequestError, apiRequest } from "@/lib/api/client";
 import type { AppLanguage } from "@/lib/i18n/language";
 import { useAutoFetch } from "@/hooks/useAutoFetch";
 import { LocaleInput } from "@/components/admin/LocaleField";
+import AvatarUploader from "@/components/account/AvatarUploader";
 import { pickLocale } from "@/lib/i18n/localeText";
 
 type Section = "personal" | "security" | "notifications" | "language";
@@ -32,6 +33,7 @@ type AccountSettingsPayload = {
     last_name_i18n?: LocaleName;
     email: string;
     phone?: string | null;
+    avatar?: string | null;
     role: "owner" | "user";
     is_active?: boolean;
     notify_orders?: boolean;
@@ -250,11 +252,6 @@ export default function AdminSettings() {
       language,
       form.last_name_ar || form.last_name_en
     ) || "";
-  const initials =
-    `${displayFirst.charAt(0)}${displayLast.charAt(0)}`.trim().toUpperCase() ||
-    user?.email?.charAt(0)?.toUpperCase() ||
-    "A";
-
   const showSave = section === "personal" || section === "security";
 
   return (
@@ -334,24 +331,10 @@ export default function AdminSettings() {
 
           {section === "personal" && (
             <Card variant="panel" padding="none" className="overflow-hidden">
-              <div className="bg-gray-50 p-6 border-b border-gray-100 flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-2xl">
-                  {initials}
-                </div>
-                <div className="min-w-0">
-                  <h3 className="font-bold text-secondary text-lg truncate">
-                    {displayFirst} {displayLast}
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    {user?.role === "owner"
-                      ? language === "ar"
-                        ? "مالك المتجر"
-                        : "Store owner"
-                      : language === "ar"
-                        ? "مستخدم"
-                        : "User"}
-                  </p>
-                </div>
+              <div className="bg-gray-50 p-6 border-b border-gray-100">
+                <AvatarUploader
+                  fallbackLabel={`${displayFirst} ${displayLast}`.trim() || user?.email || "O"}
+                />
               </div>
 
               <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">

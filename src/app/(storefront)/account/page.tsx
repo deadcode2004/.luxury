@@ -18,6 +18,7 @@ import Table, { TableRow, TableCell } from "@/components/ui/Table";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import Modal from "@/components/ui/Modal";
 import AuthModal from "@/components/auth/AuthModal";
+import AvatarUploader from "@/components/account/AvatarUploader";
 
 type Tab = "orders" | "profile" | "addresses";
 
@@ -288,6 +289,11 @@ export default function AccountPage() {
                       : "You're browsing as a guest. Sign in to save your profile."}
                   </div>
                 )}
+                {user ? (
+                  <div className="mb-8 max-w-2xl rounded-2xl border border-surface/60 bg-surface/20 p-4 sm:p-5">
+                    <AvatarUploader fallbackLabel={welcomeName} />
+                  </div>
+                ) : null}
                 <form
                   onSubmit={saveProfile}
                   className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl"

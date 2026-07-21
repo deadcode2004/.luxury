@@ -8,13 +8,14 @@ import FormField from "@/components/ui/FormField";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import PasswordStrength from "@/components/auth/PasswordStrength";
+import AvatarUploader from "@/components/account/AvatarUploader";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getPasswordStrength } from "@/lib/auth/passwordStrength";
 
 export default function RegisterPage() {
   const { language } = useLanguage();
-  const { register, loading } = useAuth();
+  const { register, uploadAvatar, loading } = useAuth();
   const router = useRouter();
   const [form, setForm] = useState({
     first_name: "",
@@ -25,6 +26,7 @@ export default function RegisterPage() {
     password_confirmation: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [pendingAvatar, setPendingAvatar] = useState<File | null>(null);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +62,10 @@ export default function RegisterPage() {
       password_confirmation: form.password_confirmation,
     });
     if (result.ok) {
-      router.replace("/account");
+      if (pendingAvatar) {
+        await uploadAvatar(pendingAvatar, result.token);
+      }
+      router.replace("/account?tab=profile");
       return;
     }
     if (result.fieldErrors && Object.keys(result.fieldErrors).length) {
@@ -78,6 +83,14 @@ export default function RegisterPage() {
       }
     >
       <form onSubmit={onSubmit} className="space-y-4">
+        <div className="rounded-2xl border border-surface/60 bg-surface/20 p-4">
+          <AvatarUploader
+            deferUpload
+            fallbackLabel={form.first_name || form.email || "?"}
+            onPendingChange={setPendingAvatar}
+            size="md"
+          />
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField
             label={language === "ar" ? "الاسم الأول" : "First Name"}

@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Api\V1\Account;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Account\ChangePasswordRequest;
+use App\Http\Requests\Account\UpdateAvatarRequest;
 use App\Http\Requests\Account\UpdateNotificationPreferencesRequest;
 use App\Http\Requests\Account\UpdateProfileRequest;
 use App\Http\Resources\AddressResource;
 use App\Http\Resources\UserResource;
+use App\Services\AvatarService;
 use App\Services\CmsService;
 use App\Services\UserNameLocaleService;
 use App\Support\ApiResponse;
@@ -21,6 +23,7 @@ class ProfileController extends Controller
     public function __construct(
         private readonly CmsService $cms,
         private readonly UserNameLocaleService $names,
+        private readonly AvatarService $avatars,
     ) {}
 
     public function show(Request $request): JsonResponse
@@ -60,6 +63,22 @@ class ProfileController extends Controller
         }
 
         return ApiResponse::success(UserResource::make($fresh), 'Profile updated');
+    }
+
+    public function updateAvatar(UpdateAvatarRequest $request): JsonResponse
+    {
+        $user = $this->avatars->store($request->user(), $request->file('avatar'));
+        $fresh = $this->names->ensureLocales($user);
+
+        return ApiResponse::success(UserResource::make($fresh), 'Avatar updated');
+    }
+
+    public function destroyAvatar(Request $request): JsonResponse
+    {
+        $user = $this->avatars->clear($request->user());
+        $fresh = $this->names->ensureLocales($user);
+
+        return ApiResponse::success(UserResource::make($fresh), 'Avatar removed');
     }
 
     public function updatePassword(ChangePasswordRequest $request): JsonResponse

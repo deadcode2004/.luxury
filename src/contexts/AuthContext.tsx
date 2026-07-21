@@ -7,13 +7,14 @@ import { readStorage, removeStorage, writeStorage } from "@/lib/storage";
 import { clearAuthCookies, setAuthCookies } from "@/lib/auth/session";
 import { normalizeAuthUser, type AuthUser } from "@/lib/auth/user";
 import { fieldErrorsFromUnknown } from "@/lib/auth/validationErrors";
+import { deleteAccountAvatar, uploadAccountAvatar } from "@/lib/api/avatar";
 import { useToast } from "@/components/ui/Toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export type { AuthUser };
 
 export type AuthActionResult =
-  | { ok: true }
+  | { ok: true; token?: string }
   | { ok: false; fieldErrors?: Record<string, string>; message?: string };
 
 type AuthContextValue = {
@@ -51,6 +52,8 @@ type AuthContextValue = {
     notify_stock?: boolean;
     notify_marketing?: boolean;
   }) => Promise<boolean>;
+  uploadAvatar: (file: File, tokenOverride?: string) => Promise<boolean>;
+  removeAvatar: () => Promise<boolean>;
 };
 
 const TOKEN_KEY = "paradise_token";
@@ -179,7 +182,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           language === "ar" ? "✔ تم إنشاء الحساب بنجاح" : "✔ Account created successfully",
           "success"
         );
-        return { ok: true };
+        return { ok: true, token: data.token };
       } catch (error) {
         const fieldErrors = fieldErrorsFromUnknown(error, language);
         const message =
@@ -352,6 +355,70 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [clear, language, toast, token]
   );
 
+  const uploadAvatar = useCallback(
+    async (file: File, tokenOverride?: string) => {
+      const authToken = tokenOverride || token;
+      if (!authToken) return false;
+      setLoading(true);
+      try {
+        const data = normalizeAuthUser(await uploadAccountAvatar(authToken, file));
+        if (!data) {
+          clear();
+          return false;
+        }
+        persist(authToken, data);
+        toast(
+          language === "ar" ? "✔ تم تحديث الصورة الشخصية" : "✔ Profile photo updated",
+          "success"
+        );
+        return true;
+      } catch (error) {
+        toast(
+          error instanceof ApiRequestError
+            ? error.message
+            : language === "ar"
+              ? "✖ فشل رفع الصورة"
+              : "✖ Failed to upload photo",
+          "danger"
+        );
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [clear, language, persist, toast, token]
+  );
+
+  const removeAvatar = useCallback(async () => {
+    if (!token) return false;
+    setLoading(true);
+    try {
+      const data = normalizeAuthUser(await deleteAccountAvatar(token));
+      if (!data) {
+        clear();
+        return false;
+      }
+      persist(token, data);
+      toast(
+        language === "ar" ? "✔ تم حذف الصورة الشخصية" : "✔ Profile photo removed",
+        "success"
+      );
+      return true;
+    } catch (error) {
+      toast(
+        error instanceof ApiRequestError
+          ? error.message
+          : language === "ar"
+            ? "✖ تعذر حذف الصورة"
+            : "✖ Failed to remove photo",
+        "danger"
+      );
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [clear, language, persist, toast, token]);
+
   const isAuthenticated = Boolean(token && user && (user.role === "owner" || user.role === "user"));
   const isOwner = isAuthenticated && user?.role === "owner";
   const isUser = isAuthenticated && user?.role === "user";
@@ -372,6 +439,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       updateProfile,
       changePassword,
       updateNotifications,
+      uploadAvatar,
+      removeAvatar,
     }),
     [
       user,
@@ -388,6 +457,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       updateProfile,
       changePassword,
       updateNotifications,
+      uploadAvatar,
+      removeAvatar,
     ]
   );
 

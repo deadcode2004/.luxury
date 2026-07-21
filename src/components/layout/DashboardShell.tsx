@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Bell, Globe, LogOut, Menu, Settings, X } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -143,8 +144,19 @@ export default function DashboardShell({
 
             <div className="relative group h-20 flex items-center pl-4 rtl:pr-4 rtl:border-r ltr:border-l border-gray-200 cursor-pointer">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-                  {(userName || "A").trim().charAt(0).toUpperCase()}
+                <div className="relative w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold overflow-hidden ring-2 ring-primary/10">
+                  {user?.avatar ? (
+                    <Image
+                      src={user.avatar}
+                      alt=""
+                      fill
+                      sizes="40px"
+                      className="object-cover"
+                      unoptimized
+                    />
+                  ) : (
+                    (userName || "A").trim().charAt(0).toUpperCase()
+                  )}
                 </div>
                 <div className="hidden md:block">
                   <p className="text-sm font-bold text-secondary group-hover:text-primary transition-colors">

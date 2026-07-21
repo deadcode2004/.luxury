@@ -5,6 +5,7 @@ import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import FormField from "@/components/ui/FormField";
+import AvatarUploader from "@/components/account/AvatarUploader";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -18,9 +19,10 @@ type AuthModalProps = {
 
 export default function AuthModal({ open, onClose, initialMode = "login" }: AuthModalProps) {
   const { language } = useLanguage();
-  const { login, register, loading } = useAuth();
+  const { login, register, uploadAvatar, loading } = useAuth();
   const [mode, setMode] = useState<Mode>(initialMode);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [pendingAvatar, setPendingAvatar] = useState<File | null>(null);
   const [form, setForm] = useState({
     first_name: "",
     last_name: "",
@@ -75,6 +77,9 @@ export default function AuthModal({ open, onClose, initialMode = "login" }: Auth
     });
 
     if (result.ok) {
+      if (pendingAvatar) {
+        await uploadAvatar(pendingAvatar, result.token);
+      }
       onClose();
       return;
     }
@@ -98,6 +103,14 @@ export default function AuthModal({ open, onClose, initialMode = "login" }: Auth
       }
     >
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
+        {mode === "register" && (
+          <AvatarUploader
+            deferUpload
+            size="md"
+            fallbackLabel={form.first_name || form.email || "?"}
+            onPendingChange={setPendingAvatar}
+          />
+        )}
         {mode === "register" && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField label={language === "ar" ? "الاسم الأول" : "First Name"} error={errors.first_name}>
@@ -183,6 +196,7 @@ export default function AuthModal({ open, onClose, initialMode = "login" }: Auth
           onClick={() => {
             setMode(mode === "login" ? "register" : "login");
             setErrors({});
+            setPendingAvatar(null);
           }}
         >
           {mode === "login"
