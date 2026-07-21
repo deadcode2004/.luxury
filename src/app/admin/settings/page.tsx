@@ -322,223 +322,229 @@ export default function AdminSettings() {
           </Card>
         </div>
 
-        <div className="lg:col-span-2 flex flex-col gap-6">
-          {loadingSettings && !hasFetched ? (
-            <Card variant="panel" padding="lg" className="text-sm text-gray-400">
-              {language === "ar" ? "جاري التحميل..." : "Loading..."}
-            </Card>
-          ) : null}
+        <div className="lg:col-span-2">
+          <Card
+            variant="panel"
+            padding={section === "personal" ? "none" : "lg"}
+            className={section === "personal" ? "overflow-hidden" : undefined}
+          >
+            {loadingSettings && !hasFetched ? (
+              <p className="text-sm text-gray-400 p-6">
+                {language === "ar" ? "جاري التحميل..." : "Loading..."}
+              </p>
+            ) : null}
 
-          {section === "personal" && (
-            <Card variant="panel" padding="none" className="overflow-hidden">
-              <div className="bg-gray-50 p-6 border-b border-gray-100">
-                <AvatarUploader
-                  fallbackLabel={`${displayFirst} ${displayLast}`.trim() || user?.email || "O"}
-                />
-              </div>
-
-              <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <p className="md:col-span-2 text-xs text-secondary/50 leading-relaxed">
-                  {language === "ar"
-                    ? "أدخل الاسم بالعربية؛ عند التبديل للإنجليزية يظهر الاسم المترجم تلقائياً. البريد والهاتف يظهران في صفحة التواصل بعد الحفظ."
-                    : "Enter the Arabic name; switch the dashboard to English to see the auto-translated name. Email and phone appear on the contact page after saving."}
-                </p>
-                <FormField
-                  label={language === "ar" ? "الاسم الأول" : "First Name"}
-                  error={errors.first_name}
-                >
-                  <LocaleInput
-                    ar={form.first_name_ar}
-                    en={form.first_name_en}
-                    onArChange={(ar) =>
-                      setForm((f) => ({ ...f, first_name_ar: ar, first_name_en: "" }))
-                    }
-                    className="h-12"
+            {section === "personal" && (
+              <>
+                <div className="bg-gray-50 p-6 border-b border-gray-100">
+                  <AvatarUploader
+                    fallbackLabel={`${displayFirst} ${displayLast}`.trim() || user?.email || "O"}
                   />
-                </FormField>
-                <FormField
-                  label={language === "ar" ? "اسم العائلة" : "Last Name"}
-                  error={errors.last_name}
-                >
-                  <LocaleInput
-                    ar={form.last_name_ar}
-                    en={form.last_name_en}
-                    onArChange={(ar) =>
-                      setForm((f) => ({ ...f, last_name_ar: ar, last_name_en: "" }))
-                    }
-                    className="h-12"
-                  />
-                </FormField>
-                <FormField
-                  className="md:col-span-2"
-                  label={language === "ar" ? "البريد الإلكتروني" : "Email Address"}
-                  error={errors.email}
-                >
-                  <Input
-                    type="email"
-                    value={form.email}
-                    onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                    className="h-12 text-start dir-ltr"
-                  />
-                </FormField>
-                <FormField
-                  className="md:col-span-2"
-                  label={language === "ar" ? "رقم الهاتف" : "Phone Number"}
-                >
-                  <Input
-                    type="tel"
-                    value={form.phone}
-                    onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-                    className="h-12 text-start dir-ltr"
-                  />
-                </FormField>
-              </div>
-            </Card>
-          )}
-
-          {section === "security" && (
-            <div className="flex flex-col gap-6">
-              <Card variant="panel" padding="lg" className="flex items-start gap-3">
-                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <ShieldCheck size={20} />
-                </span>
-                <div className="min-w-0">
-                  <h3 className="font-bold text-secondary">
-                    {language === "ar" ? "حالة الحساب" : "Account status"}
-                  </h3>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {user?.is_active === false
-                      ? language === "ar"
-                        ? "الحساب غير نشط"
-                        : "Account is inactive"
-                      : language === "ar"
-                        ? "الحساب نشط ومحمي بكلمة مرور"
-                        : "Account is active and password-protected"}
-                  </p>
                 </div>
-              </Card>
 
-              <Card variant="panel" padding="lg" className="grid grid-cols-1 gap-6 max-w-xl">
-                <div>
-                  <h3 className="font-bold text-secondary mb-1">
-                    {language === "ar" ? "تغيير كلمة المرور" : "Change password"}
-                  </h3>
-                  <p className="text-sm text-gray-500">
+                <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <p className="md:col-span-2 text-xs text-secondary/50 leading-relaxed">
                     {language === "ar"
-                      ? "أدخل كلمة المرور الحالية ثم كلمة المرور الجديدة."
-                      : "Enter your current password, then the new password."}
+                      ? "أدخل الاسم بالعربية؛ عند التبديل للإنجليزية يظهر الاسم المترجم تلقائياً. البريد والهاتف يظهران في صفحة التواصل بعد الحفظ."
+                      : "Enter the Arabic name; switch the dashboard to English to see the auto-translated name. Email and phone appear on the contact page after saving."}
                   </p>
+                  <FormField
+                    label={language === "ar" ? "الاسم الأول" : "First Name"}
+                    error={errors.first_name}
+                  >
+                    <LocaleInput
+                      ar={form.first_name_ar}
+                      en={form.first_name_en}
+                      onArChange={(ar) =>
+                        setForm((f) => ({ ...f, first_name_ar: ar, first_name_en: "" }))
+                      }
+                      className="h-12"
+                    />
+                  </FormField>
+                  <FormField
+                    label={language === "ar" ? "اسم العائلة" : "Last Name"}
+                    error={errors.last_name}
+                  >
+                    <LocaleInput
+                      ar={form.last_name_ar}
+                      en={form.last_name_en}
+                      onArChange={(ar) =>
+                        setForm((f) => ({ ...f, last_name_ar: ar, last_name_en: "" }))
+                      }
+                      className="h-12"
+                    />
+                  </FormField>
+                  <FormField
+                    className="md:col-span-2"
+                    label={language === "ar" ? "البريد الإلكتروني" : "Email Address"}
+                    error={errors.email}
+                  >
+                    <Input
+                      type="email"
+                      value={form.email}
+                      onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                      className="h-12 text-start dir-ltr"
+                    />
+                  </FormField>
+                  <FormField
+                    className="md:col-span-2"
+                    label={language === "ar" ? "رقم الهاتف" : "Phone Number"}
+                  >
+                    <Input
+                      type="tel"
+                      value={form.phone}
+                      onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                      className="h-12 text-start dir-ltr"
+                    />
+                  </FormField>
                 </div>
-                <FormField
-                  label={language === "ar" ? "كلمة المرور الحالية" : "Current Password"}
-                  error={errors.current_password}
-                >
-                  <Input
-                    type="password"
-                    autoComplete="current-password"
-                    value={form.current_password}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, current_password: e.target.value }))
-                    }
-                  />
-                </FormField>
-                <FormField
-                  label={language === "ar" ? "كلمة المرور الجديدة" : "New Password"}
-                  error={errors.new_password}
-                >
-                  <Input
-                    type="password"
-                    autoComplete="new-password"
-                    value={form.new_password}
-                    onChange={(e) => setForm((f) => ({ ...f, new_password: e.target.value }))}
-                  />
-                </FormField>
-                <FormField
-                  label={language === "ar" ? "تأكيد كلمة المرور" : "Confirm Password"}
-                  error={errors.confirm_password}
-                >
-                  <Input
-                    type="password"
-                    autoComplete="new-password"
-                    value={form.confirm_password}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, confirm_password: e.target.value }))
-                    }
-                  />
-                </FormField>
-              </Card>
-            </div>
-          )}
+              </>
+            )}
 
-          {section === "notifications" && (
-            <Card variant="panel" padding="lg" className="space-y-4">
-              {[
-                {
-                  key: "notify_orders" as const,
-                  label: language === "ar" ? "تنبيهات الطلبات الجديدة" : "New order alerts",
-                },
-                {
-                  key: "notify_stock" as const,
-                  label: language === "ar" ? "تنبيهات نفاد المخزون" : "Low stock alerts",
-                },
-                {
-                  key: "notify_marketing" as const,
-                  label: language === "ar" ? "رسائل تسويقية" : "Marketing emails",
-                },
-              ].map((item) => (
-                <label
-                  key={item.key}
-                  className="flex items-center justify-between gap-4 rounded-xl border border-gray-100 px-4 py-3 hover:border-primary/40 transition-colors cursor-pointer"
-                >
-                  <span className="font-medium text-secondary">{item.label}</span>
-                  <input
-                    type="checkbox"
-                    checked={form[item.key]}
-                    onChange={(e) => void toggleNotification(item.key, e.target.checked)}
-                    className="h-5 w-5 accent-[var(--color-primary,#c9a96e)]"
+            {section === "security" && (
+              <div className="flex flex-col gap-8 max-w-xl">
+                <div className="flex items-start gap-3">
+                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <ShieldCheck size={20} />
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-secondary">
+                      {language === "ar" ? "حالة الحساب" : "Account status"}
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {user?.is_active === false
+                        ? language === "ar"
+                          ? "الحساب غير نشط"
+                          : "Account is inactive"
+                        : language === "ar"
+                          ? "الحساب نشط ومحمي بكلمة مرور"
+                          : "Account is active and password-protected"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-6">
+                  <div>
+                    <h3 className="font-bold text-secondary mb-1">
+                      {language === "ar" ? "تغيير كلمة المرور" : "Change password"}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {language === "ar"
+                        ? "أدخل كلمة المرور الحالية ثم كلمة المرور الجديدة."
+                        : "Enter your current password, then the new password."}
+                    </p>
+                  </div>
+                  <FormField
+                    label={language === "ar" ? "كلمة المرور الحالية" : "Current Password"}
+                    error={errors.current_password}
+                  >
+                    <Input
+                      type="password"
+                      autoComplete="current-password"
+                      value={form.current_password}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, current_password: e.target.value }))
+                      }
+                    />
+                  </FormField>
+                  <FormField
+                    label={language === "ar" ? "كلمة المرور الجديدة" : "New Password"}
+                    error={errors.new_password}
+                  >
+                    <Input
+                      type="password"
+                      autoComplete="new-password"
+                      value={form.new_password}
+                      onChange={(e) => setForm((f) => ({ ...f, new_password: e.target.value }))}
+                    />
+                  </FormField>
+                  <FormField
+                    label={language === "ar" ? "تأكيد كلمة المرور" : "Confirm Password"}
+                    error={errors.confirm_password}
+                  >
+                    <Input
+                      type="password"
+                      autoComplete="new-password"
+                      value={form.confirm_password}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, confirm_password: e.target.value }))
+                      }
+                    />
+                  </FormField>
+                </div>
+              </div>
+            )}
+
+            {section === "notifications" && (
+              <div className="space-y-4">
+                {[
+                  {
+                    key: "notify_orders" as const,
+                    label: language === "ar" ? "تنبيهات الطلبات الجديدة" : "New order alerts",
+                  },
+                  {
+                    key: "notify_stock" as const,
+                    label: language === "ar" ? "تنبيهات نفاد المخزون" : "Low stock alerts",
+                  },
+                  {
+                    key: "notify_marketing" as const,
+                    label: language === "ar" ? "رسائل تسويقية" : "Marketing emails",
+                  },
+                ].map((item) => (
+                  <label
+                    key={item.key}
+                    className="flex items-center justify-between gap-4 rounded-xl border border-gray-100 px-4 py-3 hover:border-primary/40 transition-colors cursor-pointer"
+                  >
+                    <span className="font-medium text-secondary">{item.label}</span>
+                    <input
+                      type="checkbox"
+                      checked={form[item.key]}
+                      onChange={(e) => void toggleNotification(item.key, e.target.checked)}
+                      className="h-5 w-5 accent-[var(--color-primary,#c9a96e)]"
+                    />
+                  </label>
+                ))}
+              </div>
+            )}
+
+            {section === "language" && (
+              <div className="flex flex-col gap-6 max-w-xl">
+                <FormField label={language === "ar" ? "لغة لوحة التحكم" : "Dashboard language"}>
+                  <Select
+                    className="h-12"
+                    value={language}
+                    onChange={(e) => {
+                      const next = e.target.value as AppLanguage;
+                      setLanguage(next);
+                      toast(
+                        next === "ar"
+                          ? "✔ تم تغيير لغة اللوحة إلى العربية"
+                          : "✔ Dashboard language set to English",
+                        "success"
+                      );
+                    }}
+                  >
+                    <option value="ar">العربية</option>
+                    <option value="en">English</option>
+                  </Select>
+                </FormField>
+
+                <FormField label={language === "ar" ? "المنطقة الزمنية" : "Timezone"}>
+                  <Input
+                    className="h-12 text-start dir-ltr"
+                    value={timezoneLabel}
+                    readOnly
+                    disabled
                   />
-                </label>
-              ))}
-            </Card>
-          )}
-
-          {section === "language" && (
-            <Card variant="panel" padding="lg" className="flex flex-col gap-6 max-w-xl">
-              <FormField label={language === "ar" ? "لغة لوحة التحكم" : "Dashboard language"}>
-                <Select
-                  className="h-12"
-                  value={language}
-                  onChange={(e) => {
-                    const next = e.target.value as AppLanguage;
-                    setLanguage(next);
-                    toast(
-                      next === "ar"
-                        ? "✔ تم تغيير لغة اللوحة إلى العربية"
-                        : "✔ Dashboard language set to English",
-                      "success"
-                    );
-                  }}
-                >
-                  <option value="ar">العربية</option>
-                  <option value="en">English</option>
-                </Select>
-              </FormField>
-
-              <FormField label={language === "ar" ? "المنطقة الزمنية" : "Timezone"}>
-                <Input
-                  className="h-12 text-start dir-ltr"
-                  value={timezoneLabel}
-                  readOnly
-                  disabled
-                />
-                <p className="mt-1.5 text-xs text-gray-400">
-                  {language === "ar"
-                    ? "تُجلب تلقائياً من إعدادات السيرفر ولا يمكن تعديلها من هنا."
-                    : "Fetched automatically from server settings and cannot be changed here."}
-                </p>
-              </FormField>
-            </Card>
-          )}
+                  <p className="mt-1.5 text-xs text-gray-400">
+                    {language === "ar"
+                      ? "تُجلب تلقائياً من إعدادات السيرفر ولا يمكن تعديلها من هنا."
+                      : "Fetched automatically from server settings and cannot be changed here."}
+                  </p>
+                </FormField>
+              </div>
+            )}
+          </Card>
         </div>
       </div>
     </div>
