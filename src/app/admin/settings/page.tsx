@@ -311,7 +311,7 @@ export default function AdminSettings() {
       <section className="w-full min-w-0 rounded-2xl sm:rounded-3xl border border-surface bg-white/70 overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-12 lg:items-stretch w-full min-w-0">
           <aside className="lg:col-span-4 min-w-0 w-full border-b lg:border-b-0 lg:border-e border-surface bg-background/50 p-3 sm:p-4">
-            <SidebarNav variant="light" activeKey={section} items={navItems} />
+            <SidebarNav variant="light" divided activeKey={section} items={navItems} />
           </aside>
 
           <div className="lg:col-span-8 min-w-0 w-full flex flex-col">

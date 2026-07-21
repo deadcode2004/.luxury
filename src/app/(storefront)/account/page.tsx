@@ -471,6 +471,7 @@ export default function AccountPage() {
                     <aside className="lg:col-span-4 min-w-0 w-full border-b lg:border-b-0 lg:border-e border-surface bg-background/50 p-3 sm:p-4">
                       <SidebarNav
                         variant="light"
+                        divided
                         activeKey={settingsSection}
                         items={[
                           {

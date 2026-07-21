@@ -18,6 +18,7 @@ type SidebarNavProps = {
   activeKey?: string;
   variant?: "dark" | "light";
   collapsed?: boolean;
+  divided?: boolean;
   onNavigate?: () => void;
   className?: string;
 };
@@ -27,13 +28,15 @@ export default function SidebarNav({
   activeKey,
   variant = "dark",
   collapsed = false,
+  divided = false,
   onNavigate,
   className,
 }: SidebarNavProps) {
   return (
-    <nav className={cn("flex flex-col gap-2", className)}>
-      {items.map((item) => {
+    <nav className={cn("flex flex-col", divided ? "gap-0" : "gap-2", className)}>
+      {items.map((item, index) => {
         const isActive = activeKey === item.key;
+        const isLast = index === items.length - 1;
         const classes = cn(
           "group/nav relative flex items-center rounded-xl transition-all font-medium text-start w-full",
           collapsed ? "justify-center px-0 py-3" : "gap-3 px-4 py-3",
@@ -86,26 +89,20 @@ export default function SidebarNav({
           </>
         );
 
-        if (item.href) {
-          return (
-            <Link
-              key={item.key}
-              href={item.href}
-              className={classes}
-              title={collapsed && typeof item.label === "string" ? item.label : undefined}
-              onClick={() => {
-                item.onClick?.();
-                onNavigate?.();
-              }}
-            >
-              {content}
-            </Link>
-          );
-        }
-
-        return (
+        const linkOrButton = item.href ? (
+          <Link
+            href={item.href}
+            className={classes}
+            title={collapsed && typeof item.label === "string" ? item.label : undefined}
+            onClick={() => {
+              item.onClick?.();
+              onNavigate?.();
+            }}
+          >
+            {content}
+          </Link>
+        ) : (
           <button
-            key={item.key}
             type="button"
             className={classes}
             title={collapsed && typeof item.label === "string" ? item.label : undefined}
@@ -116,6 +113,22 @@ export default function SidebarNav({
           >
             {content}
           </button>
+        );
+
+        if (!divided) {
+          return <React.Fragment key={item.key}>{linkOrButton}</React.Fragment>;
+        }
+
+        return (
+          <div
+            key={item.key}
+            className={cn(
+              !isLast &&
+                (variant === "dark" ? "border-b border-white/10" : "border-b border-surface")
+            )}
+          >
+            {linkOrButton}
+          </div>
         );
       })}
     </nav>
