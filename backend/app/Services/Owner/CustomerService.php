@@ -4,11 +4,14 @@ namespace App\Services\Owner;
 
 use App\Enums\UserRole;
 use App\Models\User;
+use App\Services\UserNameLocaleService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 class CustomerService
 {
+    public function __construct(private readonly UserNameLocaleService $names) {}
+
     public function list(array $filters = []): LengthAwarePaginator
     {
         $query = User::query()
@@ -25,7 +28,14 @@ class CustomerService
             });
         }
 
-        return $query->latest('id')->paginate(min((int) ($filters['per_page'] ?? 15), 50));
+        $page = $query->latest('id')->paginate(min((int) ($filters['per_page'] ?? 15), 50));
+
+        // Backfill bilingual names once so admin English UI can show translated customer names.
+        $page->setCollection(
+            $page->getCollection()->map(fn (User $user) => $this->names->ensureLocales($user))
+        );
+
+        return $page;
     }
 
     public function dashboardStats(): array

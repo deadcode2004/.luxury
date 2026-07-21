@@ -19,6 +19,7 @@ import {
   updateOwnerOrderStatus,
   type ApiOrder,
 } from "@/lib/api/owner";
+import { displayPersonName } from "@/lib/i18n/localeText";
 import { useAutoFetch } from "@/hooks/useAutoFetch";
 import { useRealtime } from "@/contexts/RealtimeContext";
 
@@ -81,15 +82,16 @@ export default function AdminOrders() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return orders.filter((o) => {
-      const customer = o.customer?.name || o.customer?.email || "";
+      const customer = displayPersonName(o.customer, language, "");
       const matchesQuery =
         !q ||
         o.number.toLowerCase().includes(q) ||
-        customer.toLowerCase().includes(q);
+        customer.toLowerCase().includes(q) ||
+        (o.customer?.email || "").toLowerCase().includes(q);
       const matchesStatus = statusFilter === "all" || o.status === statusFilter;
       return matchesQuery && matchesStatus;
     });
-  }, [orders, query, statusFilter]);
+  }, [orders, query, statusFilter, language]);
 
   return (
     <>
@@ -155,7 +157,7 @@ export default function AdminOrders() {
             <TableRow key={order.id}>
               <TableCell className="font-bold text-secondary">{order.number}</TableCell>
               <TableCell className="text-gray-600">
-                {order.customer?.name || order.customer?.email || "—"}
+                {displayPersonName(order.customer, language)}
               </TableCell>
               <TableCell className="text-gray-500">{formatDate(order.placed_at)}</TableCell>
               <TableCell className="text-gray-500">{order.items_count ?? "—"}</TableCell>
@@ -238,7 +240,7 @@ export default function AdminOrders() {
             </div>
             <div className="flex justify-between">
               <span className="text-gray-500">{language === "ar" ? "العميل" : "Customer"}</span>
-              <span>{viewOrder.customer?.name || viewOrder.customer?.email || "—"}</span>
+              <span>{displayPersonName(viewOrder.customer, language)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-500">{language === "ar" ? "المنتجات" : "Items"}</span>
@@ -294,7 +296,7 @@ export default function AdminOrders() {
             }}
           >
             <p className="text-sm text-gray-500">
-              {editOrder.number} · {editOrder.customer?.name || editOrder.customer?.email || ""}
+              {editOrder.number} · {displayPersonName(editOrder.customer, language, "")}
             </p>
             <FormField label={language === "ar" ? "الحالة الجديدة" : "New Status"}>
               <Select value={nextStatus} onChange={(e) => setNextStatus(e.target.value)}>

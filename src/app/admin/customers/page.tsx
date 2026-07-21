@@ -13,6 +13,7 @@ import {
   fetchOwnerCustomers,
   type ApiCustomer,
 } from "@/lib/api/owner";
+import { displayPersonName } from "@/lib/i18n/localeText";
 import { useAutoFetch } from "@/hooks/useAutoFetch";
 
 function formatDate(iso?: string | null) {
@@ -62,13 +63,16 @@ export default function AdminCustomers() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return customers;
-    return customers.filter(
-      (c) =>
+    return customers.filter((c) => {
+      const localized = displayPersonName(c, language, "").toLowerCase();
+      return (
+        localized.includes(q) ||
         c.name?.toLowerCase().includes(q) ||
         c.email?.toLowerCase().includes(q) ||
         String(c.id).includes(q)
-    );
-  }, [customers, query]);
+      );
+    });
+  }, [customers, query, language]);
 
   return (
     <Table
@@ -108,7 +112,9 @@ export default function AdminCustomers() {
           return (
             <TableRow key={customer.id}>
               <TableCell>
-                <span className="font-bold text-secondary block">{customer.name}</span>
+                <span className="font-bold text-secondary block">
+                  {displayPersonName(customer, language)}
+                </span>
                 <span className="text-xs text-gray-400">{customer.email}</span>
               </TableCell>
               <TableCell className="text-gray-500">{formatDate(customer.created_at)}</TableCell>

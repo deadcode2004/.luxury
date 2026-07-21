@@ -7,17 +7,30 @@ use App\Http\Resources\OrderResource;
 use App\Http\Resources\ProductResource;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\User;
 use App\Services\Owner\CustomerService;
+use App\Services\UserNameLocaleService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 
 class DashboardController extends Controller
 {
-    public function __construct(private readonly CustomerService $customers) {}
+    public function __construct(
+        private readonly CustomerService $customers,
+        private readonly UserNameLocaleService $names,
+    ) {}
 
     public function __invoke(): JsonResponse
     {
-        $recent = Order::query()->with(['user', 'items'])->latest('placed_at')->limit(5)->get();
+        $recent = Order::query()->with(['user', 'items'])->latest('placed_at')->limit(5)->get()
+            ->map(function (Order $order) {
+                if ($order->relationLoaded('user') && $order->user instanceof User) {
+                    $order->setRelation('user', $this->names->ensureLocales($order->user));
+                }
+
+                return $order;
+            });
+
         $lowStock = Product::query()
             ->with('category')
             ->where('is_active', true)

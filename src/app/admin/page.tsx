@@ -20,7 +20,7 @@ import {
   fetchOwnerDashboard,
   type DashboardData,
 } from "@/lib/api/owner";
-import { pickLocale } from "@/lib/i18n/localeText";
+import { displayPersonName, pickLocale } from "@/lib/i18n/localeText";
 import { useAutoFetch } from "@/hooks/useAutoFetch";
 
 export default function AdminOverview() {
@@ -175,7 +175,7 @@ export default function AdminOverview() {
                         {order.number}
                       </td>
                       <td className="py-3 text-gray-600">
-                        {order.customer?.name || order.customer?.email || "—"}
+                        {displayPersonName(order.customer, language)}
                       </td>
                       <td className="py-3 font-bold">
                         {order.total.toLocaleString()} {order.currency || "EGP"}

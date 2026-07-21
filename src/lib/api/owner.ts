@@ -50,13 +50,22 @@ export type ApiCoupon = {
   status: string;
 };
 
+export type ApiPersonName = {
+  id?: number;
+  name?: string | null;
+  name_i18n?: Partial<LocaleText> | null;
+  first_name_i18n?: Partial<LocaleText> | null;
+  last_name_i18n?: Partial<LocaleText> | null;
+  email?: string | null;
+};
+
 export type ApiOrder = {
   id: number;
   number: string;
   status: string;
   total: number;
   currency?: string;
-  customer?: { id: number; name?: string; email?: string } | null;
+  customer?: ApiPersonName | null;
   items_count?: number;
   placed_at?: string | null;
 };
@@ -197,7 +206,7 @@ export async function updateOwnerOrderStatus(token: string, id: number, status: 
   });
 }
 
-export type ApiCustomer = {
+export type ApiCustomer = ApiPersonName & {
   id: number;
   name: string;
   email: string;

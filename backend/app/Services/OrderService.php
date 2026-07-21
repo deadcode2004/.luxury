@@ -21,6 +21,7 @@ class OrderService
         private readonly CartService $cartService,
         private readonly CartTotalsCalculator $totals,
         private readonly RealtimeHub $realtime,
+        private readonly UserNameLocaleService $names,
     ) {}
 
     /**
@@ -166,13 +167,19 @@ class OrderService
             });
         }
 
-        return $query->latest('placed_at')->paginate(min((int) ($filters['per_page'] ?? 15), 50));
+        $page = $query->latest('placed_at')->paginate(min((int) ($filters['per_page'] ?? 15), 50));
+        $page->setCollection(
+            $page->getCollection()->map(fn (Order $order) => $this->withLocalizedCustomer($order))
+        );
+
+        return $page;
     }
 
     public function updateStatus(Order $order, OrderStatus $status): Order
     {
         $order->update(['status' => $status]);
         $fresh = $order->fresh(['items', 'user']);
+        $fresh = $this->withLocalizedCustomer($fresh);
         $this->realtime->ordersChanged('status_updated', [
             'id' => $fresh->id,
             'number' => $fresh->number,
@@ -180,6 +187,15 @@ class OrderService
         ]);
 
         return $fresh;
+    }
+
+    private function withLocalizedCustomer(Order $order): Order
+    {
+        if ($order->relationLoaded('user') && $order->user instanceof User) {
+            $order->setRelation('user', $this->names->ensureLocales($order->user));
+        }
+
+        return $order;
     }
 
     private function generateOrderNumber(): string
