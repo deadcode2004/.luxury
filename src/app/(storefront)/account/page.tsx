@@ -55,6 +55,7 @@ export default function AccountPage() {
     updateProfile,
     changePassword,
     updateNotifications,
+    refreshProfile,
     logout,
     ready,
   } = useAuth();
@@ -109,6 +110,11 @@ export default function AccountPage() {
     notify_stock: true,
     notify_marketing: false,
   });
+
+  useEffect(() => {
+    if (!ready || !user || activeTab !== "profile") return;
+    void refreshProfile();
+  }, [ready, user?.id, activeTab, refreshProfile]);
 
   useEffect(() => {
     try {
