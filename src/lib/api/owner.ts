@@ -62,11 +62,20 @@ export type ApiPersonName = {
 export type ApiShippingAddress = {
   full_address?: string;
   city?: string;
+  city_id?: number | null;
+  city_name_en?: string | null;
+  city_name_ar?: string | null;
   zip_code?: string | null;
+  country_id?: number | null;
   country_code?: string;
   country_name?: string;
+  country_name_en?: string | null;
+  country_name_ar?: string | null;
+  state_id?: number | null;
   state_code?: string | null;
   state_name?: string | null;
+  state_name_en?: string | null;
+  state_name_ar?: string | null;
   phone_country_code?: string | null;
   phone_dial_code?: string | null;
 };

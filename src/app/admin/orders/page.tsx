@@ -315,10 +315,23 @@ export default function AdminOrders() {
                 </p>
                 <p className="text-gray-500">
                   {[
-                    viewOrder.shipping_address.city,
-                    viewOrder.shipping_address.state_name,
-                    viewOrder.shipping_address.country_name ||
-                      viewOrder.shipping_address.country_code,
+                    language === "ar"
+                      ? viewOrder.shipping_address.city_name_ar ||
+                        viewOrder.shipping_address.city
+                      : viewOrder.shipping_address.city_name_en ||
+                        viewOrder.shipping_address.city,
+                    language === "ar"
+                      ? viewOrder.shipping_address.state_name_ar ||
+                        viewOrder.shipping_address.state_name
+                      : viewOrder.shipping_address.state_name_en ||
+                        viewOrder.shipping_address.state_name,
+                    language === "ar"
+                      ? viewOrder.shipping_address.country_name_ar ||
+                        viewOrder.shipping_address.country_name ||
+                        viewOrder.shipping_address.country_code
+                      : viewOrder.shipping_address.country_name_en ||
+                        viewOrder.shipping_address.country_name ||
+                        viewOrder.shipping_address.country_code,
                     viewOrder.shipping_address.zip_code,
                   ]
                     .filter(Boolean)

@@ -4,7 +4,10 @@ namespace Tests\Feature\Api;
 
 use App\Enums\UserRole;
 use App\Models\Category;
+use App\Models\City;
+use App\Models\Country;
 use App\Models\Product;
+use App\Models\State;
 use App\Models\User;
 use App\Services\CartService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -15,8 +18,40 @@ class CheckoutStockTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * @return array{country: Country, state: State, city: City}
+     */
+    private function seedGeo(string $iso2, string $en, string $ar, string $cityEn = 'Capital', string $cityAr = 'العاصمة'): array
+    {
+        $country = Country::query()->create([
+            'iso2' => $iso2,
+            'name_en' => $en,
+            'name_ar' => $ar,
+            'phonecode' => $iso2 === 'SA' ? '966' : '20',
+            'flag' => $iso2 === 'SA' ? '🇸🇦' : '🇪🇬',
+            'is_active' => true,
+        ]);
+        $state = State::query()->create([
+            'country_id' => $country->id,
+            'code' => '01',
+            'name_en' => $en.' State',
+            'name_ar' => $ar.' - محافظة',
+            'is_active' => true,
+        ]);
+        $city = City::query()->create([
+            'country_id' => $country->id,
+            'state_id' => $state->id,
+            'name_en' => $cityEn,
+            'name_ar' => $cityAr,
+            'is_active' => true,
+        ]);
+
+        return compact('country', 'state', 'city');
+    }
+
     public function test_checkout_decrements_stock_and_clears_cart(): void
     {
+        $geo = $this->seedGeo('SA', 'Saudi Arabia', 'المملكة العربية السعودية', 'Riyadh', 'الرياض');
         $user = User::factory()->create(['role' => UserRole::User]);
         $category = Category::query()->create([
             'code' => 'c1',
@@ -46,9 +81,9 @@ class CheckoutStockTest extends TestCase
             'email' => 'ahmed@example.com',
             'shipping_address' => [
                 'full_address' => 'Olaya St',
-                'city' => 'Riyadh',
-                'country_code' => 'SA',
-                'country_name' => 'Saudi Arabia',
+                'country_id' => $geo['country']->id,
+                'state_id' => $geo['state']->id,
+                'city_id' => $geo['city']->id,
             ],
         ]);
 
@@ -57,10 +92,12 @@ class CheckoutStockTest extends TestCase
         $this->assertDatabaseCount('cart_items', 0);
         $this->assertDatabaseCount('orders', 1);
         $this->assertDatabaseCount('order_items', 1);
+        $this->assertSame($geo['city']->id, data_get($response->json('data.shipping_address'), 'city_id'));
     }
 
     public function test_checkout_fails_when_stock_insufficient(): void
     {
+        $geo = $this->seedGeo('SA', 'Saudi Arabia', 'المملكة العربية السعودية', 'Riyadh', 'الرياض');
         $user = User::factory()->create(['role' => UserRole::User]);
         $category = Category::query()->create([
             'code' => 'c1',
@@ -93,9 +130,9 @@ class CheckoutStockTest extends TestCase
             'email' => 'ahmed@example.com',
             'shipping_address' => [
                 'full_address' => 'Olaya St',
-                'city' => 'Riyadh',
-                'country_code' => 'SA',
-                'country_name' => 'Saudi Arabia',
+                'country_id' => $geo['country']->id,
+                'state_id' => $geo['state']->id,
+                'city_id' => $geo['city']->id,
             ],
         ])->assertStatus(422)
             ->assertJsonPath('code', 'INSUFFICIENT_STOCK');
@@ -106,6 +143,7 @@ class CheckoutStockTest extends TestCase
 
     public function test_guest_checkout_creates_order_without_user(): void
     {
+        $geo = $this->seedGeo('EG', 'Egypt', 'مصر', 'Cairo', 'القاهرة');
         $category = Category::query()->create([
             'code' => 'c1',
             'name' => ['ar' => 'أ', 'en' => 'A'],
@@ -134,9 +172,9 @@ class CheckoutStockTest extends TestCase
             ],
             'shipping_address' => [
                 'full_address' => 'Nile St',
-                'city' => 'Cairo',
-                'country_code' => 'EG',
-                'country_name' => 'Egypt',
+                'country_id' => $geo['country']->id,
+                'state_id' => $geo['state']->id,
+                'city_id' => $geo['city']->id,
             ],
         ]);
 

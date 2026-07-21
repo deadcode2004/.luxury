@@ -23,6 +23,7 @@ class OrderService
         private readonly CartTotalsCalculator $totals,
         private readonly RealtimeHub $realtime,
         private readonly UserNameLocaleService $names,
+        private readonly GeoService $geo,
     ) {}
 
     /**
@@ -77,6 +78,8 @@ class OrderService
             ]);
             $totals = $this->totals->calculate($pricedLines, $paymentMethod);
 
+            $shippingAddress = $this->geo->resolveShippingAddress($payload['shipping_address']);
+
             $order = Order::query()->create([
                 'number' => $this->generateOrderNumber(),
                 'user_id' => $user?->id,
@@ -89,7 +92,7 @@ class OrderService
                 'discount' => $totals['discount'],
                 'total' => $totals['total'],
                 'currency' => 'EGP',
-                'shipping_address' => $payload['shipping_address'],
+                'shipping_address' => $shippingAddress,
                 'billing_snapshot' => [
                     'first_name' => $payload['first_name'] ?? $user?->first_name,
                     'last_name' => $payload['last_name'] ?? $user?->last_name,

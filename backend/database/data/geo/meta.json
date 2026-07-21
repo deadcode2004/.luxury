@@ -1,0 +1,9 @@
+{
+  "generated_at": "2026-07-21T05:02:05.653Z",
+  "counts": {
+    "countries": 250,
+    "states": 5017,
+    "cities": 33120
+  },
+  "notes": "Bilingual geo seed. Attested Arabic preferred; phonetic Arabic used only for gaps."
+}

@@ -1,25 +1,31 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import FormField from "@/components/ui/FormField";
 import Input from "@/components/ui/Input";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
-  getCityOptions,
-  getCountryOptions,
-  getStateOptions,
-} from "@/lib/geo/locations";
+  citiesToOptions,
+  countriesToOptions,
+  fetchGeoCities,
+  fetchGeoCountries,
+  fetchGeoStates,
+  statesToOptions,
+  type GeoCity,
+  type GeoCountry,
+  type GeoState,
+} from "@/lib/geo/api";
 
 type ShippingLocationFieldsProps = {
-  countryCode: string;
-  stateCode: string;
-  city: string;
+  countryId: number | null;
+  stateId: number | null;
+  cityId: number | null;
   fullAddress: string;
   zipCode: string;
-  onCountryChange: (countryCode: string) => void;
-  onStateChange: (stateCode: string) => void;
-  onCityChange: (city: string) => void;
+  onCountryChange: (countryId: number | null, iso2: string | null) => void;
+  onStateChange: (stateId: number | null) => void;
+  onCityChange: (cityId: number | null) => void;
   onFullAddressChange: (value: string) => void;
   onZipCodeChange: (value: string) => void;
   errors?: {
@@ -31,9 +37,9 @@ type ShippingLocationFieldsProps = {
 };
 
 export default function ShippingLocationFields({
-  countryCode,
-  stateCode,
-  city,
+  countryId,
+  stateId,
+  cityId,
   fullAddress,
   zipCode,
   onCountryChange,
@@ -44,39 +50,112 @@ export default function ShippingLocationFields({
   errors,
 }: ShippingLocationFieldsProps) {
   const { language } = useLanguage();
+  const [countries, setCountries] = useState<GeoCountry[]>([]);
+  const [states, setStates] = useState<GeoState[]>([]);
+  const [cities, setCities] = useState<GeoCity[]>([]);
+  const [loadingCountries, setLoadingCountries] = useState(true);
+  const [loadingStates, setLoadingStates] = useState(false);
+  const [loadingCities, setLoadingCities] = useState(false);
 
-  const countries = useMemo(() => getCountryOptions(language), [language]);
-  const states = useMemo(
-    () => getStateOptions(countryCode, language),
-    [countryCode, language]
-  );
-  const cities = useMemo(
-    () => getCityOptions(countryCode, stateCode, language),
-    [countryCode, stateCode, language]
-  );
+  useEffect(() => {
+    let cancelled = false;
+    setLoadingCountries(true);
+    void fetchGeoCountries()
+      .then((rows) => {
+        if (!cancelled) setCountries(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setCountries([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingCountries(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  const hasStates = states.length > 0;
-  const stateRequired = hasStates;
-  const cityDisabled = !countryCode || (hasStates && !stateCode);
-  // If the selected city isn't in the monolingual list (e.g. after language
-  // switch), fall back to a text input so we never inject a mixed-language option.
-  const cityInOptions = !city || cities.some((c) => c.value === city);
-  const useCitySelect = !cityDisabled && cities.length > 0 && cityInOptions;
-  const stateInOptions = !stateCode || states.some((s) => s.value === stateCode);
+  useEffect(() => {
+    if (!countryId) {
+      setStates([]);
+      return;
+    }
+    let cancelled = false;
+    setLoadingStates(true);
+    void fetchGeoStates(countryId)
+      .then((rows) => {
+        if (!cancelled) setStates(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setStates([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingStates(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [countryId]);
+
+  useEffect(() => {
+    if (!stateId) {
+      setCities([]);
+      return;
+    }
+    let cancelled = false;
+    setLoadingCities(true);
+    void fetchGeoCities(stateId)
+      .then((rows) => {
+        if (!cancelled) setCities(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setCities([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingCities(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [stateId]);
+
+  // Labels remap instantly when language changes (same IDs / rows).
+  const countryOptions = useMemo(
+    () => countriesToOptions(countries, language),
+    [countries, language]
+  );
+  const stateOptions = useMemo(() => statesToOptions(states, language), [states, language]);
+  const cityOptions = useMemo(() => citiesToOptions(cities, language), [cities, language]);
+
+  const hasStates = stateOptions.length > 0;
+  const cityDisabled = !countryId || (hasStates && !stateId);
 
   return (
     <>
-      {/* Row: Country + State */}
       <FormField label={language === "ar" ? "الدولة" : "Country"} error={errors?.country}>
         <SearchableSelect
           key={`country-${language}`}
-          value={countryCode}
-          options={countries}
-          onChange={onCountryChange}
+          value={countryId ? String(countryId) : ""}
+          options={countryOptions}
+          onChange={(value) => {
+            const id = value ? Number(value) : null;
+            const row = countries.find((c) => c.id === id) || null;
+            onCountryChange(id, row?.iso2 || null);
+          }}
+          disabled={loadingCountries}
           error={Boolean(errors?.country)}
-          placeholder={language === "ar" ? "اختر الدولة" : "Select country"}
+          placeholder={
+            loadingCountries
+              ? language === "ar"
+                ? "جاري التحميل..."
+                : "Loading..."
+              : language === "ar"
+                ? "اختر الدولة"
+                : "Select country"
+          }
           searchPlaceholder={language === "ar" ? "ابحث عن دولة..." : "Search country..."}
           emptyLabel={language === "ar" ? "لا نتائج" : "No results"}
+          limit={250}
           aria-label={language === "ar" ? "الدولة" : "Country"}
         />
       </FormField>
@@ -86,67 +165,62 @@ export default function ShippingLocationFields({
         error={errors?.state}
       >
         <SearchableSelect
-          key={`state-${language}-${countryCode}`}
-          value={stateInOptions ? stateCode : ""}
-          options={states}
-          onChange={onStateChange}
-          disabled={!countryCode || !hasStates}
+          key={`state-${language}-${countryId || 0}`}
+          value={stateId ? String(stateId) : ""}
+          options={stateOptions}
+          onChange={(value) => onStateChange(value ? Number(value) : null)}
+          disabled={!countryId || loadingStates || !hasStates}
           error={Boolean(errors?.state)}
           placeholder={
-            !countryCode
+            !countryId
               ? language === "ar"
                 ? "اختر الدولة أولاً"
                 : "Select country first"
-              : !hasStates
+              : loadingStates
                 ? language === "ar"
-                  ? "غير متاح لهذه الدولة"
-                  : "Not available for this country"
-                : language === "ar"
-                  ? "اختر المحافظة"
-                  : "Select state"
+                  ? "جاري التحميل..."
+                  : "Loading..."
+                : !hasStates
+                  ? language === "ar"
+                    ? "غير متاح لهذه الدولة"
+                    : "Not available for this country"
+                  : language === "ar"
+                    ? "اختر المحافظة"
+                    : "Select state"
           }
           searchPlaceholder={language === "ar" ? "ابحث عن محافظة..." : "Search state..."}
           emptyLabel={language === "ar" ? "لا نتائج" : "No results"}
+          limit={400}
           aria-label={language === "ar" ? "المحافظة" : "State"}
         />
       </FormField>
 
-      {/* Row: City + Full address */}
       <FormField label={language === "ar" ? "المدينة" : "City"} error={errors?.city}>
-        {useCitySelect ? (
-          <SearchableSelect
-            key={`city-${language}-${countryCode}-${stateCode}`}
-            value={city}
-            options={cities}
-            onChange={onCityChange}
-            error={Boolean(errors?.city)}
-            placeholder={language === "ar" ? "اختر المدينة" : "Select city"}
-            searchPlaceholder={language === "ar" ? "ابحث عن مدينة..." : "Search city..."}
-            emptyLabel={language === "ar" ? "لا نتائج" : "No results"}
-            limit={200}
-            aria-label={language === "ar" ? "المدينة" : "City"}
-          />
-        ) : (
-          <Input
-            value={city}
-            disabled={cityDisabled}
-            onChange={(e) => onCityChange(e.target.value)}
-            placeholder={
-              cityDisabled
-                ? stateRequired
-                  ? language === "ar"
-                    ? "اختر المحافظة أولاً"
-                    : "Select state first"
-                  : language === "ar"
-                    ? "اختر الدولة أولاً"
-                    : "Select country first"
+        <SearchableSelect
+          key={`city-${language}-${stateId || 0}`}
+          value={cityId ? String(cityId) : ""}
+          options={cityOptions}
+          onChange={(value) => onCityChange(value ? Number(value) : null)}
+          disabled={cityDisabled || loadingCities}
+          error={Boolean(errors?.city)}
+          placeholder={
+            cityDisabled
+              ? language === "ar"
+                ? "اختر المحافظة أولاً"
+                : "Select state first"
+              : loadingCities
+                ? language === "ar"
+                  ? "جاري التحميل..."
+                  : "Loading..."
                 : language === "ar"
-                  ? "أدخل اسم المدينة"
-                  : "Enter city name"
-            }
-            className={errors?.city ? "border-red-300" : ""}
-          />
-        )}
+                  ? "اختر المدينة"
+                  : "Select city"
+          }
+          searchPlaceholder={language === "ar" ? "ابحث عن مدينة..." : "Search city..."}
+          emptyLabel={language === "ar" ? "لا نتائج" : "No results"}
+          limit={200}
+          aria-label={language === "ar" ? "المدينة" : "City"}
+        />
       </FormField>
 
       <FormField
@@ -166,7 +240,6 @@ export default function ShippingLocationFields({
         />
       </FormField>
 
-      {/* Row: Zip full width */}
       <FormField
         className="md:col-span-2"
         label={language === "ar" ? "الرمز البريدي" : "Zip / Postal Code"}

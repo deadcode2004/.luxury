@@ -26,13 +26,8 @@ import CheckoutAccountChoiceModal from "@/components/checkout/CheckoutAccountCho
 import AuthModal from "@/components/auth/AuthModal";
 import Modal from "@/components/ui/Modal";
 import { apiRequest, ApiRequestError } from "@/lib/api/client";
-import {
-  countryDisplayName,
-  getCountryByCode,
-  getStateByCode,
-  getStateOptions,
-  getCityOptions,
-} from "@/lib/geo/locations";
+import { fetchGeoCountries } from "@/lib/geo/api";
+import { getCountryByCode } from "@/lib/geo/locations";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 
 type SavedAddress = {
@@ -45,18 +40,6 @@ type SavedAddress = {
 };
 
 const GEO_SESSION_KEY = "paradise_geo_country";
-
-function findStateForCity(countryCode: string, cityName: string) {
-  const needle = cityName.trim().toLowerCase();
-  if (!needle || !countryCode) return { stateCode: "", city: cityName };
-  for (const state of getStateOptions(countryCode, "en")) {
-    const match = getCityOptions(countryCode, state.value, "en").find(
-      (c) => c.value.toLowerCase() === needle
-    );
-    if (match) return { stateCode: state.value, city: match.value };
-  }
-  return { stateCode: "", city: cityName };
-}
 
 export default function CheckoutPage() {
   const { language } = useLanguage();
@@ -84,9 +67,10 @@ export default function CheckoutPage() {
     phone_country: "SA",
     email: "",
     full_address: "",
-    country_code: "SA",
-    state_code: "",
-    city: "",
+    country_id: null as number | null,
+    country_iso2: "SA",
+    state_id: null as number | null,
+    city_id: null as number | null,
     zip_code: "",
     card_number: "",
     expiry: "",
@@ -98,40 +82,46 @@ export default function CheckoutPage() {
     [paymentMethod, totals.total]
   );
 
-  /** Detect visitor country once (geo API / session cache). */
+  /** Detect visitor country once and map ISO2 → country_id from geo API. */
   useEffect(() => {
     if (prefillsDone.current.geo) return;
     prefillsDone.current.geo = true;
 
     let cancelled = false;
-    const applyCountry = (code: string) => {
+    const applyCountryIso = async (code: string) => {
       const iso = code.toUpperCase();
-      if (!/^[A-Z]{2}$/.test(iso) || !getCountryByCode(iso)) return;
-      if (cancelled) return;
-      setForm((f) => {
-        // Only auto-fill if user hasn't started editing location/phone.
-        if (f.country_code !== "SA" && f.country_code !== "") return f;
-        if (f.state_code || f.city || f.phone.length > 4) {
+      if (!/^[A-Z]{2}$/.test(iso)) return;
+      try {
+        const countries = await fetchGeoCountries("", 300);
+        const match = countries.find((c) => c.iso2 === iso);
+        if (!match || cancelled) return;
+        setForm((f) => {
+          if (f.country_id || f.state_id || f.city_id || f.phone.length > 4) {
+            return {
+              ...f,
+              country_id: f.country_id || match.id,
+              country_iso2: f.country_iso2 || match.iso2,
+              phone_country: f.phone.length > 4 ? f.phone_country : match.iso2,
+            };
+          }
           return {
             ...f,
-            country_code: f.country_code || iso,
-            phone_country: f.phone.length > 4 ? f.phone_country : iso,
+            country_id: match.id,
+            country_iso2: match.iso2,
+            phone_country: match.iso2,
+            state_id: null,
+            city_id: null,
           };
-        }
-        return {
-          ...f,
-          country_code: iso,
-          phone_country: iso,
-          state_code: "",
-          city: "",
-        };
-      });
+        });
+      } catch {
+        // ignore
+      }
     };
 
     try {
       const cached = sessionStorage.getItem(GEO_SESSION_KEY);
       if (cached && /^[A-Z]{2}$/i.test(cached)) {
-        applyCountry(cached);
+        void applyCountryIso(cached);
         return () => {
           cancelled = true;
         };
@@ -150,7 +140,7 @@ export default function CheckoutPage() {
         } catch {
           // ignore
         }
-        applyCountry(code);
+        void applyCountryIso(code);
       })
       .catch(() => undefined);
 
@@ -167,7 +157,7 @@ export default function CheckoutPage() {
     const parts = (user.name || "").trim().split(/\s+/);
     const parsedPhone = parsePhoneNumberFromString(user.phone || "");
     const phoneE164 = parsedPhone?.number || "";
-    const phoneIso = (parsedPhone?.country || form.phone_country || form.country_code || "SA").toUpperCase();
+    const phoneIso = (parsedPhone?.country || form.phone_country || form.country_iso2 || "SA").toUpperCase();
 
     setForm((f) => ({
       ...f,
@@ -177,9 +167,9 @@ export default function CheckoutPage() {
       phone: f.phone.length > 4 ? f.phone : phoneE164 || f.phone,
       phone_country: f.phone.length > 4 ? f.phone_country : phoneIso,
     }));
-  }, [authReady, user, form.phone_country, form.country_code]);
+  }, [authReady, user, form.phone_country, form.country_iso2]);
 
-  /** Prefill default saved address when logged in. */
+  /** Prefill street/zip from saved address (city IDs come from geo dropdowns). */
   useEffect(() => {
     if (!authReady || !token || prefillsDone.current.address) return;
     prefillsDone.current.address = true;
@@ -192,16 +182,10 @@ export default function CheckoutPage() {
         if (!preferred) return;
         setForm((f) => {
           if (f.full_address.trim()) return f;
-          const country = f.country_code || "SA";
-          const located = preferred.city
-            ? findStateForCity(country, preferred.city)
-            : { stateCode: f.state_code, city: f.city };
           return {
             ...f,
             full_address: preferred.full_address || f.full_address,
             zip_code: preferred.zip_code || f.zip_code,
-            state_code: located.stateCode || f.state_code,
-            city: located.city || f.city,
           };
         });
       })
@@ -212,19 +196,19 @@ export default function CheckoutPage() {
     };
   }, [authReady, token]);
 
-  const onCountryChange = (countryCode: string) => {
+  const onCountryChange = (countryId: number | null, iso2: string | null) => {
     setForm((f) => ({
       ...f,
-      country_code: countryCode,
-      state_code: "",
-      city: "",
-      // Keep phone dial in sync when user hasn't typed a real number yet.
-      phone_country: f.phone.length > 4 ? f.phone_country : countryCode,
+      country_id: countryId,
+      country_iso2: iso2 || f.country_iso2,
+      state_id: null,
+      city_id: null,
+      phone_country: f.phone.length > 4 ? f.phone_country : iso2 || f.phone_country,
     }));
   };
 
-  const onStateChange = (stateCode: string) => {
-    setForm((f) => ({ ...f, state_code: stateCode, city: "" }));
+  const onStateChange = (stateId: number | null) => {
+    setForm((f) => ({ ...f, state_id: stateId, city_id: null }));
   };
 
   const validate = () => {
@@ -236,12 +220,9 @@ export default function CheckoutPage() {
     if (!form.email.trim() || !form.email.includes("@")) {
       next.email = language === "ar" ? "بريد غير صالح" : "Invalid email";
     }
-    if (!form.country_code) next.country = language === "ar" ? "مطلوب" : "Required";
-    const states = getStateOptions(form.country_code, language);
-    if (states.length > 0 && !form.state_code) {
-      next.state = language === "ar" ? "مطلوب" : "Required";
-    }
-    if (!form.city.trim()) next.city = language === "ar" ? "مطلوب" : "Required";
+    if (!form.country_id) next.country = language === "ar" ? "مطلوب" : "Required";
+    if (!form.state_id) next.state = language === "ar" ? "مطلوب" : "Required";
+    if (!form.city_id) next.city = language === "ar" ? "مطلوب" : "Required";
     if (!form.full_address.trim()) next.full_address = language === "ar" ? "مطلوب" : "Required";
     if (paymentMethod === "card") {
       if (form.card_number.replace(/\s/g, "").length < 12) {
@@ -266,10 +247,6 @@ export default function CheckoutPage() {
     const activeToken = authToken === undefined ? token : authToken;
     const phoneCountryIso2 = phoneCountryIso(form.phone, form.phone_country);
     const phoneCountry = getCountryByCode(phoneCountryIso2);
-    const shipCountry = getCountryByCode(form.country_code);
-    const shipState = form.state_code
-      ? getStateByCode(form.country_code, form.state_code)
-      : null;
     const phone = form.phone.trim();
 
     const items = lines
@@ -318,14 +295,9 @@ export default function CheckoutPage() {
           items,
           shipping_address: {
             full_address: form.full_address.trim(),
-            country_code: form.country_code,
-            country_name:
-              countryDisplayName(form.country_code, "en", shipCountry?.name) ||
-              shipCountry?.name ||
-              form.country_code,
-            state_code: form.state_code || null,
-            state_name: shipState?.name || null,
-            city: form.city.trim(),
+            country_id: form.country_id,
+            state_id: form.state_id,
+            city_id: form.city_id,
             zip_code: form.zip_code.trim() || null,
             phone_country_code: phoneCountryIso2,
             phone_dial_code: phoneCountry ? `+${phoneCountry.phonecode}` : null,
@@ -505,14 +477,14 @@ export default function CheckoutPage() {
                 </FormField>
 
                 <ShippingLocationFields
-                  countryCode={form.country_code}
-                  stateCode={form.state_code}
-                  city={form.city}
+                  countryId={form.country_id}
+                  stateId={form.state_id}
+                  cityId={form.city_id}
                   fullAddress={form.full_address}
                   zipCode={form.zip_code}
                   onCountryChange={onCountryChange}
                   onStateChange={onStateChange}
-                  onCityChange={(city) => setForm((f) => ({ ...f, city }))}
+                  onCityChange={(cityId) => setForm((f) => ({ ...f, city_id: cityId }))}
                   onFullAddressChange={(full_address) =>
                     setForm((f) => ({ ...f, full_address }))
                   }

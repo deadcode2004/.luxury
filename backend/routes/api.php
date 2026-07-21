@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Geo\GeoController;
 use App\Http\Controllers\Api\V1\Account\ProfileController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Cart\CartController;
@@ -44,6 +45,13 @@ Route::prefix('v1')->group(function () {
     Route::get('reviews', [ReviewController::class, 'index']);
     Route::post('reviews', [ReviewController::class, 'store'])->middleware('throttle:20,1');
     Route::get('cms', [PublicCmsController::class, 'show']);
+
+    // Public geo lookups (bilingual country → state → city).
+    Route::prefix('geo')->group(function () {
+        Route::get('countries', [GeoController::class, 'countries']);
+        Route::get('countries/{country}/states', [GeoController::class, 'states']);
+        Route::get('states/{state}/cities', [GeoController::class, 'cities']);
+    });
 
     // Public checkout (guest or authenticated via optional Sanctum).
     Route::post('checkout', [CheckoutController::class, 'store'])
