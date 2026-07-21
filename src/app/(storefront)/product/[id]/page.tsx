@@ -80,7 +80,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       <div className="container mx-auto px-4 md:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 mb-24">
           <div>
-            <ProductGallery images={images} />
+            <ProductGallery images={images} productId={product.id} />
           </div>
           <div>
             <ProductInfo

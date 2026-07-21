@@ -176,11 +176,20 @@ export default function ProductInfo({ product, onWriteReview }: ProductInfoProps
           <button
             type="button"
             onClick={() => void toggle(product.id)}
-            className={`w-14 h-14 rounded-lg flex items-center justify-center border transition-all active:scale-95 ${
+            className={`hidden lg:flex w-14 h-14 rounded-lg items-center justify-center border transition-all active:scale-95 ${
               wished
                 ? "bg-wishlist/10 border-wishlist text-wishlist"
                 : "bg-surface border-gray-100 text-gray-400 hover:border-wishlist hover:text-wishlist"
             }`}
+            aria-label={
+              wished
+                ? language === "ar"
+                  ? "إزالة من المفضلة"
+                  : "Remove from wishlist"
+                : language === "ar"
+                  ? "إضافة للمفضلة"
+                  : "Add to wishlist"
+            }
           >
             <Heart size={24} fill={wished ? "currentColor" : "none"} />
           </button>
