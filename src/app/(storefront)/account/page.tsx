@@ -105,6 +105,17 @@ export default function AccountPage() {
       return;
     }
 
+    const storageKey = `paradise:account-welcome:${user.id}`;
+    try {
+      if (sessionStorage.getItem(storageKey)) {
+        setWelcomePhase("hidden");
+        return;
+      }
+      sessionStorage.setItem(storageKey, "1");
+    } catch {
+      // Private mode / blocked storage — still show once for this mount only.
+    }
+
     setWelcomePhase("enter");
     const enterId = window.requestAnimationFrame(() => {
       window.requestAnimationFrame(() => setWelcomePhase("shown"));
