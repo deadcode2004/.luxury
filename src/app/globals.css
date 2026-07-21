@@ -15,6 +15,13 @@
   --shadow-glow: 0 4px 15px rgba(62, 147, 61, 0.1);
   --shadow-floating: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
   --shadow-soft-3d: 0 20px 40px -15px rgba(0,0,0,0.05), 0 0 10px rgba(0,0,0,0.01) inset;
+  /* Alias for repeated glass-card shadow used across storefront */
+  --shadow-card: 0 8px 30px rgb(0, 0, 0, 0.04);
+
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
 }
 
 :root {
@@ -30,6 +37,15 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Keep icon+label controls horizontal (preflight sets svg { display:block }). */
+button > svg,
+a > svg,
+[role="button"] > svg {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
 }
 
 /* تأثيرات الزجاج (Glassmorphism) */
@@ -48,10 +64,3 @@ body {
   backface-visibility: hidden;
   isolation: isolate;
 }
-
-.dark .glass {
-  background: rgba(18, 18, 18, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-

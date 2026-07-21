@@ -1,119 +1,699 @@
 "use client";
 
-import React from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Image as ImageIcon, Type, Layout, Save } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/components/ui/Toast";
+import { Megaphone, Save, Layout, Plus, Trash2, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import Card from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
+import FormField from "@/components/ui/FormField";
+import ImageUploadField from "@/components/admin/ImageUploadField";
+import AdminCmsSocialContactCard from "@/components/admin/AdminCmsSocialContactCard";
+import { LocaleInput, LocaleTextarea } from "@/components/admin/LocaleField";
+import {
+  ApiRequestError,
+  fetchOwnerCms,
+  updateOwnerCms,
+  type CmsStorefront,
+} from "@/lib/api/owner";
+import {
+  emptyHeroSlide,
+  HERO_ACTION_OPTIONS,
+  type HeroCtaActionType,
+  type HeroSlide,
+} from "@/lib/cms/hero";
+import { emptyCmsContact, emptyCmsSocial } from "@/lib/cms/footer";
+import { pickLocale } from "@/lib/i18n/localeText";
+import { useAutoFetch } from "@/hooks/useAutoFetch";
+import { useRealtime } from "@/contexts/RealtimeContext";
+
+const emptyCms = (): CmsStorefront => ({
+  hero: {
+    slides: [emptyHeroSlide({ action: { type: "shop_all" } })],
+  },
+  announcement: {
+    enabled: true,
+    text: { ar: "", en: "" },
+  },
+  social: emptyCmsSocial(),
+  contact: emptyCmsContact(),
+});
+
+function clearSlideEn(slide: HeroSlide): HeroSlide {
+  return {
+    ...slide,
+    heading: { ...slide.heading, en: "" },
+    subtitle: { ...slide.subtitle, en: "" },
+    description: { ...slide.description, en: "" },
+    cta: { ...slide.cta, en: "" },
+  };
+}
 
 export default function AdminCMS() {
   const { language } = useLanguage();
+  const { token } = useAuth();
+  const { toast } = useToast();
+  const { signalLocal } = useRealtime();
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [hasFetched, setHasFetched] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [form, setForm] = useState<CmsStorefront>(emptyCms);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const tabsRef = useRef<HTMLDivElement>(null);
+
+  const selectSlide = (index: number) => {
+    setActiveSlide(index);
+    // Keep the active tab visible inside the horizontal scroller.
+    requestAnimationFrame(() => {
+      const el = tabsRef.current;
+      const btn = el?.querySelector<HTMLElement>(`[data-slide-tab="${index}"]`);
+      btn?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    });
+  };
+
+  const load = useCallback(async (options?: { silent?: boolean }) => {
+    if (!token) return;
+    if (!options?.silent) setLoading(true);
+    try {
+      const data = await fetchOwnerCms(token);
+      const slides = data.hero?.slides?.length
+        ? data.hero.slides
+        : emptyCms().hero.slides;
+      setForm({
+        ...emptyCms(),
+        ...data,
+        hero: { slides },
+        social: { ...emptyCmsSocial(), ...(data.social ?? {}) },
+        contact: {
+          ...emptyCmsContact(),
+          ...(data.contact ?? {}),
+          address: {
+            ...emptyCmsContact().address,
+            ...(data.contact?.address ?? {}),
+            text: {
+              ar: data.contact?.address?.text?.ar ?? "",
+              en: data.contact?.address?.text?.en ?? "",
+            },
+          },
+          phones: {
+            enabled: Boolean(data.contact?.phones?.enabled),
+            numbers:
+              data.contact?.phones?.numbers?.length
+                ? data.contact.phones.numbers
+                : [""],
+          },
+          hours: {
+            ...emptyCmsContact().hours,
+            ...(data.contact?.hours ?? {}),
+            text: {
+              ar: data.contact?.hours?.text?.ar ?? "",
+              en: data.contact?.hours?.text?.en ?? "",
+            },
+          },
+          email: {
+            enabled: Boolean(data.contact?.email?.enabled),
+            value: data.contact?.email?.value ?? "",
+          },
+          map: {
+            enabled: Boolean(data.contact?.map?.enabled),
+            embedUrl: data.contact?.map?.embedUrl ?? "",
+          },
+        },
+      });
+      setActiveSlide(0);
+    } catch (err) {
+      toast(
+        err instanceof ApiRequestError
+          ? err.message
+          : language === "ar"
+            ? "تعذر تحميل المحتوى"
+            : "Failed to load CMS",
+        "danger"
+      );
+    } finally {
+      if (!options?.silent) setLoading(false);
+      setHasFetched(true);
+    }
+  }, [token, language, toast]);
+
+  useAutoFetch(load, { domains: ["cms"] });
+
+  const updateSlide = (index: number, patch: Partial<HeroSlide>, clearEn = false) => {
+    setForm((f) => {
+      const slides = f.hero.slides.map((s, i) => {
+        if (i !== index) return s;
+        const next = { ...s, ...patch };
+        return clearEn ? clearSlideEn(next) : next;
+      });
+      return { ...f, hero: { slides } };
+    });
+  };
+
+  const updateSlideLocale = (
+    index: number,
+    field: "heading" | "subtitle" | "description" | "cta",
+    ar: string
+  ) => {
+    setForm((f) => {
+      const slides = f.hero.slides.map((s, i) => {
+        if (i !== index) return s;
+        return { ...s, [field]: { ar, en: "" } };
+      });
+      return { ...f, hero: { slides } };
+    });
+  };
+
+  const addSlide = () => {
+    setForm((f) => {
+      if (f.hero.slides.length >= 10) return f;
+      return {
+        ...f,
+        hero: { slides: [...f.hero.slides, emptyHeroSlide({ action: { type: "shop_all" } })] },
+      };
+    });
+    setActiveSlide((i) => {
+      const next = form.hero.slides.length;
+      return next >= 10 ? i : next;
+    });
+    requestAnimationFrame(() => {
+      const el = tabsRef.current;
+      if (el) el.scrollTo({ left: el.scrollWidth, behavior: "smooth" });
+    });
+  };
+
+  const removeSlide = (index: number) => {
+    setForm((f) => {
+      if (f.hero.slides.length <= 1) return f;
+      const slides = f.hero.slides.filter((_, i) => i !== index);
+      return { ...f, hero: { slides } };
+    });
+    const nextIndex = Math.max(0, Math.min(activeSlide, form.hero.slides.length - 2));
+    selectSlide(nextIndex);
+  };
+
+  const moveSlide = (index: number, dir: -1 | 1) => {
+    setForm((f) => {
+      const target = index + dir;
+      if (target < 0 || target >= f.hero.slides.length) return f;
+      const slides = [...f.hero.slides];
+      const tmp = slides[index];
+      slides[index] = slides[target];
+      slides[target] = tmp;
+      return { ...f, hero: { slides } };
+    });
+    selectSlide(index + dir);
+  };
+
+  const save = async () => {
+    if (!token) return;
+    const next: Record<string, string> = {};
+    form.hero.slides.forEach((slide, i) => {
+      if (!slide.heading.ar.trim()) {
+        next[`slide-${i}-heading`] =
+          language === "ar" ? `عنوان الشريحة ${i + 1} مطلوب` : `Slide ${i + 1} heading required`;
+      }
+      if (!slide.image.trim()) {
+        next[`slide-${i}-image`] =
+          language === "ar" ? `صورة الشريحة ${i + 1} مطلوبة` : `Slide ${i + 1} image required`;
+      }
+      if (slide.action.type === "custom" && !slide.action.href?.trim()) {
+        next[`slide-${i}-href`] =
+          language === "ar" ? `رابط الشريحة ${i + 1} مطلوب` : `Slide ${i + 1} link required`;
+      }
+    });
+    if (form.announcement.enabled && !form.announcement.text.ar.trim()) {
+      next.announcementAr = language === "ar" ? "نص الإعلان مطلوب" : "Announcement required";
+    }
+    setErrors(next);
+    if (Object.keys(next).length) {
+      toast(
+        language === "ar" ? "يرجى تعبئة الحقول المطلوبة" : "Please fill required fields",
+        "warning"
+      );
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const payload: CmsStorefront = {
+        ...form,
+        hero: {
+          slides: form.hero.slides.map((s) => clearSlideEn(s)),
+        },
+        announcement: {
+          ...form.announcement,
+          text: { ar: form.announcement.text.ar, en: "" },
+        },
+        contact: {
+          ...form.contact,
+          address: {
+            ...form.contact.address,
+            text: { ar: form.contact.address.text.ar, en: "" },
+          },
+          hours: {
+            ...form.contact.hours,
+            text: { ar: form.contact.hours.text.ar, en: "" },
+          },
+          phones: {
+            ...form.contact.phones,
+            numbers: form.contact.phones.numbers.map((n) => n.trim()).filter(Boolean).length
+              ? form.contact.phones.numbers.map((n) => n.trim()).filter(Boolean)
+              : [""],
+          },
+        },
+      };
+      const saved = await updateOwnerCms(token, payload);
+      setForm({
+        ...emptyCms(),
+        ...saved,
+        hero: { slides: saved.hero?.slides?.length ? saved.hero.slides : form.hero.slides },
+        social: { ...emptyCmsSocial(), ...(saved.social ?? {}) },
+        contact: {
+          ...emptyCmsContact(),
+          ...(saved.contact ?? {}),
+          address: {
+            ...emptyCmsContact().address,
+            ...(saved.contact?.address ?? {}),
+            text: {
+              ar: saved.contact?.address?.text?.ar ?? "",
+              en: saved.contact?.address?.text?.en ?? "",
+            },
+          },
+          phones: {
+            enabled: Boolean(saved.contact?.phones?.enabled),
+            numbers: saved.contact?.phones?.numbers?.length
+              ? saved.contact.phones.numbers
+              : [""],
+          },
+          hours: {
+            ...emptyCmsContact().hours,
+            ...(saved.contact?.hours ?? {}),
+            text: {
+              ar: saved.contact?.hours?.text?.ar ?? "",
+              en: saved.contact?.hours?.text?.en ?? "",
+            },
+          },
+          email: {
+            enabled: Boolean(saved.contact?.email?.enabled),
+            value: saved.contact?.email?.value ?? "",
+          },
+          map: {
+            enabled: Boolean(saved.contact?.map?.enabled),
+            embedUrl: saved.contact?.map?.embedUrl ?? "",
+          },
+        },
+      });
+      signalLocal(["cms"]);
+      toast(language === "ar" ? "✔ تم حفظ محتوى المتجر" : "✔ Store content saved", "success");
+    } catch (err) {
+      toast(err instanceof ApiRequestError ? err.message : "Save failed", "danger");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading || !hasFetched) {
+    return (
+      <div className="py-20 text-center text-gray-400">
+        {language === "ar" ? "جاري التحميل..." : "Loading..."}
+      </div>
+    );
+  }
+
+  const slide = form.hero.slides[activeSlide] ?? form.hero.slides[0];
 
   return (
-    <div className="flex flex-col gap-8">
-      
-      {/* Header */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-secondary mb-1">
-            {language === "ar" ? "إدارة محتوى المتجر" : "Store Content Management"}
+    <div className="flex flex-col gap-4 sm:gap-6 w-full min-w-0">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 w-full min-w-0">
+        <div className="min-w-0">
+          <h2 className="text-xl sm:text-2xl font-bold text-secondary tracking-tight">
+            {language === "ar" ? "محتوى المتجر" : "Store Content"}
           </h2>
-          <p className="text-gray-500 text-sm">
-            {language === "ar" ? "تعديل النصوص والصور في الصفحة الرئيسية" : "Edit texts and images on the home page"}
+          <p className="text-sm text-gray-500 mt-1">
+            {language === "ar"
+              ? "شرائح البطل والشريط الإعلاني — عربي فقط مع ترجمة تلقائية"
+              : "Hero slides and announcement — Arabic only with auto-translation"}
           </p>
         </div>
-        <button className="flex items-center gap-2 px-6 py-3 bg-secondary text-white rounded-xl text-sm font-bold hover:bg-primary hover:text-secondary transition-all w-full sm:w-auto justify-center shadow-md">
+        <Button
+          variant="secondary"
+          size="md"
+          loading={saving}
+          onClick={() => void save()}
+          className="w-full sm:w-auto shrink-0"
+        >
           <Save size={18} />
-          {language === "ar" ? "حفظ جميع التغييرات" : "Save All Changes"}
-        </button>
+          {language === "ar" ? "حفظ التغييرات" : "Save changes"}
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Left Column: Form Sections */}
-        <div className="lg:col-span-2 flex flex-col gap-6">
-          
-          {/* Hero Section Edit */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="bg-gray-50 p-4 border-b border-gray-100 flex items-center gap-3">
-              <Layout size={20} className="text-primary" />
-              <h3 className="font-bold text-secondary">
-                {language === "ar" ? "واجهة العرض الرئيسية (Hero Section)" : "Hero Section"}
+      <section className="w-full min-w-0 rounded-2xl sm:rounded-3xl border border-surface bg-white/70 overflow-hidden">
+        <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-surface/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-background/60">
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Layout size={18} />
+            </span>
+            <div className="min-w-0">
+              <h3 className="font-bold text-secondary text-sm sm:text-base">
+                {language === "ar" ? "قسم البطل (Hero)" : "Hero section"}
               </h3>
+              <p className="text-xs text-gray-400">
+                {language === "ar"
+                  ? "حتى 10 شرائح — لكل صورة عنوان وزر وإجراء مستقل"
+                  : "Up to 10 slides — each with its own copy and CTA action"}
+              </p>
             </div>
-            
-            <div className="p-6 flex flex-col gap-6">
-              <div>
-                <label className="block text-sm font-bold text-gray-600 mb-2">{language === "ar" ? "العنوان الرئيسي (عربي)" : "Main Heading (Arabic)"}</label>
-                <input type="text" defaultValue="اكتشف جوهر الفخامة" className="w-full bg-gray-50 border border-gray-200 rounded-lg h-12 px-4 focus:outline-none focus:border-primary transition-colors" />
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="shrink-0 w-full sm:w-auto"
+            onClick={addSlide}
+            disabled={form.hero.slides.length >= 10}
+          >
+            <Plus size={16} />
+            {language === "ar" ? "إضافة شريحة" : "Add slide"}
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-12 xl:items-stretch w-full min-w-0">
+          {/* Hero editor — full width until xl */}
+          <div className="xl:col-span-8 p-3 sm:p-5 lg:p-6 flex flex-col gap-4 sm:gap-5 min-w-0 w-full">
+            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 w-full">
+              <button
+                type="button"
+                onClick={() => {
+                  if (activeSlide <= 0) return;
+                  selectSlide(activeSlide - 1);
+                }}
+                disabled={activeSlide <= 0}
+                className="shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-full border border-surface bg-background text-secondary/70 hover:border-primary/40 hover:text-primary transition-colors disabled:opacity-40 disabled:pointer-events-none"
+                aria-label={language === "ar" ? "الشريحة السابقة" : "Previous slide"}
+              >
+                {language === "ar" ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+              </button>
+
+              <div
+                ref={tabsRef}
+                className="flex-1 min-w-0 flex items-center gap-2 overflow-x-auto overscroll-x-contain scroll-smooth snap-x snap-mandatory py-1 px-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              >
+                {form.hero.slides.map((s, i) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    data-slide-tab={i}
+                    onClick={() => selectSlide(i)}
+                    className={`snap-start shrink-0 px-3 py-1.5 rounded-full text-xs font-bold border transition-colors whitespace-nowrap ${
+                      i === activeSlide
+                        ? "bg-primary text-background border-primary"
+                        : "bg-background border-surface text-secondary/70 hover:border-primary/40"
+                    }`}
+                  >
+                    {language === "ar" ? `شريحة ${i + 1}` : `Slide ${i + 1}`}
+                  </button>
+                ))}
               </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-600 mb-2">{language === "ar" ? "العنوان الرئيسي (إنجليزي)" : "Main Heading (English)"}</label>
-                <input type="text" defaultValue="Discover the Essence of Luxury" className="w-full bg-gray-50 border border-gray-200 rounded-lg h-12 px-4 focus:outline-none focus:border-primary transition-colors text-start dir-ltr" />
-              </div>
-              
-              <div className="border-t border-gray-100 pt-6 mt-2">
-                <label className="block text-sm font-bold text-gray-600 mb-2 flex items-center gap-2">
-                  <ImageIcon size={16} />
-                  {language === "ar" ? "صورة الخلفية" : "Background Image"}
-                </label>
-                <div className="w-full h-40 bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center text-gray-400 hover:border-primary hover:text-primary transition-colors cursor-pointer">
-                  <ImageIcon size={32} className="mb-2" />
-                  <span className="text-sm font-medium">{language === "ar" ? "اضغط لرفع صورة جديدة" : "Click to upload new image"}</span>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (activeSlide >= form.hero.slides.length - 1) return;
+                  selectSlide(activeSlide + 1);
+                }}
+                disabled={activeSlide >= form.hero.slides.length - 1}
+                className="shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-full border border-surface bg-background text-secondary/70 hover:border-primary/40 hover:text-primary transition-colors disabled:opacity-40 disabled:pointer-events-none"
+                aria-label={language === "ar" ? "الشريحة التالية" : "Next slide"}
+              >
+                {language === "ar" ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+              </button>
+            </div>
+
+            {slide ? (
+              <div
+                key={slide.id}
+                className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 min-w-0 w-full"
+              >
+                <div className="lg:col-span-4 flex flex-col gap-3 min-w-0 w-full">
+                  <FormField
+                    label={language === "ar" ? "صورة الشريحة" : "Slide image"}
+                    error={errors[`slide-${activeSlide}-image`]}
+                  >
+                    <ImageUploadField
+                      value={slide.image}
+                      onChange={(url) => updateSlide(activeSlide, { image: url })}
+                      folder="cms"
+                      error={errors[`slide-${activeSlide}-image`]}
+                      className="[&_.upload-frame]:max-h-52 sm:[&_.upload-frame]:max-h-64 lg:[&_.upload-frame]:max-h-72"
+                    />
+                  </FormField>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={activeSlide <= 0}
+                      onClick={() => selectSlide(activeSlide - 1)}
+                      aria-label={language === "ar" ? "الشريحة السابقة" : "Previous slide"}
+                      title={language === "ar" ? "الشريحة السابقة" : "Previous slide"}
+                    >
+                      {language === "ar" ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+                    </Button>
+                    <span className="text-xs font-bold text-secondary/60 tabular-nums px-1">
+                      {activeSlide + 1} / {form.hero.slides.length}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={activeSlide >= form.hero.slides.length - 1}
+                      onClick={() => selectSlide(activeSlide + 1)}
+                      aria-label={language === "ar" ? "الشريحة التالية" : "Next slide"}
+                      title={language === "ar" ? "الشريحة التالية" : "Next slide"}
+                    >
+                      {language === "ar" ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={activeSlide === 0}
+                      onClick={() => moveSlide(activeSlide, -1)}
+                      aria-label={language === "ar" ? "نقل الشريحة لأعلى" : "Move slide up"}
+                      title={language === "ar" ? "نقل الشريحة لأعلى" : "Move slide up"}
+                    >
+                      <ChevronUp size={16} />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={activeSlide >= form.hero.slides.length - 1}
+                      onClick={() => moveSlide(activeSlide, 1)}
+                      aria-label={language === "ar" ? "نقل الشريحة لأسفل" : "Move slide down"}
+                      title={language === "ar" ? "نقل الشريحة لأسفل" : "Move slide down"}
+                    >
+                      <ChevronDown size={16} />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-500 ms-auto"
+                      disabled={form.hero.slides.length <= 1}
+                      onClick={() => removeSlide(activeSlide)}
+                    >
+                      <Trash2 size={16} />
+                      {language === "ar" ? "حذف" : "Delete"}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-8 flex flex-col gap-3 sm:gap-4 min-w-0 w-full">
+                  <p className="text-xs text-secondary/50">
+                    {language === "ar"
+                      ? "اكتب بالعربية — الترجمة الإنجليزية تُحفظ تلقائياً. بدّل لغة اللوحة لعرضها في نفس الحقول."
+                      : "Edit in Arabic — English auto-saves on submit. Switch dashboard language to see it in the same fields."}
+                  </p>
+                  <FormField
+                    label={language === "ar" ? "العنوان" : "Heading"}
+                    error={errors[`slide-${activeSlide}-heading`]}
+                  >
+                    <LocaleInput
+                      ar={slide.heading.ar}
+                      en={slide.heading.en}
+                      onArChange={(ar) => updateSlideLocale(activeSlide, "heading", ar)}
+                    />
+                  </FormField>
+                  <FormField label={language === "ar" ? "العنوان الفرعي" : "Subtitle"}>
+                    <LocaleInput
+                      ar={slide.subtitle.ar}
+                      en={slide.subtitle.en}
+                      onArChange={(ar) => updateSlideLocale(activeSlide, "subtitle", ar)}
+                    />
+                  </FormField>
+                  <FormField label={language === "ar" ? "الوصف" : "Description"}>
+                    <LocaleTextarea
+                      rows={3}
+                      ar={slide.description.ar}
+                      en={slide.description.en}
+                      onArChange={(ar) => updateSlideLocale(activeSlide, "description", ar)}
+                    />
+                  </FormField>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full min-w-0">
+                    <FormField label={language === "ar" ? "نص الزر" : "Button text"}>
+                      <LocaleInput
+                        ar={slide.cta.ar}
+                        en={slide.cta.en}
+                        onArChange={(ar) => updateSlideLocale(activeSlide, "cta", ar)}
+                      />
+                    </FormField>
+                    <FormField label={language === "ar" ? "إجراء الزر" : "Button action"}>
+                      <Select
+                        className="h-12"
+                        value={slide.action.type}
+                        onChange={(e) =>
+                          updateSlide(activeSlide, {
+                            action: {
+                              type: e.target.value as HeroCtaActionType,
+                              href: slide.action.href,
+                            },
+                          })
+                        }
+                      >
+                        {HERO_ACTION_OPTIONS.map((opt) => (
+                          <option key={opt.type} value={opt.type}>
+                            {opt.label[language]}
+                          </option>
+                        ))}
+                      </Select>
+                    </FormField>
+                  </div>
+                  {slide.action.type === "custom" ? (
+                    <FormField
+                      label={language === "ar" ? "الرابط المخصص" : "Custom link"}
+                      error={errors[`slide-${activeSlide}-href`]}
+                    >
+                      <Input
+                        className="dir-ltr text-start"
+                        placeholder="/shop or https://..."
+                        value={slide.action.href || ""}
+                        onChange={(e) =>
+                          updateSlide(activeSlide, {
+                            action: { type: "custom", href: e.target.value },
+                          })
+                        }
+                      />
+                    </FormField>
+                  ) : (
+                    <p className="text-xs text-secondary/45">
+                      {
+                        HERO_ACTION_OPTIONS.find((o) => o.type === slide.action.type)?.description[
+                          language
+                        ]
+                      }
+                    </p>
+                  )}
                 </div>
               </div>
-            </div>
+            ) : null}
           </div>
 
-          {/* Announcement Bar Edit */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="bg-gray-50 p-4 border-b border-gray-100 flex items-center gap-3">
-              <Type size={20} className="text-primary" />
-              <h3 className="font-bold text-secondary">
-                {language === "ar" ? "الشريط الإعلاني" : "Announcement Bar"}
-              </h3>
-            </div>
-            
-            <div className="p-6 flex flex-col gap-6">
-              <div className="flex items-center gap-4 mb-2">
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" value="" className="sr-only peer" defaultChecked />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] rtl:after:right-[2px] rtl:after:left-auto after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                  <span className="ms-3 text-sm font-bold text-gray-600">{language === "ar" ? "تفعيل الشريط" : "Enable Bar"}</span>
-                </label>
+          {/* Announcement: stacked under hero on phones/tablets, beside on xl+ */}
+          <aside className="xl:col-span-4 min-w-0 w-full border-t xl:border-t-0 xl:border-s border-surface bg-background/50 flex flex-col">
+            <div className="px-3 sm:px-5 py-3 sm:py-4 border-b border-surface/70 flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3 min-w-0">
+                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent/15 text-accent">
+                  <Megaphone size={18} />
+                </span>
+                <div className="min-w-0">
+                  <h3 className="font-bold text-secondary text-sm sm:text-base">
+                    {language === "ar" ? "الشريط الإعلاني" : "Announcement"}
+                  </h3>
+                  <p className="text-[11px] text-gray-400 leading-snug mt-0.5">
+                    {language === "ar"
+                      ? "عربي فقط — ترجمة وتحويل العملة تلقائياً"
+                      : "Arabic only — auto translate & currency"}
+                  </p>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-600 mb-2">{language === "ar" ? "نص الإعلان" : "Announcement Text"}</label>
-                <input type="text" defaultValue="شحن مجاني للطلبات فوق 500 ريال" className="w-full bg-gray-50 border border-gray-200 rounded-lg h-12 px-4 focus:outline-none focus:border-primary transition-colors" />
-              </div>
+
+              <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={form.announcement.enabled}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      announcement: { ...f.announcement, enabled: e.target.checked },
+                    }))
+                  }
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] rtl:after:right-[2px] rtl:after:left-auto after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
+              </label>
             </div>
-          </div>
 
+            <div className="p-3 sm:p-5 flex flex-col gap-4 flex-1 w-full min-w-0">
+              <FormField
+                label={language === "ar" ? "نص الإعلان" : "Announcement"}
+                error={errors.announcementAr}
+              >
+                <LocaleTextarea
+                  rows={4}
+                  disabled={!form.announcement.enabled}
+                  ar={form.announcement.text.ar}
+                  en={form.announcement.text.en}
+                  onArChange={(ar) =>
+                    setForm((f) => ({
+                      ...f,
+                      announcement: {
+                        ...f.announcement,
+                        text: { ar, en: "" },
+                      },
+                    }))
+                  }
+                  placeholder={
+                    language === "ar"
+                      ? "مثال: شحن مجاني للطلبات فوق 500 ج.م"
+                      : "Switch to Arabic to edit…"
+                  }
+                />
+              </FormField>
+
+              <p className="text-xs text-secondary/50 leading-relaxed">
+                {language === "ar"
+                  ? "يُترجم تلقائياً عند الحفظ. اكتب المبالغ بالجنيه (مثل 500 ج.م). بدّل لغة اللوحة لعرض الإنجليزية في نفس الحقل."
+                  : "Auto-translated on save. Write amounts in EGP. Switch to Arabic to edit this field."}
+              </p>
+
+              {form.announcement.enabled &&
+              (form.announcement.text.ar || form.announcement.text.en) ? (
+                <div className="mt-auto rounded-xl bg-secondary text-background text-center text-sm py-3 px-3 break-words w-full">
+                  {pickLocale(form.announcement.text, language)}
+                </div>
+              ) : null}
+            </div>
+          </aside>
         </div>
+      </section>
 
-        {/* Right Column: Information/Guide */}
-        <div className="lg:col-span-1">
-          <div className="bg-primary/5 rounded-2xl p-6 border border-primary/20 sticky top-24">
-            <h4 className="font-bold text-secondary mb-4 flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-xs">i</span>
-              {language === "ar" ? "ملاحظات هامة" : "Important Notes"}
-            </h4>
-            <ul className="text-sm text-gray-600 space-y-3 leading-relaxed">
-              <li className="flex items-start gap-2">
-                <span className="text-primary mt-1">•</span>
-                {language === "ar" ? "التعديلات هنا ستنعكس فوراً على واجهة المتجر الرئيسية." : "Changes here will reflect immediately on the storefront."}
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-primary mt-1">•</span>
-                {language === "ar" ? "تأكد من استخدام صور عالية الجودة بصيغة WebP أو JPEG لضمان سرعة التحميل." : "Ensure you use high-quality WebP or JPEG images for fast loading."}
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-primary mt-1">•</span>
-                {language === "ar" ? "يُفضل أن لا يتجاوز النص الإعلاني 50 حرفاً ليكون مقروءاً في الجوال." : "It's recommended to keep announcement text under 50 characters for mobile readability."}
-              </li>
-            </ul>
-          </div>
-        </div>
+      <AdminCmsSocialContactCard
+        social={form.social}
+        contact={form.contact}
+        onSocialChange={(social) => setForm((f) => ({ ...f, social }))}
+        onContactChange={(contact) => setForm((f) => ({ ...f, contact }))}
+      />
 
-      </div>
+      <Card variant="panel" padding="md" className="text-sm text-gray-500 leading-relaxed w-full min-w-0">
+        {language === "ar"
+          ? "احفظ التغييرات ثم افتح الصفحة الرئيسية وصفحة التواصل للتأكد من ظهور الروابط والمعلومات."
+          : "Save changes, then open the homepage and contact page to verify links and details."}
+      </Card>
     </div>
   );
 }

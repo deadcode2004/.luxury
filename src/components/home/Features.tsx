@@ -16,7 +16,7 @@ export default function Features() {
     {
       icon: <Truck size={22} />,
       title: { ar: "توصيل سريع ومجاني", en: "Fast & Free Delivery" },
-      description: { ar: "توصيل مجاني للطلبات التي تزيد عن 500 ريال داخل المملكة.", en: "Free delivery for orders over 500 SAR within the kingdom." }
+      description: { ar: "توصيل مجاني للطلبات التي تزيد عن 500 ج.م.", en: "Free delivery for orders over 500 EGP." }
     },
     {
       icon: <PackageOpen size={22} />,
@@ -34,7 +34,7 @@ export default function Features() {
     <section className="relative z-20 -mt-12 pb-8 pt-0 bg-transparent border-b border-surface">
       <div className="container mx-auto px-4 md:px-8">
         <div className="text-center mb-6 md:mb-8 flex flex-col items-center -mt-20 md:mt-0">
-          <div className="bg-gradient-to-br from-white/60 to-white/10 backdrop-blur-xl border border-white/40 px-6 py-1.5 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-3 inline-block">
+          <div className="bg-gradient-to-br from-white/60 to-white/10 backdrop-blur-xl border border-white/40 px-6 py-1.5 rounded-full shadow-card mb-3 inline-block">
             <h2 className="text-base md:text-lg font-bold font-sans text-black drop-shadow-sm">
               {language === "ar" ? "لماذا تختارنا؟" : "Why Choose Us?"}
             </h2>
