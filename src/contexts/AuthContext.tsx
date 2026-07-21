@@ -25,7 +25,7 @@ type AuthContextValue = {
   isAuthenticated: boolean;
   isOwner: boolean;
   isUser: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<boolean | string>;
   register: (payload: {
     first_name: string;
     last_name: string;
@@ -145,7 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           language === "ar" ? "✔ تم تسجيل الدخول بنجاح" : "✔ Signed in successfully",
           "success"
         );
-        return true;
+        return data.token;
       } catch (error) {
         const message =
           error instanceof ApiRequestError

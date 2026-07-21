@@ -15,14 +15,13 @@ export function middleware(request: NextRequest) {
 
   const isAuthPage = pathname === "/login" || pathname === "/register";
   const isAccount = pathname.startsWith("/account");
-  const isCheckout = pathname.startsWith("/checkout");
   const isAdmin = pathname.startsWith("/admin");
 
   if (isAuthPage && isAuthed) {
     return NextResponse.redirect(new URL(role === "owner" ? "/admin" : "/account", request.url));
   }
 
-  if ((isAccount || isCheckout) && !isAuthed) {
+  if (isAccount && !isAuthed) {
     const url = new URL("/login", request.url);
     url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);

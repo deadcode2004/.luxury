@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -11,13 +11,29 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 type Mode = "login" | "register";
 
+export type AuthPrefill = {
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  phone?: string;
+};
+
 type AuthModalProps = {
   open: boolean;
   onClose: () => void;
   initialMode?: Mode;
+  /** Called after successful login/register with the session token. */
+  onSuccess?: (token: string) => void;
+  prefill?: AuthPrefill;
 };
 
-export default function AuthModal({ open, onClose, initialMode = "login" }: AuthModalProps) {
+export default function AuthModal({
+  open,
+  onClose,
+  initialMode = "login",
+  onSuccess,
+  prefill,
+}: AuthModalProps) {
   const { language } = useLanguage();
   const { login, register, uploadAvatar, loading } = useAuth();
   const [mode, setMode] = useState<Mode>(initialMode);
@@ -31,6 +47,22 @@ export default function AuthModal({ open, onClose, initialMode = "login" }: Auth
     password: "",
     password_confirmation: "",
   });
+
+  useEffect(() => {
+    if (!open) return;
+    setMode(initialMode);
+    setErrors({});
+    setPendingAvatar(null);
+    setForm((f) => ({
+      ...f,
+      first_name: prefill?.first_name || "",
+      last_name: prefill?.last_name || "",
+      email: prefill?.email || "",
+      phone: prefill?.phone || "",
+      password: "",
+      password_confirmation: "",
+    }));
+  }, [open, initialMode, prefill?.first_name, prefill?.last_name, prefill?.email, prefill?.phone]);
 
   const validate = () => {
     const next: Record<string, string> = {};
@@ -62,8 +94,11 @@ export default function AuthModal({ open, onClose, initialMode = "login" }: Auth
     if (!validate()) return;
 
     if (mode === "login") {
-      const ok = await login(form.email, form.password);
-      if (ok) onClose();
+      const result = await login(form.email, form.password);
+      if (result) {
+        onSuccess?.(typeof result === "string" ? result : "");
+        onClose();
+      }
       return;
     }
 
@@ -80,6 +115,7 @@ export default function AuthModal({ open, onClose, initialMode = "login" }: Auth
       if (pendingAvatar) {
         await uploadAvatar(pendingAvatar, result.token);
       }
+      if (result.token) onSuccess?.(result.token);
       onClose();
       return;
     }

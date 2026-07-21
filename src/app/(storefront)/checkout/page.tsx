@@ -22,6 +22,9 @@ import PhoneCountryField, {
   validateCheckoutPhone,
 } from "@/components/checkout/PhoneCountryField";
 import ShippingLocationFields from "@/components/checkout/ShippingLocationFields";
+import CheckoutAccountChoiceModal from "@/components/checkout/CheckoutAccountChoiceModal";
+import AuthModal from "@/components/auth/AuthModal";
+import Modal from "@/components/ui/Modal";
 import { apiRequest, ApiRequestError } from "@/lib/api/client";
 import {
   countryDisplayName,
@@ -65,7 +68,14 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<"card" | "cod">("card");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [accountChoiceOpen, setAccountChoiceOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<"login" | "register">("login");
+  const [placedOrder, setPlacedOrder] = useState<{ number: string; isGuest: boolean } | null>(
+    null
+  );
   const prefillsDone = useRef({ geo: false, profile: false, address: false });
+  const placeAfterAuth = useRef(false);
 
   const [form, setForm] = useState({
     first_name: "",
@@ -244,7 +254,7 @@ export default function CheckoutPage() {
     return Object.keys(next).length === 0;
   };
 
-  const placeOrder = async () => {
+  const placeOrder = async (authToken?: string | null) => {
     if (!validate()) {
       toast(
         language === "ar" ? "يرجى تصحيح الحقول المطلوبة" : "Please fix the highlighted fields",
@@ -252,11 +262,8 @@ export default function CheckoutPage() {
       );
       return;
     }
-    if (!token) {
-      toast(language === "ar" ? "سجّل الدخول لإتمام الطلب" : "Sign in to place your order", "warning");
-      return;
-    }
 
+    const activeToken = authToken === undefined ? token : authToken;
     const phoneCountryIso2 = phoneCountryIso(form.phone, form.phone_country);
     const phoneCountry = getCountryByCode(phoneCountryIso2);
     const shipCountry = getCountryByCode(form.country_code);
@@ -265,42 +272,50 @@ export default function CheckoutPage() {
       : null;
     const phone = form.phone.trim();
 
+    const items = lines
+      .map((line) => ({
+        product_id: Number(line.id),
+        quantity: line.quantity,
+      }))
+      .filter((item) => Number.isFinite(item.product_id) && item.product_id > 0 && item.quantity > 0);
+
+    if (items.length === 0) {
+      toast(
+        language === "ar" ? "السلة فارغة" : "Your cart is empty",
+        "warning"
+      );
+      return;
+    }
+
     setLoading(true);
     try {
-      // Sync local cart → server so checkout stock validation uses the same items.
-      try {
-        await apiRequest("/cart", { method: "DELETE", token, cache: "no-store" });
-        for (const line of lines) {
-          const productId = Number(line.id);
-          if (!Number.isFinite(productId) || productId <= 0) continue;
-          await apiRequest("/cart/items", {
-            method: "POST",
-            token,
-            body: { product_id: productId, quantity: line.quantity },
-            cache: "no-store",
-          });
+      // Best-effort sync for logged-in users (server cart cleanup).
+      if (activeToken) {
+        try {
+          await apiRequest("/cart", { method: "DELETE", token: activeToken, cache: "no-store" });
+          for (const item of items) {
+            await apiRequest("/cart/items", {
+              method: "POST",
+              token: activeToken,
+              body: item,
+              cache: "no-store",
+            });
+          }
+        } catch {
+          // Checkout still sends items[] so placement can succeed without sync.
         }
-      } catch (syncErr) {
-        toast(
-          syncErr instanceof ApiRequestError
-            ? syncErr.message
-            : language === "ar"
-              ? "تعذر مزامنة السلة قبل الدفع"
-              : "Could not sync cart before checkout",
-          "danger"
-        );
-        return;
       }
 
-      await apiRequest("/checkout", {
+      const order = await apiRequest<{ number?: string; id?: number }>("/checkout", {
         method: "POST",
-        token,
+        token: activeToken,
         body: {
           payment_method: paymentMethod,
           first_name: form.first_name.trim(),
           last_name: form.last_name.trim(),
           phone,
           email: form.email.trim(),
+          items,
           shipping_address: {
             full_address: form.full_address.trim(),
             country_code: form.country_code,
@@ -317,12 +332,22 @@ export default function CheckoutPage() {
           },
         },
       });
+
       await clear({ silent: true });
+      setAccountChoiceOpen(false);
       toast(
         language === "ar" ? "تم تأكيد الطلب بنجاح" : "Order placed successfully",
         "success"
       );
-      router.push("/account?tab=orders");
+
+      if (activeToken) {
+        router.push("/account?tab=orders");
+      } else {
+        setPlacedOrder({
+          number: order?.number || "",
+          isGuest: true,
+        });
+      }
     } catch (err) {
       toast(
         err instanceof ApiRequestError
@@ -335,6 +360,21 @@ export default function CheckoutPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const requestPlaceOrder = () => {
+    if (!validate()) {
+      toast(
+        language === "ar" ? "يرجى تصحيح الحقول المطلوبة" : "Please fix the highlighted fields",
+        "warning"
+      );
+      return;
+    }
+    if (token) {
+      void placeOrder(token);
+      return;
+    }
+    setAccountChoiceOpen(true);
   };
 
   if (lines.length === 0) {
@@ -658,7 +698,7 @@ export default function CheckoutPage() {
                 size="xl"
                 fullWidth
                 loading={loading}
-                onClick={() => void placeOrder()}
+                onClick={() => requestPlaceOrder()}
               >
                 <ShieldCheck size={22} />
                 {language === "ar" ? "تأكيد الطلب والدفع" : "Place Order & Pay"}
@@ -667,6 +707,102 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
+
+      <CheckoutAccountChoiceModal
+        open={accountChoiceOpen}
+        loading={loading}
+        onClose={() => setAccountChoiceOpen(false)}
+        onGuest={() => void placeOrder(null)}
+        onLogin={() => {
+          placeAfterAuth.current = true;
+          setAccountChoiceOpen(false);
+          setAuthModalMode("login");
+          setAuthModalOpen(true);
+        }}
+        onRegister={() => {
+          placeAfterAuth.current = true;
+          setAccountChoiceOpen(false);
+          setAuthModalMode("register");
+          setAuthModalOpen(true);
+        }}
+      />
+
+      <AuthModal
+        open={authModalOpen}
+        initialMode={authModalMode}
+        prefill={{
+          first_name: form.first_name,
+          last_name: form.last_name,
+          email: form.email,
+          phone: form.phone,
+        }}
+        onClose={() => {
+          setAuthModalOpen(false);
+          if (placeAfterAuth.current) {
+            placeAfterAuth.current = false;
+            setAccountChoiceOpen(true);
+          }
+        }}
+        onSuccess={(nextToken) => {
+          placeAfterAuth.current = false;
+          void placeOrder(nextToken);
+        }}
+      />
+
+      <Modal
+        open={placedOrder != null}
+        onClose={() => {
+          setPlacedOrder(null);
+          router.push("/shop");
+        }}
+        title={language === "ar" ? "تم تأكيد طلبك" : "Order confirmed"}
+      >
+        {placedOrder ? (
+          <div className="space-y-4 text-sm">
+            <p className="text-gray-600">
+              {language === "ar"
+                ? "شكراً لطلبك! يمكنك حفظ رقم الطلب للمتابعة."
+                : "Thank you for your order! Save your order number for reference."}
+            </p>
+            {placedOrder.number ? (
+              <div className="rounded-xl border border-surface bg-background/60 px-4 py-3 flex justify-between gap-3">
+                <span className="text-gray-500">
+                  {language === "ar" ? "رقم الطلب" : "Order number"}
+                </span>
+                <span className="font-bold text-secondary dir-ltr">{placedOrder.number}</span>
+              </div>
+            ) : null}
+            <p className="text-gray-500">
+              {language === "ar"
+                ? "أرسلنا تفاصيل الطلب إلى بريدك الإلكتروني إن وُجد."
+                : "Order details were sent to your email if provided."}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <Button
+                variant="secondary"
+                className="flex-1"
+                onClick={() => {
+                  setPlacedOrder(null);
+                  router.push("/shop");
+                }}
+              >
+                {language === "ar" ? "متابعة التسوق" : "Continue shopping"}
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  setPlacedOrder(null);
+                  setAuthModalMode("register");
+                  setAuthModalOpen(true);
+                }}
+              >
+                {language === "ar" ? "إنشاء حساب لتتبع الطلبات" : "Create account to track orders"}
+              </Button>
+            </div>
+          </div>
+        ) : null}
+      </Modal>
     </main>
   );
 }

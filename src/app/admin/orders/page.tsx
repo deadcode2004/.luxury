@@ -157,7 +157,15 @@ export default function AdminOrders() {
             <TableRow key={order.id}>
               <TableCell className="font-bold text-secondary">{order.number}</TableCell>
               <TableCell className="text-gray-600">
-                {displayPersonName(order.customer, language)}
+                {displayPersonName(order.customer, language, "") ||
+                  [order.billing_snapshot?.first_name, order.billing_snapshot?.last_name]
+                    .filter(Boolean)
+                    .join(" ") ||
+                  (order.billing_snapshot?.is_guest
+                    ? language === "ar"
+                      ? "زائر"
+                      : "Guest"
+                    : "—")}
               </TableCell>
               <TableCell className="text-gray-500">{formatDate(order.placed_at)}</TableCell>
               <TableCell className="text-gray-500">{order.items_count ?? "—"}</TableCell>
@@ -245,7 +253,17 @@ export default function AdminOrders() {
                 <span className="text-gray-500 shrink-0">
                   {language === "ar" ? "العميل" : "Customer"}
                 </span>
-                <span className="text-end">{displayPersonName(viewOrder.customer, language)}</span>
+                <span className="text-end">
+                  {displayPersonName(viewOrder.customer, language, "") ||
+                    [viewOrder.billing_snapshot?.first_name, viewOrder.billing_snapshot?.last_name]
+                      .filter(Boolean)
+                      .join(" ") ||
+                    (viewOrder.billing_snapshot?.is_guest
+                      ? language === "ar"
+                        ? "زائر"
+                        : "Guest"
+                      : "—")}
+                </span>
               </div>
               {viewOrder.billing_snapshot?.phone ? (
                 <div className="flex justify-between gap-4">

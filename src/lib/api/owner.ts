@@ -76,6 +76,7 @@ export type ApiBillingSnapshot = {
   last_name?: string;
   phone?: string;
   email?: string;
+  is_guest?: boolean;
 };
 
 export type ApiOrder = {

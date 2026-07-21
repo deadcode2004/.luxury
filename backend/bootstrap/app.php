@@ -26,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'owner' => EnsureUserIsOwner::class,
+            'optional.sanctum' => \App\Http\Middleware\OptionalSanctumAuth::class,
         ]);
 
         $middleware->api(prepend: [

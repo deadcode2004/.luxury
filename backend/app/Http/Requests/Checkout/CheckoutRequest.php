@@ -15,6 +15,8 @@ class CheckoutRequest extends FormRequest
 
     public function rules(): array
     {
+        $authenticated = $this->user() !== null;
+
         return [
             'payment_method' => ['required', Rule::enum(PaymentMethod::class)],
             'first_name' => ['required', 'string', 'max:100'],
@@ -31,6 +33,10 @@ class CheckoutRequest extends FormRequest
             'shipping_address.state_name' => ['nullable', 'string', 'max:120'],
             'shipping_address.phone_country_code' => ['nullable', 'string', 'size:2'],
             'shipping_address.phone_dial_code' => ['nullable', 'string', 'max:8'],
+            // Guests must send cart lines; authenticated users may rely on server cart.
+            'items' => [$authenticated ? 'nullable' : 'required', 'array', 'min:1'],
+            'items.*.product_id' => ['required_with:items', 'integer', 'exists:products,id'],
+            'items.*.quantity' => ['required_with:items', 'integer', 'min:1', 'max:99'],
         ];
     }
 }

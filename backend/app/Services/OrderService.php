@@ -13,6 +13,7 @@ use App\Models\Product;
 use App\Models\User;
 use App\Services\Realtime\RealtimeHub;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class OrderService
@@ -25,41 +26,43 @@ class OrderService
     ) {}
 
     /**
+     * Place an order for an authenticated user or a guest.
+     *
      * @param  array{
      *   payment_method: string,
      *   shipping_address: array<string, mixed>,
      *   first_name?: string,
      *   last_name?: string,
      *   phone?: string,
-     *   email?: string
+     *   email?: string,
+     *   items?: list<array{product_id: int, quantity: int}>
      * }  $payload
      */
-    public function checkout(User $user, array $payload): Order
+    public function checkout(?User $user, array $payload): Order
     {
         return DB::transaction(function () use ($user, $payload) {
-            $cart = $this->cartService->getCart($user);
+            $cartLines = $this->resolveCartLines($user, $payload);
 
-            if ($cart->items->isEmpty()) {
+            if ($cartLines->isEmpty()) {
                 throw new DomainException('Cart is empty.', 422, 'CART_EMPTY');
             }
 
-            // Lock every product row involved before validating stock.
-            $productIds = $cart->items->pluck('product_id')->all();
+            $productIds = $cartLines->pluck('product_id')->all();
             $products = Product::query()
                 ->whereIn('id', $productIds)
                 ->lockForUpdate()
                 ->get()
                 ->keyBy('id');
 
-            foreach ($cart->items as $item) {
+            foreach ($cartLines as $item) {
                 /** @var Product|null $product */
-                $product = $products->get($item->product_id);
+                $product = $products->get($item['product_id']);
 
                 if (! $product || ! $product->is_active) {
                     throw new DomainException('One or more products are unavailable.', 422, 'PRODUCT_UNAVAILABLE');
                 }
 
-                if ($item->quantity > $product->stock) {
+                if ($item['quantity'] > $product->stock) {
                     throw new InsufficientStockException(
                         message: "Product {$product->code} has only {$product->stock} units left.",
                         available: $product->stock
@@ -68,15 +71,15 @@ class OrderService
             }
 
             $paymentMethod = PaymentMethod::from($payload['payment_method']);
-            $lines = $cart->items->map(fn ($item) => [
-                'price' => $products[$item->product_id]->price,
-                'quantity' => $item->quantity,
+            $pricedLines = $cartLines->map(fn (array $item) => [
+                'price' => $products[$item['product_id']]->price,
+                'quantity' => $item['quantity'],
             ]);
-            $totals = $this->totals->calculate($lines, $paymentMethod);
+            $totals = $this->totals->calculate($pricedLines, $paymentMethod);
 
             $order = Order::query()->create([
                 'number' => $this->generateOrderNumber(),
-                'user_id' => $user->id,
+                'user_id' => $user?->id,
                 'status' => OrderStatus::Pending,
                 'payment_method' => $paymentMethod,
                 'subtotal' => $totals['subtotal'],
@@ -88,16 +91,17 @@ class OrderService
                 'currency' => 'EGP',
                 'shipping_address' => $payload['shipping_address'],
                 'billing_snapshot' => [
-                    'first_name' => $payload['first_name'] ?? $user->first_name,
-                    'last_name' => $payload['last_name'] ?? $user->last_name,
-                    'phone' => $payload['phone'] ?? $user->phone,
-                    'email' => $payload['email'] ?? $user->email,
+                    'first_name' => $payload['first_name'] ?? $user?->first_name,
+                    'last_name' => $payload['last_name'] ?? $user?->last_name,
+                    'phone' => $payload['phone'] ?? $user?->phone,
+                    'email' => $payload['email'] ?? $user?->email,
+                    'is_guest' => $user === null,
                 ],
                 'placed_at' => now(),
             ]);
 
-            foreach ($cart->items as $item) {
-                $product = $products[$item->product_id];
+            foreach ($cartLines as $item) {
+                $product = $products[$item['product_id']];
 
                 OrderItem::query()->create([
                     'order_id' => $order->id,
@@ -105,14 +109,14 @@ class OrderService
                     'product_code' => $product->code,
                     'product_name' => $product->name,
                     'unit_price' => $product->price,
-                    'quantity' => $item->quantity,
-                    'line_total' => round(((float) $product->price) * $item->quantity, 2),
+                    'quantity' => $item['quantity'],
+                    'line_total' => round(((float) $product->price) * $item['quantity'], 2),
                 ]);
 
                 $affected = Product::query()
                     ->whereKey($product->id)
-                    ->where('stock', '>=', $item->quantity)
-                    ->decrement('stock', $item->quantity);
+                    ->where('stock', '>=', $item['quantity'])
+                    ->decrement('stock', $item['quantity']);
 
                 if ($affected === 0) {
                     throw new InsufficientStockException(
@@ -122,13 +126,15 @@ class OrderService
                 }
             }
 
-            $this->cartService->clear($user);
+            if ($user) {
+                $this->cartService->clear($user);
+            }
+
             ProductService::flushListCache();
 
             $order->load(['items.product', 'user']);
             event(new OrderPlaced($order));
 
-            // Stock + order + customer spend / dashboard all move together.
             $this->realtime->productsChanged('stock_changed', [
                 'order_id' => $order->id,
                 'product_ids' => $productIds,
@@ -140,6 +146,35 @@ class OrderService
 
             return $order;
         });
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return Collection<int, array{product_id: int, quantity: int}>
+     */
+    private function resolveCartLines(?User $user, array $payload): Collection
+    {
+        $items = $payload['items'] ?? null;
+        if (is_array($items) && $items !== []) {
+            return collect($items)
+                ->map(fn ($item) => [
+                    'product_id' => (int) ($item['product_id'] ?? 0),
+                    'quantity' => (int) ($item['quantity'] ?? 0),
+                ])
+                ->filter(fn (array $item) => $item['product_id'] > 0 && $item['quantity'] > 0)
+                ->values();
+        }
+
+        if (! $user) {
+            return collect();
+        }
+
+        $cart = $this->cartService->getCart($user);
+
+        return $cart->items->map(fn ($item) => [
+            'product_id' => (int) $item->product_id,
+            'quantity' => (int) $item->quantity,
+        ])->values();
     }
 
     public function listForUser(User $user, int $perPage = 15): LengthAwarePaginator
@@ -163,6 +198,10 @@ class OrderService
             $search = '%'.$filters['search'].'%';
             $query->where(function ($q) use ($search) {
                 $q->where('number', 'like', $search)
+                    ->orWhere('billing_snapshot->email', 'like', $search)
+                    ->orWhere('billing_snapshot->phone', 'like', $search)
+                    ->orWhere('billing_snapshot->first_name', 'like', $search)
+                    ->orWhere('billing_snapshot->last_name', 'like', $search)
                     ->orWhereHas('user', fn ($u) => $u->where('name', 'like', $search)->orWhere('email', 'like', $search));
             });
         }

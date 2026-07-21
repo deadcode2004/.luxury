@@ -45,14 +45,16 @@ Route::prefix('v1')->group(function () {
     Route::post('reviews', [ReviewController::class, 'store'])->middleware('throttle:20,1');
     Route::get('cms', [PublicCmsController::class, 'show']);
 
+    // Public checkout (guest or authenticated via optional Sanctum).
+    Route::post('checkout', [CheckoutController::class, 'store'])
+        ->middleware(['optional.sanctum', 'throttle:20,1']);
+
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('cart', [CartController::class, 'show']);
         Route::post('cart/items', [CartController::class, 'store']);
         Route::patch('cart/items/{productId}', [CartController::class, 'update']);
         Route::delete('cart/items/{productId}', [CartController::class, 'destroy']);
         Route::delete('cart', [CartController::class, 'clear']);
-
-        Route::post('checkout', [CheckoutController::class, 'store'])->middleware('throttle:20,1');
 
         Route::get('orders', [OrderController::class, 'index']);
         Route::get('orders/{order}', [OrderController::class, 'show']);

@@ -103,4 +103,49 @@ class CheckoutStockTest extends TestCase
         $this->assertSame(1, $product->fresh()->stock);
         $this->assertDatabaseCount('orders', 0);
     }
+
+    public function test_guest_checkout_creates_order_without_user(): void
+    {
+        $category = Category::query()->create([
+            'code' => 'c1',
+            'name' => ['ar' => 'أ', 'en' => 'A'],
+            'image' => '/i.jpg',
+            'is_active' => true,
+        ]);
+        $product = Product::query()->create([
+            'code' => 'p1',
+            'category_id' => $category->id,
+            'name' => ['ar' => 'منتج', 'en' => 'Product'],
+            'brand' => ['ar' => 'ب', 'en' => 'B'],
+            'price' => 100,
+            'image' => '/i.jpg',
+            'stock' => 5,
+            'is_active' => true,
+        ]);
+
+        $response = $this->postJson('/api/v1/checkout', [
+            'payment_method' => 'card',
+            'first_name' => 'Guest',
+            'last_name' => 'Buyer',
+            'phone' => '+201001234567',
+            'email' => 'guest@example.com',
+            'items' => [
+                ['product_id' => $product->id, 'quantity' => 2],
+            ],
+            'shipping_address' => [
+                'full_address' => 'Nile St',
+                'city' => 'Cairo',
+                'country_code' => 'EG',
+                'country_name' => 'Egypt',
+            ],
+        ]);
+
+        $response->assertCreated()->assertJsonPath('success', true);
+        $this->assertSame(3, $product->fresh()->stock);
+        $this->assertDatabaseCount('orders', 1);
+        $this->assertDatabaseHas('orders', [
+            'user_id' => null,
+        ]);
+        $this->assertTrue((bool) data_get($response->json('data.billing_snapshot'), 'is_guest'));
+    }
 }
