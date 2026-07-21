@@ -9,6 +9,7 @@ export type GeoCountry = {
   phonecode: string | null;
   flag: string | null;
   dial_code: string | null;
+  postal_code_required?: boolean;
 };
 
 export type GeoState = {
@@ -25,6 +26,16 @@ export type GeoCity = {
   state_id: number;
   name_en: string;
   name_ar: string;
+};
+
+export type GeoPostalCode = {
+  id: number;
+  country_id: number;
+  state_id: number;
+  city_id: number;
+  code: string;
+  place_name_en: string | null;
+  place_name_ar: string | null;
 };
 
 export type GeoOption = {
@@ -83,6 +94,19 @@ export async function fetchGeoCities(
   if (q.trim()) qs.set("q", q.trim());
   qs.set("limit", String(limit));
   return apiRequest<GeoCity[]>(`/geo/states/${stateId}/cities?${qs.toString()}`, {
+    cache: "no-store",
+  });
+}
+
+export async function fetchGeoPostalCodes(
+  cityId: number,
+  q = "",
+  limit = 50
+): Promise<GeoPostalCode[]> {
+  const qs = new URLSearchParams();
+  if (q.trim()) qs.set("q", q.trim());
+  qs.set("limit", String(limit));
+  return apiRequest<GeoPostalCode[]>(`/geo/cities/${cityId}/postal-codes?${qs.toString()}`, {
     cache: "no-store",
   });
 }

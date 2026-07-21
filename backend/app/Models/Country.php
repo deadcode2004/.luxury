@@ -15,12 +15,14 @@ class Country extends Model
         'flag',
         'currency',
         'is_active',
+        'postal_code_required',
     ];
 
     protected function casts(): array
     {
         return [
             'is_active' => 'boolean',
+            'postal_code_required' => 'boolean',
         ];
     }
 
@@ -32,6 +34,11 @@ class Country extends Model
     public function cities(): HasMany
     {
         return $this->hasMany(City::class);
+    }
+
+    public function postalCodes(): HasMany
+    {
+        return $this->hasMany(PostalCode::class);
     }
 
     public function localizedName(string $lang): string

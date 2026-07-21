@@ -10,10 +10,12 @@ import {
   countriesToOptions,
   fetchGeoCities,
   fetchGeoCountries,
+  fetchGeoPostalCodes,
   fetchGeoStates,
   statesToOptions,
   type GeoCity,
   type GeoCountry,
+  type GeoPostalCode,
   type GeoState,
 } from "@/lib/geo/api";
 
@@ -33,6 +35,7 @@ type ShippingLocationFieldsProps = {
     state?: string;
     city?: string;
     full_address?: string;
+    zip_code?: string;
   };
 };
 
@@ -53,6 +56,7 @@ export default function ShippingLocationFields({
   const [countries, setCountries] = useState<GeoCountry[]>([]);
   const [states, setStates] = useState<GeoState[]>([]);
   const [cities, setCities] = useState<GeoCity[]>([]);
+  const [postalHints, setPostalHints] = useState<GeoPostalCode[]>([]);
   const [loadingCountries, setLoadingCountries] = useState(true);
   const [loadingStates, setLoadingStates] = useState(false);
   const [loadingCities, setLoadingCities] = useState(false);
@@ -119,6 +123,24 @@ export default function ShippingLocationFields({
     };
   }, [stateId]);
 
+  useEffect(() => {
+    if (!cityId) {
+      setPostalHints([]);
+      return;
+    }
+    let cancelled = false;
+    void fetchGeoPostalCodes(cityId, zipCode.trim(), 8)
+      .then((rows) => {
+        if (!cancelled) setPostalHints(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setPostalHints([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [cityId, zipCode]);
+
   // Labels remap instantly when language changes (same IDs / rows).
   const countryOptions = useMemo(
     () => countriesToOptions(countries, language),
@@ -127,8 +149,19 @@ export default function ShippingLocationFields({
   const stateOptions = useMemo(() => statesToOptions(states, language), [states, language]);
   const cityOptions = useMemo(() => citiesToOptions(cities, language), [cities, language]);
 
+  const selectedCountry = useMemo(
+    () => countries.find((c) => c.id === countryId) || null,
+    [countries, countryId]
+  );
+  const postalRequired = Boolean(selectedCountry?.postal_code_required);
   const hasStates = stateOptions.length > 0;
   const cityDisabled = !countryId || (hasStates && !stateId);
+
+  const zipMatchesCity =
+    !zipCode.trim() ||
+    postalHints.some(
+      (p) => p.code.replace(/\s+/g, "").toLowerCase() === zipCode.replace(/\s+/g, "").toLowerCase()
+    );
 
   return (
     <>
@@ -242,15 +275,50 @@ export default function ShippingLocationFields({
 
       <FormField
         className="md:col-span-2"
-        label={language === "ar" ? "الرمز البريدي" : "Zip / Postal Code"}
+        label={
+          language === "ar"
+            ? postalRequired
+              ? "الرمز البريدي *"
+              : "الرمز البريدي"
+            : postalRequired
+              ? "Zip / Postal Code *"
+              : "Zip / Postal Code"
+        }
+        error={errors?.zip_code}
       >
         <Input
           value={zipCode}
           onChange={(e) => onZipCodeChange(e.target.value)}
           autoComplete="postal-code"
-          className="text-start dir-ltr"
-          placeholder={language === "ar" ? "الرمز البريدي" : "Postal code"}
+          className={`text-start dir-ltr ${errors?.zip_code ? "border-red-300" : ""}`}
+          placeholder={
+            !cityId
+              ? language === "ar"
+                ? "اختر المدينة أولاً"
+                : "Select city first"
+              : language === "ar"
+                ? "أدخل الرمز البريدي للمدينة"
+                : "Enter the postal code for this city"
+          }
+          disabled={!cityId}
+          aria-required={postalRequired}
         />
+        {cityId && postalHints.length > 0 && !zipMatchesCity ? (
+          <p className="mt-2 text-xs text-[var(--muted)]">
+            {language === "ar" ? "أمثلة لهذه المدينة: " : "Examples for this city: "}
+            {postalHints
+              .slice(0, 5)
+              .map((p) => p.code)
+              .join(", ")}
+          </p>
+        ) : null}
+        {cityId && postalRequired && zipCode.trim() && postalHints.length > 0 && !zipMatchesCity ? (
+          <p className="mt-1 text-xs text-red-600">
+            {language === "ar"
+              ? "الرمز البريدي لا يتطابق مع المدينة المختارة."
+              : "The postal code does not match the selected city."}
+          </p>
+        ) : null}
       </FormField>
     </>
   );

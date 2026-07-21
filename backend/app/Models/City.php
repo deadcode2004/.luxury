@@ -37,6 +37,11 @@ class City extends Model
         return $this->belongsTo(State::class);
     }
 
+    public function postalCodes(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(PostalCode::class);
+    }
+
     public function localizedName(string $lang): string
     {
         return $lang === 'ar' ? $this->name_ar : $this->name_en;

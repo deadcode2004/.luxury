@@ -47,4 +47,17 @@ class GeoController extends Controller
 
         return ApiResponse::success($data);
     }
+
+    public function postalCodes(Request $request, int $city): JsonResponse
+    {
+        abort_if(! $this->geo->city($city), 404, 'City not found');
+
+        $data = $this->geo->postalCodes(
+            $city,
+            $request->query('q'),
+            (int) $request->query('limit', 50)
+        );
+
+        return ApiResponse::success($data);
+    }
 }

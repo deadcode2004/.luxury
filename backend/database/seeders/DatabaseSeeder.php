@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             CatalogSeeder::class,
             GeoSeeder::class,
+            PostalCodeSeeder::class,
         ]);
     }
 }

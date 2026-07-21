@@ -1,0 +1,10 @@
+[
+  {"city_name_en": "Amman", "code": "11118", "place_name_en": "Amman", "place_name_ar": "عمّان"},
+  {"city_name_en": "Amman", "code": "11821", "place_name_en": "Abdoun", "place_name_ar": "عبدون"},
+  {"city_name_en": "Irbid", "code": "21110", "place_name_en": "Irbid", "place_name_ar": "إربد"},
+  {"city_name_en": "Zarqa", "code": "13110", "place_name_en": "Zarqa", "place_name_ar": "الزرقاء"},
+  {"city_name_en": "Aqaba", "code": "77110", "place_name_en": "Aqaba", "place_name_ar": "العقبة"},
+  {"city_name_en": "Madaba", "code": "17110", "place_name_en": "Madaba", "place_name_ar": "مادبا"},
+  {"city_name_en": "Salt", "code": "19110", "place_name_en": "Salt", "place_name_ar": "السلط"},
+  {"city_name_en": "Jerash", "code": "26110", "place_name_en": "Jerash", "place_name_ar": "جرش"}
+]

@@ -51,6 +51,7 @@ Route::prefix('v1')->group(function () {
         Route::get('countries', [GeoController::class, 'countries']);
         Route::get('countries/{country}/states', [GeoController::class, 'states']);
         Route::get('states/{state}/cities', [GeoController::class, 'cities']);
+        Route::get('cities/{city}/postal-codes', [GeoController::class, 'postalCodes']);
     });
 
     // Public checkout (guest or authenticated via optional Sanctum).

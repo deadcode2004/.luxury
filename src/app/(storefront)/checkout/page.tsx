@@ -72,6 +72,7 @@ export default function CheckoutPage() {
     state_id: null as number | null,
     city_id: null as number | null,
     zip_code: "",
+    postal_code_required: false,
     card_number: "",
     expiry: "",
     cvv: "",
@@ -101,6 +102,8 @@ export default function CheckoutPage() {
               ...f,
               country_id: f.country_id || match.id,
               country_iso2: f.country_iso2 || match.iso2,
+              postal_code_required:
+                f.country_id != null ? f.postal_code_required : Boolean(match.postal_code_required),
               phone_country: f.phone.length > 4 ? f.phone_country : match.iso2,
             };
           }
@@ -108,6 +111,7 @@ export default function CheckoutPage() {
             ...f,
             country_id: match.id,
             country_iso2: match.iso2,
+            postal_code_required: Boolean(match.postal_code_required),
             phone_country: match.iso2,
             state_id: null,
             city_id: null,
@@ -203,12 +207,26 @@ export default function CheckoutPage() {
       country_iso2: iso2 || f.country_iso2,
       state_id: null,
       city_id: null,
+      zip_code: "",
+      postal_code_required: false,
       phone_country: f.phone.length > 4 ? f.phone_country : iso2 || f.phone_country,
     }));
+    if (countryId) {
+      void fetchGeoCountries().then((rows) => {
+        const row = rows.find((c) => c.id === countryId);
+        if (row) {
+          setForm((f) =>
+            f.country_id === countryId
+              ? { ...f, postal_code_required: Boolean(row.postal_code_required) }
+              : f
+          );
+        }
+      });
+    }
   };
 
   const onStateChange = (stateId: number | null) => {
-    setForm((f) => ({ ...f, state_id: stateId, city_id: null }));
+    setForm((f) => ({ ...f, state_id: stateId, city_id: null, zip_code: "" }));
   };
 
   const validate = () => {
@@ -224,6 +242,10 @@ export default function CheckoutPage() {
     if (!form.state_id) next.state = language === "ar" ? "مطلوب" : "Required";
     if (!form.city_id) next.city = language === "ar" ? "مطلوب" : "Required";
     if (!form.full_address.trim()) next.full_address = language === "ar" ? "مطلوب" : "Required";
+    if (form.postal_code_required && !form.zip_code.trim()) {
+      next.zip_code =
+        language === "ar" ? "الرمز البريدي مطلوب لهذه الدولة" : "Postal code is required for this country";
+    }
     if (paymentMethod === "card") {
       if (form.card_number.replace(/\s/g, "").length < 12) {
         next.card_number = language === "ar" ? "رقم البطاقة غير صالح" : "Invalid card";
@@ -286,6 +308,7 @@ export default function CheckoutPage() {
       const order = await apiRequest<{ number?: string; id?: number }>("/checkout", {
         method: "POST",
         token: activeToken,
+        locale: language,
         body: {
           payment_method: paymentMethod,
           first_name: form.first_name.trim(),
@@ -321,6 +344,21 @@ export default function CheckoutPage() {
         });
       }
     } catch (err) {
+      if (err instanceof ApiRequestError && err.errors) {
+        const fieldMap: Record<string, string> = {
+          "shipping_address.zip_code": "zip_code",
+          "shipping_address.city_id": "city",
+          "shipping_address.state_id": "state",
+          "shipping_address.country_id": "country",
+        };
+        const next: Record<string, string> = {};
+        for (const [key, messages] of Object.entries(err.errors)) {
+          const field = fieldMap[key] || key;
+          const msg = Array.isArray(messages) ? messages[0] : String(messages);
+          if (msg) next[field] = msg;
+        }
+        if (Object.keys(next).length) setErrors((e) => ({ ...e, ...next }));
+      }
       toast(
         err instanceof ApiRequestError
           ? err.message
@@ -484,7 +522,7 @@ export default function CheckoutPage() {
                   zipCode={form.zip_code}
                   onCountryChange={onCountryChange}
                   onStateChange={onStateChange}
-                  onCityChange={(cityId) => setForm((f) => ({ ...f, city_id: cityId }))}
+                  onCityChange={(cityId) => setForm((f) => ({ ...f, city_id: cityId, zip_code: "" }))}
                   onFullAddressChange={(full_address) =>
                     setForm((f) => ({ ...f, full_address }))
                   }
@@ -494,6 +532,7 @@ export default function CheckoutPage() {
                     state: errors.state,
                     city: errors.city,
                     full_address: errors.full_address,
+                    zip_code: errors.zip_code,
                   }}
                 />
               </div>

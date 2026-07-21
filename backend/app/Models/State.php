@@ -33,6 +33,11 @@ class State extends Model
         return $this->hasMany(City::class);
     }
 
+    public function postalCodes(): HasMany
+    {
+        return $this->hasMany(PostalCode::class);
+    }
+
     public function localizedName(string $lang): string
     {
         return $lang === 'ar' ? $this->name_ar : $this->name_en;

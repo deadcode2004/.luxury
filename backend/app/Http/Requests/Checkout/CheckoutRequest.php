@@ -28,6 +28,7 @@ class CheckoutRequest extends FormRequest
             'shipping_address.country_id' => ['required', 'integer', 'exists:countries,id'],
             'shipping_address.state_id' => ['nullable', 'integer', 'exists:states,id'],
             'shipping_address.city_id' => ['required', 'integer', 'exists:cities,id'],
+            // Strict city membership is enforced in GeoService (DB hierarchy), not regex.
             'shipping_address.zip_code' => ['nullable', 'string', 'max:20'],
             'shipping_address.phone_country_code' => ['nullable', 'string', 'size:2'],
             'shipping_address.phone_dial_code' => ['nullable', 'string', 'max:8'],

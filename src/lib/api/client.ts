@@ -32,6 +32,8 @@ type RequestOptions = {
   body?: unknown;
   token?: string | null;
   signal?: AbortSignal;
+  /** Site language for bilingual API error messages (ar|en). */
+  locale?: string | null;
   /**
    * Always defaults to no-store so Next.js / browser never reuse stale catalog JSON.
    * Opt into caching only for explicitly safe endpoints (e.g. geo).
@@ -49,6 +51,11 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 
   if (options.token) {
     headers.Authorization = `Bearer ${options.token}`;
+  }
+
+  if (options.locale) {
+    headers["Accept-Language"] = options.locale;
+    headers["X-Locale"] = options.locale;
   }
 
   const method = options.method || "GET";

@@ -14,7 +14,8 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "next lint",
-    "geo:build": "node scripts/build-geo-seed.cjs"
+    "geo:build": "node scripts/build-geo-seed.cjs",
+    "geo:postal:build": "node scripts/build-postal-seed.cjs"
   },
   "dependencies": {
     "countries-cities-ar": "^3.0.5",

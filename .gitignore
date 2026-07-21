@@ -41,3 +41,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Generated geo/postal artifacts (rebuild: npm run geo:postal:build)
+backend/database/data/geo/postal-codes.ndjson
+backend/database/data/geo/postal/allCountries.txt

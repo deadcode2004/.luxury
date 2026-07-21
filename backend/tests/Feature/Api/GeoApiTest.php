@@ -52,4 +52,21 @@ class GeoApiTest extends TestCase
             ->assertJsonPath('data.0.name_en', 'New Cairo')
             ->assertJsonPath('data.0.name_ar', 'القاهرة الجديدة');
     }
+
+    public function test_countries_include_postal_code_required_flag(): void
+    {
+        Country::query()->create([
+            'iso2' => 'SA',
+            'name_en' => 'Saudi Arabia',
+            'name_ar' => 'السعودية',
+            'phonecode' => '966',
+            'flag' => '🇸🇦',
+            'is_active' => true,
+            'postal_code_required' => true,
+        ]);
+
+        $this->getJson('/api/v1/geo/countries')
+            ->assertOk()
+            ->assertJsonPath('data.0.postal_code_required', true);
+    }
 }
