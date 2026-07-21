@@ -102,7 +102,7 @@ export default function Offers() {
 
             {/* DESKTOP Overlapping Text Card */}
             <div className={`hidden md:flex absolute top-1/2 -translate-y-1/2 w-[60%] lg:w-[75%] xl:w-[60%] z-20 -start-8 ${language === "ar" ? "justify-end" : "justify-start"}`}>
-              <div className="bg-gradient-to-br from-white/60 to-white/10 backdrop-blur-xl glass-fix p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/40 transform transition-transform duration-700 hover:-translate-y-2 w-full">
+              <div className="bg-gradient-to-br from-white/60 to-white/10 backdrop-blur-xl glass-fix p-8 rounded-2xl shadow-card border border-white/40 transform transition-transform duration-700 hover:-translate-y-2 w-full">
                 {offer1Content(false)}
               </div>
             </div>
@@ -144,7 +144,7 @@ export default function Offers() {
 
             {/* DESKTOP Overlapping Text Card */}
             <div className={`hidden md:flex absolute top-1/2 -translate-y-1/2 w-[60%] lg:w-[75%] xl:w-[60%] z-20 -end-8 ${language === "ar" ? "justify-start" : "justify-end"}`}>
-              <div className="bg-gradient-to-br from-white/60 to-white/10 backdrop-blur-xl glass-fix p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/40 transform transition-transform duration-700 hover:-translate-y-2 w-full">
+              <div className="bg-gradient-to-br from-white/60 to-white/10 backdrop-blur-xl glass-fix p-8 rounded-2xl shadow-card border border-white/40 transform transition-transform duration-700 hover:-translate-y-2 w-full">
                 {offer2Content(false)}
               </div>
             </div>

@@ -8,9 +8,11 @@ export interface Product {
   gallery?: string[];
   rating: number;
   reviews: number;
+  stock?: number;
   isNew?: boolean;
   isFeatured?: boolean;
   isBestSeller?: boolean;
+  isOffer?: boolean;
   category: string;
   description?: { ar: string; en: string };
   ingredients?: { ar: string[]; en: string[] };
@@ -37,11 +39,13 @@ export const products: Product[] = [
     brand: { ar: "بارادايس إيسنس", en: "Paradise Essence" },
     price: 1250,
     image: "/images/products/paradisecare-home02.jpg",
-    rating: 4.9,
-    reviews: 128,
+    rating: 0,
+    reviews: 0,
+    stock: 45,
     isNew: true,
     isFeatured: true,
     isBestSeller: true,
+    isOffer: true,
     category: "c1",
     description: {
       ar: "عطر شرقي فاخر يجمع بين الأصالة والعصرية. مزيج ساحر من العود والزعفران مع نفحات رقيقة من الورد الدمشقي، مصمم خصيصاً لأصحاب الذوق الرفيع ليترك بصمة لا تُنسى في كل مكان.",
@@ -63,9 +67,10 @@ export const products: Product[] = [
     price: 850,
     oldPrice: 1000,
     image: "/images/products/paradisecare-home03.jpg",
-    rating: 4.8,
-    reviews: 95,
-    isBestSeller: true, isFeatured: true, category: "c2",
+    rating: 0,
+    reviews: 0,
+    stock: 12,
+    isBestSeller: true, isFeatured: true, isOffer: true, category: "c2",
     description: {
       ar: "سيروم مغذي غني برقائق الذهب عيار 24 قيراط وحمض الهيالورونيك. يعمل على تجديد خلايا البشرة، تقليل الخطوط الدقيقة، وإعطاء إشراقة شبابية فورية.",
       en: "A nourishing serum enriched with 24K gold flakes and Hyaluronic Acid. It works to renew skin cells, reduce fine lines, and provide an instant youthful glow."
@@ -85,8 +90,9 @@ export const products: Product[] = [
     brand: { ar: "أورا رويال", en: "Aura Royale" },
     price: 450,
     image: "/images/products/paradisecare-shop-hyaluronic-with-gold-and-silver-01-300x300.jpg",
-    rating: 4.7,
-    reviews: 210,
+    rating: 0,
+    reviews: 0,
+    stock: 0,
     isFeatured: true,
     category: "c2",
     description: {
@@ -108,8 +114,9 @@ export const products: Product[] = [
     brand: { ar: "جلو آند كو", en: "Glow & Co" },
     price: 320,
     image: "/images/products/paradisecare-shop-biomagneti-01-300x300.jpeg",
-    rating: 4.9,
-    reviews: 340,
+    rating: 0,
+    reviews: 0,
+    stock: 80,
     isFeatured: true, category: "c3",
     description: {
       ar: "مجموعة مذهلة من 12 لون مستوحاة من ألوان الصحراء وقت الغروب. تركيبة غنية بالصبغات وسهلة الدمج تتيح لك ابتكار إطلالات طبيعية أو درامية جذابة.",
@@ -126,23 +133,10 @@ export const products: Product[] = [
   }
 ];
 
-export const reviews = [
-  {
-    id: "r1",
-    author: { ar: "سارة محمد", en: "Sarah M." },
-    rating: 5,
-    comment: { ar: "منتجات رائعة جداً وتغليف فاخر يليق بالمستوى. سرعة في التوصيل وتجربة ممتازة عموماً.", en: "Amazing products and luxury packaging. Fast delivery and overall excellent experience." }
-  },
-  {
-    id: "r2",
-    author: { ar: "نورة العبدالله", en: "Noura A." },
-    rating: 5,
-    comment: { ar: "السيروم غير بشرتي بالكامل! أنصح به بشدة لكل من تبحث عن النضارة الحقيقية.", en: "The serum completely transformed my skin! Highly recommend it to anyone looking for real glow." }
-  },
-  {
-    id: "r3",
-    author: { ar: "ريم الخالد", en: "Reem K." },
-    rating: 4,
-    comment: { ar: "العطور ثباتها عالي وريحتها مميزة جداً، لا تشبه أي عطر آخر في السوق.", en: "Perfumes have high longevity and very unique scents, unlike anything else in the market." }
-  }
-];
+/** @deprecated Site reviews are loaded from the API; kept empty for legacy imports. */
+export const reviews: Array<{
+  id: string;
+  author: { ar: string; en: string };
+  rating: number;
+  comment: { ar: string; en: string };
+}> = [];
