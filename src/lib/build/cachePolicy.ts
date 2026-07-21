@@ -1,7 +1,11 @@
 /**
  * Production HTTP cache policy for PARADISE (Next.js 16 + Laravel 12).
  *
- * Layer map (App Router):
+ * IMPORTANT: These headers are applied only when `NODE_ENV === "production"`.
+ * Custom Cache-Control in `next dev` breaks Fast Refresh / HMR (Chrome often
+ * keeps a stale document/module shell until the Next process is restarted).
+ *
+ * Layer map (App Router, production):
  *
  * | Layer              | Strategy                                                                 |
  * |--------------------|--------------------------------------------------------------------------|
@@ -14,8 +18,10 @@
  * | `/storage/*`       | Immutable long-cache (UUID filenames; safe across deploys)              |
  * | Deploy safety      | `ClientCacheGuard` + `/api/build` hard-reloads open tabs                |
  *
- * Do NOT blanket `no-store` the whole site — that hurts performance/SEO
- * repeat visits without improving catalog freshness (already no-store JSON).
+ * Development extras (see `next.config.ts`):
+ * - Per-boot `NEXT_PUBLIC_BUILD_ID` so every browser reloads after `next dev` restart
+ * - Webpack `cache: { type: "memory" }` to avoid stale filesystem compile graphs
+ * - Use a single stack (`npm run dev:stack`) — never `next start` alongside `next dev`
  */
 
 export const CACHE_HTML_REVALIDATE =

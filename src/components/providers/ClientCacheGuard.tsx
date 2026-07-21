@@ -26,16 +26,19 @@ async function unregisterOrphanServiceWorkers(): Promise<boolean> {
 }
 
 /**
- * Production deploy safety net (not a cache killer):
+ * Deploy / dev-server boot safety net (not a cache killer):
  * - One-time cleanup if a legacy Service Worker still controls the origin
- * - Throttled build-id check so open tabs pick up a new deploy automatically
+ * - Hard-reload when the server boot/build id changes (new deploy OR new `next dev`)
+ * - In development, checks are more frequent so a restarted Next process wakes Chrome
  *
- * HTTP caching for HTML/assets is handled by `next.config.ts` headers.
+ * HTTP caching for HTML/assets is production-only (`next.config.ts`).
  */
 export default function ClientCacheGuard({ buildId }: { buildId: string }) {
   useEffect(() => {
     let cancelled = false;
     let lastCheckAt = 0;
+    const isDev = process.env.NODE_ENV === "development";
+    const throttleMs = isDev ? 5_000 : CHECK_THROTTLE_MS;
 
     const hardReload = () => {
       window.location.reload();
@@ -43,7 +46,7 @@ export default function ClientCacheGuard({ buildId }: { buildId: string }) {
 
     const checkLiveBuild = async (force = false) => {
       const now = Date.now();
-      if (!force && now - lastCheckAt < CHECK_THROTTLE_MS) return;
+      if (!force && now - lastCheckAt < throttleMs) return;
       lastCheckAt = now;
 
       try {
