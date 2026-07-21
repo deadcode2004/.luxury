@@ -65,6 +65,7 @@ export default function ShippingLocationFields({
       {/* Row: Country + State */}
       <FormField label={language === "ar" ? "الدولة" : "Country"} error={errors?.country}>
         <SearchableSelect
+          key={`country-${language}`}
           value={countryCode}
           options={countries}
           onChange={onCountryChange}
@@ -81,6 +82,7 @@ export default function ShippingLocationFields({
         error={errors?.state}
       >
         <SearchableSelect
+          key={`state-${language}-${countryCode}`}
           value={stateCode}
           options={states}
           onChange={onStateChange}
@@ -109,6 +111,7 @@ export default function ShippingLocationFields({
       <FormField label={language === "ar" ? "المدينة" : "City"} error={errors?.city}>
         {useCitySelect ? (
           <SearchableSelect
+            key={`city-${language}-${countryCode}-${stateCode}`}
             value={city}
             options={cities}
             onChange={onCityChange}

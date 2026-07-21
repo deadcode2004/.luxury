@@ -1,15 +1,12 @@
 import { City, Country, State } from "country-state-city";
-import {
-  getCitiesByCountryCode,
-  getCountryByCode as getArCountryByCode,
-} from "countries-cities-ar";
-import citiesI18n from "i18n-iso-cities";
-import arCities from "i18n-iso-cities/langs/ar.json";
-import enCities from "i18n-iso-cities/langs/en.json";
 import type { AppLanguage } from "@/lib/i18n/language";
-
-citiesI18n.registerLocale(arCities);
-citiesI18n.registerLocale(enCities);
+import {
+  bilingualAdminName,
+  bilingualCityName,
+  bilingualCountryName,
+  bilingualSearchText,
+  cleanLatinName,
+} from "@/lib/geo/bilingual-places";
 
 export type GeoOption = {
   value: string;
@@ -21,7 +18,6 @@ export type GeoOption = {
 };
 
 const regionNamesCache = new Map<string, Intl.DisplayNames>();
-const arPlaceCache = new Map<string, string>();
 
 function regionNames(language: AppLanguage) {
   const key = language === "ar" ? "ar" : "en";
@@ -33,22 +29,11 @@ function regionNames(language: AppLanguage) {
   return cached;
 }
 
-function normalizeKey(value: string) {
-  return value
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9\u0600-\u06ff\s]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-/** Localized country display name (AR/EN). */
+/** Localized country display name (AR/EN) from static bilingual data + Intl fallback. */
 export function countryDisplayName(isoCode: string, language: AppLanguage, fallback?: string) {
   const code = isoCode.toUpperCase();
-  const fromPackage = getArCountryByCode(code);
-  if (language === "ar" && fromPackage?.nameAr) return fromPackage.nameAr;
-  if (language === "en" && fromPackage?.name) return fromPackage.name;
+  const fromStatic = bilingualCountryName(code, language, fallback);
+  if (fromStatic && fromStatic !== code) return fromStatic;
 
   try {
     const name = regionNames(language).of(code);
@@ -56,54 +41,21 @@ export function countryDisplayName(isoCode: string, language: AppLanguage, fallb
   } catch {
     // ignore
   }
-  return fallback || fromPackage?.name || code;
+  return fallback || code;
 }
 
-/** Best-effort place name localization (state / city). Value stays English for stability. */
+/**
+ * Localized state/city label from static bilingual indexes.
+ * Stored values stay English / ISO; only the display label changes with language.
+ */
 export function placeDisplayName(
   englishName: string,
   countryCode: string,
-  language: AppLanguage
+  language: AppLanguage,
+  kind: "state" | "city" = "city"
 ): string {
-  const name = englishName.trim();
-  if (!name) return name;
-  if (language === "en") return name;
-
-  const cacheKey = `${countryCode}:${normalizeKey(name)}`;
-  const cached = arPlaceCache.get(cacheKey);
-  if (cached) return cached;
-
-  const fromCities = citiesI18n.getName(countryCode, name, "ar");
-  if (fromCities) {
-    arPlaceCache.set(cacheKey, fromCities);
-    return fromCities;
-  }
-
-  const translated = citiesI18n.translate(name, "ar");
-  if (translated && translated !== name) {
-    arPlaceCache.set(cacheKey, translated);
-    return translated;
-  }
-
-  const localList = getCitiesByCountryCode(countryCode) || [];
-  const needle = normalizeKey(name);
-  const exact = localList.find((c) => normalizeKey(c.name) === needle);
-  if (exact?.nameAr) {
-    arPlaceCache.set(cacheKey, exact.nameAr);
-    return exact.nameAr;
-  }
-
-  const fuzzy = localList.find((c) => {
-    const n = normalizeKey(c.name);
-    return n.includes(needle) || needle.includes(n);
-  });
-  if (fuzzy?.nameAr) {
-    arPlaceCache.set(cacheKey, fuzzy.nameAr);
-    return fuzzy.nameAr;
-  }
-
-  arPlaceCache.set(cacheKey, name);
-  return name;
+  if (kind === "state") return bilingualAdminName(countryCode, englishName, language);
+  return bilingualCityName(countryCode, englishName, language);
 }
 
 export function normalizeDialCode(raw: string | null | undefined): string {
@@ -186,7 +138,7 @@ export function getCountryOptions(language: AppLanguage): GeoOption[] {
       flag: c.flag,
       dialCode: normalizeDialCode(c.phonecode),
       meta: dial,
-      searchText: `${label} ${c.name} ${c.isoCode} ${dial}`.toLowerCase(),
+      searchText: bilingualSearchText(c.name, label, `${c.isoCode} ${dial}`),
     };
   });
 }
@@ -202,7 +154,11 @@ export function getDialOptions(language: AppLanguage): GeoOption[] {
       flag: c.flag,
       dialCode: normalizeDialCode(c.phonecode),
       meta: dial,
-      searchText: `${label} ${c.name} ${c.isoCode} ${dial} ${normalizeDialCode(c.phonecode)}`.toLowerCase(),
+      searchText: bilingualSearchText(
+        c.name,
+        label,
+        `${c.isoCode} ${dial} ${normalizeDialCode(c.phonecode)}`
+      ),
     };
   });
 }
@@ -210,11 +166,12 @@ export function getDialOptions(language: AppLanguage): GeoOption[] {
 export function getStateOptions(countryCode: string, language: AppLanguage = "en"): GeoOption[] {
   if (!countryCode) return [];
   return State.getStatesOfCountry(countryCode).map((s) => {
-    const label = placeDisplayName(s.name, countryCode, language);
+    const label = placeDisplayName(s.name, countryCode, language, "state");
+    const en = cleanLatinName(s.name);
     return {
       value: s.isoCode,
       label,
-      searchText: `${label} ${s.name} ${s.isoCode}`.toLowerCase(),
+      searchText: bilingualSearchText(en, label, s.isoCode),
     };
   });
 }
@@ -228,12 +185,15 @@ export function getCityOptions(
   const cities = stateCode
     ? City.getCitiesOfState(countryCode, stateCode) || []
     : City.getCitiesOfCountry(countryCode) || [];
+
   return cities.map((city) => {
-    const label = placeDisplayName(city.name, countryCode, language);
+    const label = placeDisplayName(city.name, countryCode, language, "city");
+    const en = cleanLatinName(city.name);
     return {
+      // Stable English CSC name — language changes only update `label`.
       value: city.name,
       label,
-      searchText: `${label} ${city.name}`.toLowerCase(),
+      searchText: bilingualSearchText(en, label),
     };
   });
 }
