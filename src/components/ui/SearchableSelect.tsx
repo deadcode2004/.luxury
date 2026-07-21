@@ -1,6 +1,16 @@
 "use client";
 
-import React, { useDeferredValue, useEffect, useId, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { createPortal } from "react-dom";
 import { Check, ChevronDown, Search } from "lucide-react";
 import { cn } from "@/lib/cn";
 
@@ -35,6 +45,16 @@ type SearchableSelectProps = {
   "aria-label"?: string;
 };
 
+type MenuPos = {
+  top?: number;
+  bottom?: number;
+  left: number;
+  width: number;
+  maxHeight: number;
+};
+
+const MENU_Z = 10000;
+
 export default function SearchableSelect({
   value,
   options,
@@ -52,10 +72,15 @@ export default function SearchableSelect({
 }: SearchableSelectProps) {
   const listId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [pos, setPos] = useState<MenuPos | null>(null);
+  const [mounted, setMounted] = useState(false);
   const deferredQuery = useDeferredValue(query);
+
+  useEffect(() => setMounted(true), []);
 
   const selected = useMemo(
     () => options.find((o) => o.value === value) || null,
@@ -70,10 +95,60 @@ export default function SearchableSelect({
     return source.slice(0, limit);
   }, [options, deferredQuery, limit]);
 
+  const updatePosition = useCallback(() => {
+    const trigger = rootRef.current;
+    if (!trigger) return;
+    const rect = trigger.getBoundingClientRect();
+    const viewportH = window.innerHeight;
+    const viewportW = window.innerWidth;
+    const gap = 8;
+    const estimatedMenu = 320;
+    const spaceBelow = viewportH - rect.bottom - gap;
+    const spaceAbove = rect.top - gap;
+    const openUp = spaceBelow < Math.min(estimatedMenu, 280) && spaceAbove > spaceBelow;
+    const maxHeight = Math.max(160, Math.min(320, openUp ? spaceAbove : spaceBelow));
+    const width = embedded || compact
+      ? Math.min(22 * 16, viewportW - 16)
+      : Math.max(rect.width, Math.min(rect.width, viewportW - 16));
+    let left = rect.left;
+    if (embedded || compact) {
+      left = Math.min(rect.left, viewportW - width - 8);
+      left = Math.max(8, left);
+    } else {
+      left = Math.min(rect.left, viewportW - width - 8);
+      left = Math.max(8, left);
+    }
+    setPos({
+      top: openUp ? undefined : rect.bottom + gap,
+      bottom: openUp ? viewportH - rect.top + gap : undefined,
+      left,
+      width,
+      maxHeight,
+    });
+  }, [compact, embedded]);
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setPos(null);
+      return;
+    }
+    updatePosition();
+    const onWin = () => updatePosition();
+    window.addEventListener("resize", onWin);
+    window.addEventListener("scroll", onWin, true);
+    return () => {
+      window.removeEventListener("resize", onWin);
+      window.removeEventListener("scroll", onWin, true);
+    };
+  }, [open, updatePosition, filtered.length]);
+
   useEffect(() => {
     if (!open) return;
     const onDoc = (e: MouseEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+      const t = e.target as Node;
+      if (rootRef.current?.contains(t)) return;
+      if (menuRef.current?.contains(t)) return;
+      setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
@@ -92,6 +167,85 @@ export default function SearchableSelect({
     if (!open) setQuery("");
   }, [open]);
 
+  const menu =
+    mounted && open && pos
+      ? createPortal(
+          <div
+            ref={menuRef}
+            id={listId}
+            role="presentation"
+            style={{
+              position: "fixed",
+              top: pos.top,
+              bottom: pos.bottom,
+              left: pos.left,
+              width: pos.width,
+              zIndex: MENU_Z,
+              maxHeight: pos.maxHeight,
+            }}
+            className={cn(
+              "flex flex-col overflow-hidden rounded-xl border border-surface",
+              "bg-white shadow-floating"
+            )}
+          >
+            <div className="flex items-center gap-2 border-b border-surface/70 px-3 py-2.5 shrink-0">
+              <Search size={16} className="text-gray-400 shrink-0" />
+              <input
+                ref={searchRef}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={searchPlaceholder}
+                className="w-full bg-transparent text-sm outline-none text-secondary placeholder:text-gray-400"
+              />
+            </div>
+            <ul
+              role="listbox"
+              className="min-h-0 flex-1 overflow-y-auto overscroll-contain py-1"
+              style={{ maxHeight: pos.maxHeight - 48 }}
+            >
+              {filtered.length === 0 ? (
+                <li className="px-4 py-3 text-sm text-gray-400">{emptyLabel}</li>
+              ) : (
+                filtered.map((option) => {
+                  const isActive = option.value === value;
+                  return (
+                    <li key={option.value} role="option" aria-selected={isActive}>
+                      <button
+                        type="button"
+                        className={cn(
+                          "flex w-full items-center gap-2.5 px-3 py-2.5 text-start text-sm transition-colors",
+                          isActive
+                            ? "bg-primary/10 text-primary font-semibold"
+                            : "text-secondary hover:bg-gray-50"
+                        )}
+                        onClick={() => {
+                          onChange(option.value);
+                          setOpen(false);
+                        }}
+                      >
+                        {option.flag ? (
+                          <span className="text-base leading-none shrink-0" aria-hidden>
+                            {option.flag}
+                          </span>
+                        ) : null}
+                        <span className="flex-1 truncate min-w-0">{option.label}</span>
+                        {option.meta ? (
+                          <span className="text-xs text-gray-400 shrink-0 dir-ltr font-medium">
+                            {option.meta}
+                          </span>
+                        ) : null}
+                        {isActive ? <Check size={16} className="shrink-0 text-primary" /> : null}
+                      </button>
+                    </li>
+                  );
+                })
+              )}
+            </ul>
+          </div>,
+          document.body
+        )
+      : null;
+
   return (
     <div ref={rootRef} className={cn("relative", embedded ? "shrink-0" : "w-full", className)}>
       <button
@@ -99,7 +253,7 @@ export default function SearchableSelect({
         disabled={disabled}
         aria-expanded={open}
         aria-haspopup="listbox"
-        aria-controls={listId}
+        aria-controls={open ? listId : undefined}
         aria-label={ariaLabel}
         onClick={() => !disabled && setOpen((v) => !v)}
         className={cn(
@@ -145,72 +299,7 @@ export default function SearchableSelect({
           )}
         />
       </button>
-
-      {open ? (
-        <div
-          className={cn(
-            "absolute z-50 mt-2 overflow-hidden rounded-xl border border-surface",
-            "bg-white shadow-floating",
-            embedded || compact
-              ? "start-0 w-[min(22rem,calc(100vw-2rem))]"
-              : "w-full min-w-[16rem]"
-          )}
-        >
-          <div className="flex items-center gap-2 border-b border-surface/70 px-3 py-2.5">
-            <Search size={16} className="text-gray-400 shrink-0" />
-            <input
-              ref={searchRef}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={searchPlaceholder}
-              className="w-full bg-transparent text-sm outline-none text-secondary placeholder:text-gray-400"
-            />
-          </div>
-          <ul
-            id={listId}
-            role="listbox"
-            className="max-h-64 overflow-y-auto overscroll-contain py-1"
-          >
-            {filtered.length === 0 ? (
-              <li className="px-4 py-3 text-sm text-gray-400">{emptyLabel}</li>
-            ) : (
-              filtered.map((option) => {
-                const isActive = option.value === value;
-                return (
-                  <li key={option.value} role="option" aria-selected={isActive}>
-                    <button
-                      type="button"
-                      className={cn(
-                        "flex w-full items-center gap-2.5 px-3 py-2.5 text-start text-sm transition-colors",
-                        isActive
-                          ? "bg-primary/10 text-primary font-semibold"
-                          : "text-secondary hover:bg-gray-50"
-                      )}
-                      onClick={() => {
-                        onChange(option.value);
-                        setOpen(false);
-                      }}
-                    >
-                      {option.flag ? (
-                        <span className="text-base leading-none shrink-0" aria-hidden>
-                          {option.flag}
-                        </span>
-                      ) : null}
-                      <span className="flex-1 truncate min-w-0">{option.label}</span>
-                      {option.meta ? (
-                        <span className="text-xs text-gray-400 shrink-0 dir-ltr font-medium">
-                          {option.meta}
-                        </span>
-                      ) : null}
-                      {isActive ? <Check size={16} className="shrink-0 text-primary" /> : null}
-                    </button>
-                  </li>
-                );
-              })
-            )}
-          </ul>
-        </div>
-      ) : null}
+      {menu}
     </div>
   );
 }

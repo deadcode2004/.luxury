@@ -58,7 +58,11 @@ export default function ShippingLocationFields({
   const hasStates = states.length > 0;
   const stateRequired = hasStates;
   const cityDisabled = !countryCode || (hasStates && !stateCode);
-  const useCitySelect = !cityDisabled && cities.length > 0;
+  // If the selected city isn't in the monolingual list (e.g. after language
+  // switch), fall back to a text input so we never inject a mixed-language option.
+  const cityInOptions = !city || cities.some((c) => c.value === city);
+  const useCitySelect = !cityDisabled && cities.length > 0 && cityInOptions;
+  const stateInOptions = !stateCode || states.some((s) => s.value === stateCode);
 
   return (
     <>
@@ -83,7 +87,7 @@ export default function ShippingLocationFields({
       >
         <SearchableSelect
           key={`state-${language}-${countryCode}`}
-          value={stateCode}
+          value={stateInOptions ? stateCode : ""}
           options={states}
           onChange={onStateChange}
           disabled={!countryCode || !hasStates}

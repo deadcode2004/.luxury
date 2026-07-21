@@ -3,9 +3,13 @@ import type { AppLanguage } from "@/lib/i18n/language";
 import {
   bilingualAdminName,
   bilingualCityName,
-  bilingualCountryName,
   bilingualSearchText,
   cleanLatinName,
+  hasArabicScript,
+  resolveAdminBilingual,
+  resolveCityBilingual,
+  resolveCountryBilingual,
+  type BilingualName,
 } from "@/lib/geo/bilingual-places";
 
 export type GeoOption = {
@@ -29,15 +33,68 @@ function regionNames(language: AppLanguage) {
   return cached;
 }
 
+/**
+ * Build a monolingual option list for the active site language.
+ * Never mixes Arabic and English labels in the same list.
+ */
+function toMonolingualOptions(
+  rows: Array<{ value: string; names: BilingualName; extraSearch?: string }>,
+  language: AppLanguage
+): GeoOption[] {
+  if (rows.length === 0) return [];
+
+  if (language === "en") {
+    return rows.map((row) => {
+      const label = hasArabicScript(row.names.en)
+        ? cleanLatinName(row.value) || row.names.en
+        : row.names.en;
+      return {
+        value: row.value,
+        label,
+        searchText: bilingualSearchText(row.names.en, row.names.ar, row.extraSearch),
+      };
+    });
+  }
+
+  const translated = rows.filter((row) => row.names.ar && hasArabicScript(row.names.ar));
+
+  // No Arabic in dataset → monolingual English fallback (still no mixing).
+  if (translated.length === 0) {
+    return rows.map((row) => ({
+      value: row.value,
+      label: row.names.en,
+      searchText: bilingualSearchText(row.names.en, row.names.ar, row.extraSearch),
+    }));
+  }
+
+  // Full or partial Arabic: expose only rows that have Arabic labels.
+  return translated.map((row) => ({
+    value: row.value,
+    label: row.names.ar,
+    searchText: bilingualSearchText(row.names.en, row.names.ar, row.extraSearch),
+  }));
+}
+
 /** Localized country display name (AR/EN) from static bilingual data + Intl fallback. */
 export function countryDisplayName(isoCode: string, language: AppLanguage, fallback?: string) {
   const code = isoCode.toUpperCase();
-  const fromStatic = bilingualCountryName(code, language, fallback);
-  if (fromStatic && fromStatic !== code) return fromStatic;
+  const pair = resolveCountryBilingual(code, fallback);
 
+  if (language === "ar") {
+    if (pair.ar && hasArabicScript(pair.ar)) return pair.ar;
+    try {
+      const intlAr = regionNames("ar").of(code);
+      if (intlAr && hasArabicScript(intlAr)) return intlAr;
+    } catch {
+      // ignore
+    }
+    return pair.en || fallback || code;
+  }
+
+  if (pair.en) return pair.en;
   try {
-    const name = regionNames(language).of(code);
-    if (name) return name;
+    const intlEn = regionNames("en").of(code);
+    if (intlEn) return intlEn;
   } catch {
     // ignore
   }
@@ -129,51 +186,68 @@ export function getAllCountries() {
 }
 
 export function getCountryOptions(language: AppLanguage): GeoOption[] {
-  return getAllCountries().map((c) => {
-    const label = countryDisplayName(c.isoCode, language, c.name);
-    const dial = formatDialCode(c.phonecode);
+  const rows = getAllCountries().map((c) => {
+    const names = resolveCountryBilingual(c.isoCode, c.name);
+    try {
+      const intlAr = regionNames("ar").of(c.isoCode);
+      if (intlAr && hasArabicScript(intlAr)) {
+        // Prefer real Arabic (Intl) over Latin mistakenly stored as nameAr.
+        if (!names.ar || !hasArabicScript(names.ar)) names.ar = intlAr;
+      }
+    } catch {
+      // ignore
+    }
+    try {
+      const intlEn = regionNames("en").of(c.isoCode);
+      if (intlEn) names.en = names.en || intlEn;
+    } catch {
+      // ignore
+    }
     return {
       value: c.isoCode,
-      label,
+      names: { en: names.en || c.name, ar: names.ar },
+      extraSearch: `${c.isoCode} ${formatDialCode(c.phonecode)}`,
       flag: c.flag,
       dialCode: normalizeDialCode(c.phonecode),
-      meta: dial,
-      searchText: bilingualSearchText(c.name, label, `${c.isoCode} ${dial}`),
+      meta: formatDialCode(c.phonecode),
+    };
+  });
+
+  const options = toMonolingualOptions(
+    rows.map((r) => ({ value: r.value, names: r.names, extraSearch: r.extraSearch })),
+    language
+  );
+
+  return options.map((opt) => {
+    const src = rows.find((r) => r.value === opt.value)!;
+    return {
+      ...opt,
+      flag: src.flag,
+      dialCode: src.dialCode,
+      meta: src.meta,
     };
   });
 }
 
 /** Dial-code picker options with localized country names. */
 export function getDialOptions(language: AppLanguage): GeoOption[] {
-  return getAllCountries().map((c) => {
-    const label = countryDisplayName(c.isoCode, language, c.name);
-    const dial = formatDialCode(c.phonecode);
-    return {
-      value: c.isoCode,
-      label,
-      flag: c.flag,
-      dialCode: normalizeDialCode(c.phonecode),
-      meta: dial,
-      searchText: bilingualSearchText(
-        c.name,
-        label,
-        `${c.isoCode} ${dial} ${normalizeDialCode(c.phonecode)}`
-      ),
-    };
-  });
+  return getCountryOptions(language);
 }
 
 export function getStateOptions(countryCode: string, language: AppLanguage = "en"): GeoOption[] {
   if (!countryCode) return [];
-  return State.getStatesOfCountry(countryCode).map((s) => {
-    const label = placeDisplayName(s.name, countryCode, language, "state");
-    const en = cleanLatinName(s.name);
+  const rows = State.getStatesOfCountry(countryCode).map((s) => {
+    const names = resolveAdminBilingual(countryCode, s.name);
     return {
       value: s.isoCode,
-      label,
-      searchText: bilingualSearchText(en, label, s.isoCode),
+      names: {
+        en: names.en || cleanLatinName(s.name),
+        ar: names.ar,
+      },
+      extraSearch: s.isoCode,
     };
   });
+  return toMonolingualOptions(rows, language);
 }
 
 export function getCityOptions(
@@ -186,16 +260,29 @@ export function getCityOptions(
     ? City.getCitiesOfState(countryCode, stateCode) || []
     : City.getCitiesOfCountry(countryCode) || [];
 
-  return cities.map((city) => {
-    const label = placeDisplayName(city.name, countryCode, language, "city");
-    const en = cleanLatinName(city.name);
+  const rows = cities.map((city) => {
+    const names = resolveCityBilingual(countryCode, city.name);
     return {
-      // Stable English CSC name — language changes only update `label`.
       value: city.name,
-      label,
-      searchText: bilingualSearchText(en, label),
+      names: {
+        en: names.en || cleanLatinName(city.name),
+        ar: names.ar,
+      },
     };
   });
+
+  if (language === "ar") {
+    const translated = rows.filter((row) => row.names.ar && hasArabicScript(row.names.ar));
+    // Never show an English city list while the site language is Arabic.
+    if (translated.length === 0) return [];
+    return translated.map((row) => ({
+      value: row.value,
+      label: row.names.ar,
+      searchText: bilingualSearchText(row.names.en, row.names.ar),
+    }));
+  }
+
+  return toMonolingualOptions(rows, "en");
 }
 
 export function getCountryByCode(code: string) {
@@ -205,3 +292,5 @@ export function getCountryByCode(code: string) {
 export function getStateByCode(countryCode: string, stateCode: string) {
   return State.getStateByCodeAndCountry(stateCode, countryCode) || null;
 }
+
+export { hasArabicScript };

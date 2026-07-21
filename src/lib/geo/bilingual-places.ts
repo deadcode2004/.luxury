@@ -291,6 +291,85 @@ export function bilingualCityName(
   return pickLabel({ en: name, ar: "" }, language, name);
 }
 
+export function resolveAdminBilingual(
+  countryCode: string,
+  englishName: string
+): BilingualName {
+  const name = englishName.trim();
+  const en = cleanLatinName(name) || name;
+  if (!name) return { en: "", ar: "" };
+  const cc = countryCode.toUpperCase();
+  const bucket = adminByCountry.get(cc);
+  if (bucket) {
+    for (const key of placeLookupKeys(name, cc)) {
+      const hit = bucket.get(key);
+      if (hit?.ar && hasArabicScript(hit.ar)) return { en, ar: hit.ar };
+    }
+  }
+  const pack = getCitiesByCountryCode(cc) || [];
+  const keys = new Set(placeLookupKeys(name, cc));
+  for (const place of pack) {
+    if (!place?.name) continue;
+    if (
+      placeLookupKeys(place.name, cc).some((k) => keys.has(k)) &&
+      place.nameAr &&
+      hasArabicScript(place.nameAr)
+    ) {
+      return { en, ar: place.nameAr };
+    }
+  }
+  return { en, ar: "" };
+}
+
+export function resolveCityBilingual(
+  countryCode: string,
+  englishName: string
+): BilingualName {
+  const name = englishName.trim();
+  const en = cleanLatinName(name) || name;
+  if (!name) return { en: "", ar: "" };
+  const cc = countryCode.toUpperCase();
+  const bucket = cityByCountry.get(cc);
+  if (bucket) {
+    for (const key of placeLookupKeys(name, cc)) {
+      const hit = bucket.get(key);
+      if (hit?.ar && hasArabicScript(hit.ar)) return { en, ar: hit.ar };
+    }
+  }
+  return { en, ar: "" };
+}
+
+export function resolveCountryBilingual(
+  isoCode: string,
+  fallbackEn?: string
+): BilingualName {
+  const code = isoCode.toUpperCase();
+  const fromIndex = countryNames.get(code);
+  const packAr = fromIndex?.ar && hasArabicScript(fromIndex.ar) ? fromIndex.ar : "";
+  const packEn = cleanLatinName(fromIndex?.en || fallbackEn || code);
+
+  if (packAr) {
+    return { en: packEn, ar: packAr };
+  }
+
+  const fromPackage = getArCountryByCode(code);
+  const pkgAr =
+    fromPackage?.nameAr && hasArabicScript(fromPackage.nameAr) ? fromPackage.nameAr : "";
+  if (pkgAr) {
+    return {
+      en: cleanLatinName(fromPackage?.name || fallbackEn || code),
+      ar: pkgAr,
+    };
+  }
+
+  return { en: packEn || cleanLatinName(fallbackEn || code), ar: "" };
+}
+
 export function bilingualSearchText(en: string, ar: string, extra = ""): string {
   return `${en} ${ar} ${extra}`.toLowerCase();
+}
+
+/** True when a string contains Arabic letters (not only tashkeel/diacritics). */
+export function hasArabicScript(value: string): boolean {
+  return /[\u0621-\u063A\u0641-\u064A\u0671-\u06D3]/.test(value);
 }
